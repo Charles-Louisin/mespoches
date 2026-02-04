@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="115" fill="#0ea5e9"/>
+  
+  <!-- Wallet Shape -->
+  <g transform="translate(90, 120)">
+    <!-- Main wallet body -->
+    <rect x="0" y="40" width="332" height="240" rx="24" fill="white" opacity="0.95"/>
+    
+    <!-- Wallet flap -->
+    <path d="M 0 64 L 0 40 C 0 26.7 10.7 16 24 16 L 308 16 C 321.3 16 332 26.7 332 40 L 332 64 Z" fill="white" opacity="0.85"/>
+    
+    <!-- Card slot (darker) -->
+    <rect x="24" y="100" width="284" height="50" rx="12" fill="#0284c7" opacity="0.3"/>
+    
+    <!-- Money symbol -->
+    <text x="166" y="220" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="#0284c7" text-anchor="middle">₣</text>
+    
+    <!-- Accent line -->
+    <rect x="24" y="64" width="120" height="4" rx="2" fill="#0284c7"/>
+  </g>
+</svg>
