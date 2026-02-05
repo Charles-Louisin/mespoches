@@ -31,7 +31,7 @@ export default function HomePage() {
     setIsLoggedIn(authenticated)
     
     if (authenticated) {
-      loadData()
+    loadData()
       // Charger le nom de l'utilisateur
       const user = getUser()
       if (user) {

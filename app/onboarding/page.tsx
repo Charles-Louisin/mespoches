@@ -117,14 +117,14 @@ export default function OnboardingPage() {
               opacity: { duration: 0.3 },
               scale: { duration: 0.3 }
             }}
-            className="absolute inset-0 flex flex-col items-center justify-center px-6"
+            className="absolute inset-0 flex flex-col items-center justify-center px-6 pointer-events-none"
           >
             {/* Icon */}
             <motion.div
               variants={iconVariants}
               initial="initial"
               animate="animate"
-              className={`w-32 h-32 bg-gradient-to-br ${slide.color} rounded-full flex items-center justify-center mb-8 shadow-lg`}
+              className={`w-32 h-32 bg-gradient-to-br ${slide.color} rounded-full flex items-center justify-center mb-8 shadow-lg pointer-events-auto`}
             >
               <Icon className="w-16 h-16 text-white" />
             </motion.div>
@@ -134,7 +134,7 @@ export default function OnboardingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.5 }}
-              className="text-3xl font-bold text-gray-900 mb-4 text-center"
+              className="text-3xl font-bold text-gray-900 mb-4 text-center pointer-events-auto"
             >
               {slide.title}
             </motion.h1>
@@ -144,7 +144,7 @@ export default function OnboardingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.5 }}
-              className="text-lg text-gray-600 text-center max-w-md mb-12"
+              className="text-lg text-gray-600 text-center max-w-md mb-12 pointer-events-auto"
             >
               {slide.description}
             </motion.p>
@@ -152,7 +152,7 @@ export default function OnboardingPage() {
         </AnimatePresence>
 
         {/* Dots - Fixed position */}
-        <div className="absolute bottom-32 left-0 right-0 flex justify-center gap-2">
+        <div className="absolute bottom-32 left-0 right-0 flex justify-center gap-2 z-10">
           {slides.map((_, index) => (
             <motion.div
               key={index}
@@ -169,14 +169,14 @@ export default function OnboardingPage() {
 
         {/* Button - Fixed position */}
         <motion.div
-          className="absolute bottom-8 left-6 right-6"
+          className="absolute bottom-8 left-6 right-6 z-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.5 }}
         >
           <Button
             onClick={handleNext}
-            className="w-full flex items-center justify-center gap-2"
+            className="w-full flex items-center justify-center gap-2 relative z-10"
           >
             {currentSlide < slides.length - 1 ? 'Suivant' : 'Commencer'}
             <ChevronRight className="w-5 h-5" />
