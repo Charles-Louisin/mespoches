@@ -1,6 +1,7 @@
 import { db, SyncQueue } from './db';
 import { walletApi, transactionApi, categoryApi } from './api';
 import { isAuthenticated } from './auth';
+import { normalizeTransaction } from './normalizeData';
 
 // Détection de la connexion
 export const isOnline = (): boolean => {
@@ -227,16 +228,17 @@ const syncFromServer = async (): Promise<void> => {
     // Récupérer les transactions
     const transactions = await transactionApi.getAll();
     for (const transaction of transactions) {
+      const normalized = normalizeTransaction(transaction);
       const existing = await db.transactions.where('_id').equals(transaction._id).first();
       if (existing) {
         await db.transactions.update(existing.id!, {
-          ...transaction,
+          ...normalized,
           synced: true,
           pendingAction: undefined
         });
       } else {
         await db.transactions.add({
-          ...transaction,
+          ...normalized,
           synced: true
         });
       }

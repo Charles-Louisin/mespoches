@@ -1,0 +1,39 @@
+import mongoose, { Schema, Model, Types } from 'mongoose';
+
+export interface ICategory {
+  _id: string;
+  user_id: Types.ObjectId;
+  name: string;
+  type: 'income' | 'expense';
+  created_at: Date;
+}
+
+const categorySchema = new Schema<ICategory>({
+  user_id: {
+    type: Schema.Types.ObjectId as any,
+    ref: 'User',
+    required: [true, 'L\'utilisateur est requis']
+  },
+  name: {
+    type: String,
+    required: [true, 'Le nom de la catégorie est requis'],
+    trim: true
+  },
+  type: {
+    type: String,
+    enum: ['income', 'expense'],
+    required: [true, 'Le type est requis']
+  },
+  created_at: {
+    type: Date,
+    default: Date.now
+  }
+}, {
+  timestamps: true
+});
+
+categorySchema.index({ user_id: 1, type: 1 });
+
+const Category: Model<ICategory> = mongoose.models.Category || mongoose.model<ICategory>('Category', categorySchema);
+
+export default Category;

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated, hasSeenOnboarding } from '@/lib/auth';
-import { LoadingSpinner } from './LoadingSpinner';
+import LoadingSpinner from './LoadingSpinner';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();

@@ -3,7 +3,10 @@ const withPWA = require('next-pwa')({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
+  disable: process.env.NODE_ENV === 'development', // Désactivé en dev, activé en prod
+  fallbacks: {
+    document: null, // Désactiver la page de fallback offline
+  },
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/fonts\.(?:gstatic)\.com\/.*/i,
@@ -83,7 +86,7 @@ const withPWA = require('next-pwa')({
       }
     },
     {
-      urlPattern: /^https?:\/\/localhost:5000\/api\/.*/i,
+      urlPattern: /^https?:\/\/.+\/api\/.*/i, // Support pour n'importe quelle URL API (localhost ou production)
       handler: 'NetworkFirst',
       options: {
         cacheName: 'api-cache',
@@ -91,6 +94,18 @@ const withPWA = require('next-pwa')({
         expiration: {
           maxEntries: 50,
           maxAgeSeconds: 5 * 60 // 5 minutes
+        }
+      }
+    },
+    {
+      urlPattern: /^https?:\/\/.+\/.*/i, // Cache toutes les pages (localhost ou production)
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'pages-cache',
+        networkTimeoutSeconds: 5,
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 24 * 60 * 60 // 24 heures
         }
       }
     }

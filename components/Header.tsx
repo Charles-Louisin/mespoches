@@ -1,26 +1,18 @@
 'use client'
 
-import { ArrowLeft, LogOut } from 'lucide-react'
+import { ArrowLeft, Settings } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { logout } from '@/lib/auth'
-import { toast } from 'sonner'
+import Link from 'next/link'
 
 interface HeaderProps {
   title: string
   showBack?: boolean
-  showLogout?: boolean
+  showSettings?: boolean
   action?: React.ReactNode
 }
 
-export default function Header({ title, showBack = false, showLogout = false, action }: HeaderProps) {
+export default function Header({ title, showBack = false, showSettings = false, action }: HeaderProps) {
   const router = useRouter()
-
-  const handleLogout = () => {
-    if (confirm('Voulez-vous vraiment vous déconnecter ?')) {
-      logout()
-      toast.success('Déconnexion réussie')
-    }
-  }
 
   return (
     <header className="sticky top-0 bg-white border-b border-gray-200 z-40">
@@ -39,14 +31,14 @@ export default function Header({ title, showBack = false, showLogout = false, ac
           </div>
           <div className="flex items-center gap-2">
             {action && <div>{action}</div>}
-            {showLogout && (
-              <button
-                onClick={handleLogout}
-                className="p-2 hover:bg-red-50 rounded-lg transition text-red-600 touch-manipulation"
-                title="Déconnexion"
+            {showSettings && (
+              <Link
+                href="/settings"
+                className="p-2 hover:bg-gray-100 rounded-lg transition text-gray-600 touch-manipulation"
+                title="Paramètres"
               >
-                <LogOut size={20} />
-              </button>
+                <Settings size={20} />
+              </Link>
             )}
           </div>
         </div>

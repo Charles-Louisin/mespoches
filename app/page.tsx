@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Wallet, Transaction, MonthStats, analyticsApi } from '@/lib/api'
 import { offlineWalletApi, offlineTransactionApi } from '@/lib/offlineApi'
+import { getUser, isAuthenticated } from '@/lib/auth'
 import { formatCurrency, groupTransactionsByDate } from '@/lib/utils'
 import BottomNav from '@/components/BottomNav'
 import Header from '@/components/Header'
@@ -13,7 +14,7 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import EmptyState from '@/components/EmptyState'
 import Button from '@/components/Button'
 import Link from 'next/link'
-import { Plus, Wallet as WalletIcon, TrendingUp, TrendingDown } from 'lucide-react'
+import { Plus, Wallet as WalletIcon, TrendingUp, TrendingDown, LogIn } from 'lucide-react'
 
 export default function HomePage() {
   const [wallets, setWallets] = useState<Wallet[]>([])
@@ -21,9 +22,24 @@ export default function HomePage() {
   const [monthStats, setMonthStats] = useState<MonthStats | null>(null)
   const [totalBalance, setTotalBalance] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [userName, setUserName] = useState<string>('')
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
-    loadData()
+    // Vérifier l'authentification
+    const authenticated = isAuthenticated()
+    setIsLoggedIn(authenticated)
+    
+    if (authenticated) {
+      loadData()
+      // Charger le nom de l'utilisateur
+      const user = getUser()
+      if (user) {
+        setUserName(user.name || user.email.split('@')[0])
+      }
+    } else {
+      setLoading(false)
+    }
   }, [])
 
   const loadData = async () => {
@@ -72,7 +88,18 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <Header title="MES POCHES" showLogout />
+      <Header 
+        title={isLoggedIn && userName ? `Bonjour, ${userName}` : "MES POCHES"} 
+        showSettings={isLoggedIn}
+        action={!isLoggedIn ? (
+          <Link href="/login">
+            <button className="flex items-center gap-2 bg-primary-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-600 transition touch-manipulation">
+              <LogIn size={18} />
+              Connexion
+            </button>
+          </Link>
+        ) : undefined}
+      />
 
       <main className="max-w-md mx-auto px-4 py-6 space-y-6">
         {/* Solde Total */}

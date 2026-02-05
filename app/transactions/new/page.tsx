@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Wallet, Category } from '@/lib/api'
@@ -11,7 +11,7 @@ import Input from '@/components/Input'
 import Select from '@/components/Select'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
-export default function NewTransactionPage() {
+function NewTransactionForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const typeParam = searchParams.get('type')
@@ -102,7 +102,7 @@ export default function NewTransactionPage() {
   ]
 
   const categoryOptions = [
-    { value: '', label: 'Sélectionner une catégorie (optionnel)' },
+    { value: '', label: 'Sélectionner une catégorie' },
     ...categories.map(c => ({ value: c._id, label: c.name }))
   ]
 
@@ -192,7 +192,7 @@ export default function NewTransactionPage() {
           {/* Catégorie (sauf transfert) */}
           {type !== 'transfer' && (
             <Select
-              label="Catégorie"
+              label="Catégorie (optionnel)"
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
               options={categoryOptions}
@@ -201,7 +201,7 @@ export default function NewTransactionPage() {
 
           {/* Description */}
           <Input
-            label="Description (optionnel)"
+            label="Description"
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -229,5 +229,18 @@ export default function NewTransactionPage() {
         </form>
       </main>
     </div>
+  )
+}
+
+export default function NewTransactionPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50">
+        <Header title="Nouvelle transaction" showBack />
+        <LoadingSpinner />
+      </div>
+    }>
+      <NewTransactionForm />
+    </Suspense>
   )
 }

@@ -1,6 +1,7 @@
 import { db } from './db';
 import { walletApi, transactionApi, categoryApi, Wallet, Transaction, Category } from './api';
 import { isOnline, addToSyncQueue } from './sync';
+import { normalizeTransaction } from './normalizeData';
 
 // API Wallet avec support offline
 export const offlineWalletApi = {
@@ -76,11 +77,12 @@ export const offlineTransactionApi = {
         
         // Mettre à jour la base locale
         for (const transaction of transactions) {
+          const normalized = normalizeTransaction(transaction);
           const existing = await db.transactions.where('_id').equals(transaction._id).first();
           if (existing) {
-            await db.transactions.update(existing.id!, { ...transaction, synced: true });
+            await db.transactions.update(existing.id!, { ...normalized, synced: true });
           } else {
-            await db.transactions.add({ ...transaction, synced: true });
+            await db.transactions.add({ ...normalized, synced: true });
           }
         }
         
@@ -99,7 +101,8 @@ export const offlineTransactionApi = {
     if (isOnline()) {
       try {
         const transaction = await transactionApi.createIncome(data);
-        await db.transactions.add({ ...transaction, synced: true });
+        const normalized = normalizeTransaction(transaction);
+        await db.transactions.add({ ...normalized, synced: true });
         
         // Mettre à jour le solde du portefeuille localement
         const wallet = await db.wallets.where('_id').equals(data.wallet_id).first();
@@ -152,7 +155,8 @@ export const offlineTransactionApi = {
     if (isOnline()) {
       try {
         const transaction = await transactionApi.createExpense(data);
-        await db.transactions.add({ ...transaction, synced: true });
+        const normalized = normalizeTransaction(transaction);
+        await db.transactions.add({ ...normalized, synced: true });
         
         // Mettre à jour le solde du portefeuille localement
         const wallet = await db.wallets.where('_id').equals(data.wallet_id).first();
@@ -209,8 +213,10 @@ export const offlineTransactionApi = {
     if (isOnline()) {
       try {
         const result = await transactionApi.createTransfer(data);
-        await db.transactions.add({ ...result.debit, synced: true });
-        await db.transactions.add({ ...result.credit, synced: true });
+        const normalizedDebit = normalizeTransaction(result.debit);
+        const normalizedCredit = normalizeTransaction(result.credit);
+        await db.transactions.add({ ...normalizedDebit, synced: true });
+        await db.transactions.add({ ...normalizedCredit, synced: true });
         
         // Mettre à jour les soldes localement
         const sourceWallet = await db.wallets.where('_id').equals(data.wallet_id).first();

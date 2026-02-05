@@ -1,161 +1,176 @@
-# MES POCHES - Application de Gestion Financière
+# 💰 MES POCHES - Application de Gestion Financière
 
-Application mobile-first de gestion financière personnelle construite avec Next.js et Express.js.
+Une application web Progressive (PWA) moderne de gestion financière personnelle, construite avec Next.js et MongoDB, déployable sur Vercel.
 
-## 🎯 Fonctionnalités
+## ✨ Fonctionnalités
 
-- **Gestion des Portefeuilles** : Créez et gérez plusieurs portefeuilles (Espèces, Mobile Money, Compte Bancaire, etc.)
-- **Transactions** : Enregistrez vos revenus, dépenses et transferts entre portefeuilles
-- **Calcul Automatique des Soldes** : Les soldes sont toujours calculés par le système
-- **Historique Complet** : Consultez l'historique de toutes vos transactions avec balance_before et balance_after
-- **Analyses** : Visualisez vos dépenses et revenus par catégorie
-- **Interface Mobile-First** : Design optimisé pour une utilisation mobile
+- 💼 **Gestion multi-portefeuilles** - Créez et gérez plusieurs portefeuilles
+- 💸 **Transactions complètes** - Revenus, dépenses et transferts entre portefeuilles
+- 🏷️ **Catégories personnalisables** - Organisez vos transactions
+- 📊 **Analytics en temps réel** - Statistiques mensuelles et visualisations
+- 🔐 **Authentification sécurisée** - JWT avec bcrypt
+- 📱 **PWA installable** - Fonctionne comme une app native
+- 🌐 **Mode offline** - Utilisez l'app sans connexion internet
+- 🔄 **Synchronisation automatique** - Sync des données au retour en ligne
+- 🎨 **Interface moderne** - UI responsive et intuitive
 
-## 🛠 Technologies
+## 🏗️ Architecture
 
-### Frontend
-- **Next.js 14** (App Router)
-- **React 18**
-- **TypeScript**
-- **Tailwind CSS**
-- **Lucide React** (icônes)
+- **Frontend** : Next.js 14, React, TypeScript, Tailwind CSS
+- **Backend** : Next.js API Routes (Serverless)
+- **Base de données** : MongoDB (Atlas)
+- **Authentification** : JWT avec bcrypt
+- **Cache local** : IndexedDB avec Dexie
+- **Déploiement** : Vercel
 
-### Backend
-- **Node.js**
-- **Express.js**
-- **MongoDB** avec Mongoose
-- **Joi** (validation)
+## 🚀 Démarrage rapide
 
-## 📦 Installation
+### 1. Prérequis
 
-### Prérequis
 - Node.js 18+
-- MongoDB
+- MongoDB (local ou Atlas)
+- npm ou yarn
 
-### 1. Cloner le projet
-```bash
-git clone <url>
-cd note
-```
-
-### 2. Installation du Backend
+### 2. Installation
 
 ```bash
-cd backend
+# Cloner le repo
+git clone https://github.com/votre-username/mes-poches.git
+cd mes-poches
+
+# Installer les dépendances
 npm install
 ```
 
-Créer un fichier `.env` dans le dossier `backend` :
-```
-PORT=5000
+### 3. Configuration
+
+Créez un fichier `.env.local` à la racine :
+
+```bash
+# MongoDB
 MONGODB_URI=mongodb://localhost:27017/mes-poches
-NODE_ENV=development
+
+# JWT Secret (changez en production!)
+JWT_SECRET=votre-secret-tres-long-et-secure
+
+# API URL
+NEXT_PUBLIC_API_URL=/api
 ```
 
-Démarrer MongoDB et lancer le seed :
+### 4. Lancement
+
 ```bash
-npm run seed
+# Mode développement
 npm run dev
+
+# Build production
+npm run build
+
+# Démarrer en production
+npm start
 ```
 
-Le backend sera accessible sur http://localhost:5000
+L'application sera accessible sur http://localhost:3000
 
-### 3. Installation du Frontend
+## 🌐 Déploiement sur Vercel
 
-À la racine du projet :
-```bash
-npm install
-npm run dev
-```
+### Étape 1 : MongoDB Atlas
 
-Le frontend sera accessible sur http://localhost:3000
+1. Créez un compte sur [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+2. Créez un cluster gratuit (M0)
+3. Créez un utilisateur de base de données
+4. Autorisez les connexions : `0.0.0.0/0`
+5. Copiez l'URL de connexion
 
-## 📱 Structure du Projet
+### Étape 2 : Déployer
 
-```
-note/
-├── backend/
-│   ├── src/
-│   │   ├── config/          # Configuration DB
-│   │   ├── models/          # Modèles Mongoose
-│   │   ├── controllers/     # Contrôleurs API
-│   │   ├── services/        # Logique métier
-│   │   ├── routes/          # Routes Express
-│   │   ├── validators/      # Validation Joi
-│   │   ├── middleware/      # Middleware
-│   │   ├── scripts/         # Scripts (seed)
-│   │   └── server.js        # Point d'entrée
-│   └── package.json
-│
-├── src/
-│   ├── app/                 # Pages Next.js
-│   │   ├── page.tsx         # Dashboard
-│   │   ├── transactions/    # Transactions
-│   │   ├── wallets/         # Portefeuilles
-│   │   └── analytics/       # Analyses
-│   ├── components/          # Composants réutilisables
-│   └── lib/                 # Utilitaires et API
-│
-├── package.json
-└── README.md
-```
+1. Pushez votre code sur GitHub
+2. Importez le repo sur [Vercel](https://vercel.com)
+3. Ajoutez les variables d'environnement :
+   ```
+   MONGODB_URI=mongodb+srv://...
+   JWT_SECRET=votre-secret-production
+   NEXT_PUBLIC_API_URL=/api
+   ```
+4. Déployez !
 
-## 🎨 Design
+Pour plus de détails, consultez `VERCEL-READY.md` et `MIGRATION-API-VERCEL.md`.
 
-- **Couleur principale** : Bleu ciel (#0ea5e9)
-- **Style** : Simple, compact, moderne et professionnel
-- **UX** : Navigation mobile avec bottom nav
-- **Typographie** : Inter (Google Fonts)
-- **Icônes** : Lucide React
+## 📚 Documentation
 
-## 🔐 Règles Métier
+- **[VERCEL-READY.md](./VERCEL-READY.md)** - Guide de déploiement rapide
+- **[MIGRATION-API-VERCEL.md](./MIGRATION-API-VERCEL.md)** - Documentation technique complète
+- **[DEPLOIEMENT-VERCEL.md](./DEPLOIEMENT-VERCEL.md)** - Instructions détaillées de déploiement
 
-1. ✅ Les utilisateurs ne saisissent **jamais** les soldes
-2. ✅ Les soldes sont **toujours** calculés par le système
-3. ✅ Chaque transaction stocke `balance_before` et `balance_after`
-4. ✅ Les dépenses ne peuvent pas excéder le solde disponible
-5. ✅ Les transferts affectent deux portefeuilles de manière atomique
-6. ✅ Les données historiques restent cohérentes
-
-## 📚 API Endpoints
-
-### Portefeuilles
-- `GET /api/wallets` - Liste des portefeuilles
-- `GET /api/wallets/total-balance` - Solde total
-- `POST /api/wallets` - Créer un portefeuille
-- `PUT /api/wallets/:id` - Modifier un portefeuille
-- `DELETE /api/wallets/:id` - Supprimer un portefeuille
-
-### Transactions
-- `GET /api/transactions` - Liste des transactions
-- `POST /api/transactions/income` - Créer un revenu
-- `POST /api/transactions/expense` - Créer une dépense
-- `POST /api/transactions/transfer` - Créer un transfert
-
-### Catégories
-- `GET /api/categories` - Liste des catégories
-- `POST /api/categories` - Créer une catégorie
-
-### Analyses
-- `GET /api/analytics/current-month` - Stats du mois
-- `GET /api/analytics/expenses-by-category` - Dépenses par catégorie
-- `GET /api/analytics/incomes-by-category` - Revenus par catégorie
-
-## 🚀 Déploiement
-
-### Backend
-Le backend peut être déployé sur :
-- Heroku
-- Railway
-- Render
-- DigitalOcean
+## 🛠️ Technologies utilisées
 
 ### Frontend
-Le frontend peut être déployé sur :
-- Vercel (recommandé pour Next.js)
-- Netlify
-- Railway
+- Next.js 14
+- React 18
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+- Lucide Icons
+- Sonner (notifications)
 
-## 📝 Licence
+### Backend
+- Next.js API Routes
+- MongoDB avec Mongoose
+- JWT (jsonwebtoken)
+- bcryptjs
+- Joi (validation)
+
+### PWA & Offline
+- next-pwa
+- IndexedDB (Dexie)
+- Service Workers
+- Cache API
+
+## 📱 Installer la PWA
+
+### Sur mobile
+1. Ouvrez l'app dans le navigateur
+2. Cliquez sur "Ajouter à l'écran d'accueil"
+3. L'app s'installe comme une app native
+
+### Sur desktop
+1. Cliquez sur l'icône d'installation dans la barre d'adresse
+2. Suivez les instructions
+3. L'app s'ouvre dans sa propre fenêtre
+
+## 🔒 Sécurité
+
+- ✅ Mots de passe hashés avec bcrypt (10 rounds)
+- ✅ Authentification JWT avec expiration
+- ✅ Validation des données avec Joi
+- ✅ Protection des routes API
+- ✅ Variables d'environnement sécurisées
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
+
+## 📄 Licence
 
 MIT
+
+## 🎯 Roadmap
+
+- [ ] Export des données (CSV, PDF)
+- [ ] Graphiques avancés
+- [ ] Budget mensuel
+- [ ] Rappels et notifications
+- [ ] Multi-devises
+- [ ] Mode sombre
+- [ ] Support multi-langues
+
+## 💡 Support
+
+Pour toute question ou problème :
+- Consultez la documentation dans `/docs`
+- Ouvrez une issue sur GitHub
+- Contactez l'équipe de développement
+
+---
+
+**Développé avec ❤️ pour une meilleure gestion financière personnelle**

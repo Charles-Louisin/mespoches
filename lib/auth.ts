@@ -21,7 +21,11 @@ export interface AuthResponse {
 
 // Gestion du token
 export const setToken = (token: string): void => {
-  Cookies.set(TOKEN_KEY, token, { expires: 30 }); // 30 jours
+  Cookies.set(TOKEN_KEY, token, { 
+    expires: 30, // 30 jours
+    sameSite: 'strict', // Protection CSRF
+    secure: process.env.NODE_ENV === 'production' // HTTPS uniquement en prod
+  });
 };
 
 export const getToken = (): string | undefined => {
@@ -53,7 +57,8 @@ export const removeUser = (): void => {
 
 // Connexion
 export const login = async (email: string, password: string): Promise<AuthResponse> => {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+  const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
@@ -71,7 +76,8 @@ export const login = async (email: string, password: string): Promise<AuthRespon
 
 // Inscription
 export const register = async (email: string, password: string, name?: string): Promise<AuthResponse> => {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+  const response = await fetch(`${API_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password, name })
@@ -91,7 +97,7 @@ export const register = async (email: string, password: string, name?: string): 
 export const logout = (): void => {
   removeToken();
   removeUser();
-  window.location.href = '/login';
+  window.location.href = '/';
 };
 
 // Vérification de l'authentification
