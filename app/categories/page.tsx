@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
-import { Category } from '@/lib/api'
-import { offlineCategoryApi } from '@/lib/offlineApi'
-import { getToken } from '@/lib/auth'
+import { Category, categoryApi } from '@/lib/api'
+import { CACHE_KEYS, invalidateFinancialCaches, setCache } from '@/lib/cache'
+import { useCachedData } from '@/hooks/useCachedData'
+import ImageUpload from '@/components/ImageUpload'
+import EntityAvatar from '@/components/EntityAvatar'
 import { useConfirm } from '@/hooks/useConfirm'
-import BottomNav from '@/components/BottomNav'
+import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
@@ -15,33 +17,32 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import EmptyState from '@/components/EmptyState'
 import ConfirmModal from '@/components/ConfirmModal'
 import { Tag, Plus, Pencil, Trash2 } from 'lucide-react'
+import { useSubscription } from '@/hooks/useSubscription'
+import { isPremiumRequiredError } from '@/lib/subscription'
+import UpgradeBanner from '@/components/UpgradeBanner'
+import BudgetsSection from '@/components/BudgetsSection'
+import { PLAN_LIMITS } from '@/lib/planLimits'
 
 export default function CategoriesPage() {
   const { confirm, confirmState, closeConfirm } = useConfirm()
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
+  const { isPremium, requirePremium, handleApiError } = useSubscription()
+  const fetchCategories = useCallback(() => categoryApi.getAll(), [])
+  const { data: categories, loading, setData } = useCachedData(
+    CACHE_KEYS.categories,
+    fetchCategories
+  )
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: '',
-    type: 'expense' as 'income' | 'expense'
+    type: 'expense' as 'income' | 'expense',
+    image_url: null as string | null,
   })
 
-  useEffect(() => {
-    loadCategories()
-  }, [])
-
-  const loadCategories = async () => {
-    try {
-      setLoading(true)
-      const data = await offlineCategoryApi.getAll()
-      setCategories(data)
-    } catch (error) {
-      console.error('Erreur:', error)
-      toast.error('Erreur lors du chargement des catégories')
-    } finally {
-      setLoading(false)
-    }
+  const refreshCategories = async () => {
+    const data = await categoryApi.getAll()
+    setCache(CACHE_KEYS.categories, data)
+    setData(data)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,54 +54,23 @@ export default function CategoriesPage() {
     }
 
     try {
-      const token = getToken()
-      if (!token) {
-        throw new Error('Non authentifié')
-      }
-
       if (editingId) {
-        // Modifier une catégorie existante
-        const response = await fetch(`/api/categories/${editingId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(formData)
-        })
-
-        const result = await response.json()
-
-        if (!result.success) {
-          throw new Error(result.message)
-        }
-
+        await categoryApi.update(editingId, formData)
         toast.success('Catégorie modifiée avec succès !')
-        await loadCategories()
-        resetForm()
       } else {
-        // Créer une nouvelle catégorie
-        const response = await fetch('/api/categories', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(formData)
-        })
-
-        const result = await response.json()
-
-        if (!result.success) {
-          throw new Error(result.message)
-        }
-
+        await categoryApi.create(formData)
         toast.success('Catégorie créée avec succès !')
-        await loadCategories()
-        resetForm()
       }
-    } catch (error: any) {
-      toast.error(error.message || 'Une erreur est survenue')
+      invalidateFinancialCaches()
+      await refreshCategories()
+      resetForm()
+    } catch (error: unknown) {
+      if (isPremiumRequiredError(error)) {
+        requirePremium(error.message)
+        return
+      }
+      const message = error instanceof Error ? error.message : 'Une erreur est survenue'
+      toast.error(message)
     }
   }
 
@@ -108,7 +78,8 @@ export default function CategoriesPage() {
     setEditingId(category._id)
     setFormData({
       name: category.name,
-      type: category.type
+      type: category.type,
+      image_url: category.image_url ?? null,
     })
     setShowForm(true)
   }
@@ -125,52 +96,37 @@ export default function CategoriesPage() {
     if (!confirmed) return
 
     try {
-      const token = getToken()
-      if (!token) {
-        throw new Error('Non authentifié')
-      }
-
-      const response = await fetch(`/api/categories/${category._id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      const result = await response.json()
-
-      if (!result.success) {
-        throw new Error(result.message)
-      }
-
+      await categoryApi.delete(category._id)
       toast.success('Catégorie supprimée avec succès !')
-      await loadCategories()
-    } catch (error: any) {
-      toast.error(error.message || 'Une erreur est survenue')
+      invalidateFinancialCaches()
+      await refreshCategories()
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Une erreur est survenue'
+      toast.error(message)
     }
   }
 
   const resetForm = () => {
-    setFormData({ name: '', type: 'expense' })
+    setFormData({ name: '', type: 'expense', image_url: null })
     setEditingId(null)
     setShowForm(false)
   }
 
-  const incomeCategories = categories.filter(c => c.type === 'income')
-  const expenseCategories = categories.filter(c => c.type === 'expense')
+  const list = categories ?? []
+  const incomeCategories = list.filter((c) => c.type === 'income')
+  const expenseCategories = list.filter((c) => c.type === 'expense')
 
-  if (loading) {
+  if (loading && !categories) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <PageShell>
         <Header title="Catégories" />
         <LoadingSpinner />
-        <BottomNav />
-      </div>
+      </PageShell>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <PageShell>
       <Header 
         title="Catégories" 
         action={
@@ -184,13 +140,27 @@ export default function CategoriesPage() {
       />
 
       <main className="max-w-md mx-auto px-4 py-6 space-y-6">
+        {!isPremium && (
+          <UpgradeBanner
+            compact
+            message={`Gratuit : max ${PLAN_LIMITS.FREE_MAX_CATEGORIES_PER_TYPE} catégories par type`}
+          />
+        )}
         {/* Formulaire d'ajout/modification */}
         {showForm && (
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+          <div className="card p-4">
             <h3 className="text-lg font-semibold mb-4">
               {editingId ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <ImageUpload
+                value={formData.image_url}
+                onChange={(url) => setFormData({ ...formData, image_url: url })}
+                endpoint="categoryImage"
+                label="Icône de la catégorie"
+                premiumRequired={!isPremium}
+              />
+
               <Input
                 label="Nom de la catégorie"
                 type="text"
@@ -224,7 +194,7 @@ export default function CategoriesPage() {
         )}
 
         {/* Liste des catégories */}
-        {categories.length === 0 ? (
+        {list.length === 0 ? (
           <EmptyState
             icon={<Tag size={48} />}
             title="Aucune catégorie"
@@ -250,12 +220,15 @@ export default function CategoriesPage() {
                   {incomeCategories.map((category) => (
                     <div
                       key={category._id}
-                      className="bg-white rounded-lg p-4 border border-gray-200 flex items-center justify-between"
+                      className="card p-4 flex items-center justify-between"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                          <Tag size={20} className="text-emerald-600" />
-                        </div>
+                        <EntityAvatar
+                          imageUrl={category.image_url}
+                          name={category.name}
+                          type="category"
+                          size="sm"
+                        />
                         <div>
                           <p className="font-medium text-gray-900">{category.name}</p>
                           <p className="text-sm text-emerald-600">Revenu</p>
@@ -291,12 +264,15 @@ export default function CategoriesPage() {
                   {expenseCategories.map((category) => (
                     <div
                       key={category._id}
-                      className="bg-white rounded-lg p-4 border border-gray-200 flex items-center justify-between"
+                      className="card p-4 flex items-center justify-between"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                          <Tag size={20} className="text-red-600" />
-                        </div>
+                        <EntityAvatar
+                          imageUrl={category.image_url}
+                          name={category.name}
+                          type="category"
+                          size="sm"
+                        />
                         <div>
                           <p className="font-medium text-gray-900">{category.name}</p>
                           <p className="text-sm text-red-600">Dépense</p>
@@ -323,6 +299,8 @@ export default function CategoriesPage() {
             )}
           </>
         )}
+
+        <BudgetsSection isPremium={isPremium} onApiError={handleApiError} />
       </main>
 
       {/* Modal de confirmation */}
@@ -337,7 +315,6 @@ export default function CategoriesPage() {
         variant={confirmState.variant}
       />
 
-      <BottomNav />
-    </div>
+    </PageShell>
   )
 }

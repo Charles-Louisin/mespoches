@@ -1,188 +1,206 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ChevronRight, Wallet, TrendingUp, PieChart } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Button from '@/components/Button';
-import { setOnboardingSeen } from '@/lib/auth';
+import { useCallback, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { ArrowRight, ChevronLeft, Shield, Wallet } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import Button from '@/components/Button'
+import { setOnboardingSeen } from '@/lib/auth'
+import {
+  WelcomePreview,
+  TransactionsPreview,
+  AnalyticsPreview,
+} from '@/components/onboarding/OnboardingPreviews'
 
 const slides = [
   {
-    icon: Wallet,
-    title: 'Gérez vos portefeuilles',
-    description: 'Créez et organisez plusieurs portefeuilles pour suivre facilement vos finances.',
-    color: 'from-sky-500 to-blue-500'
+    title: "Vos finances, en un coup d'œil",
+    description:
+      'MES POCHES centralise vos portefeuilles et votre solde global. Une interface claire, pensée pour le quotidien.',
+    preview: WelcomePreview,
+    highlights: ['Multi-portefeuilles', 'Solde en temps réel', 'Devise locale'],
   },
   {
-    icon: TrendingUp,
-    title: 'Suivez vos transactions',
-    description: 'Enregistrez vos revenus et dépenses en temps réel. Vos soldes sont calculés automatiquement.',
-    color: 'from-emerald-500 to-teal-500'
+    title: 'Chaque mouvement, bien enregistré',
+    description:
+      'Revenus, dépenses et transferts : saisissez en quelques secondes. Vos soldes se mettent à jour automatiquement.',
+    preview: TransactionsPreview,
+    highlights: ['Revenus & dépenses', 'Historique complet', 'Export'],
   },
   {
-    icon: PieChart,
-    title: 'Analysez vos finances',
-    description: 'Obtenez des statistiques détaillées et comprenez où va votre argent.',
-    color: 'from-violet-500 to-purple-500'
-  }
-];
+    title: 'Décidez en connaissance de cause',
+    description:
+      'Graphiques, tendances et répartition par catégorie pour mieux piloter votre budget chaque mois.',
+    preview: AnalyticsPreview,
+    highlights: ['Stats mensuelles', 'Par catégorie', "Vue d'ensemble"],
+  },
+] as const
+
+const slideVariants = {
+  enter: (dir: number) => ({ opacity: 0, x: dir > 0 ? 48 : -48 }),
+  center: { opacity: 1, x: 0 },
+  exit: (dir: number) => ({ opacity: 0, x: dir > 0 ? -48 : 48 }),
+}
 
 export default function OnboardingPage() {
-  const router = useRouter();
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [direction, setDirection] = useState(0);
+  const router = useRouter()
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [direction, setDirection] = useState(0)
 
-  const handleNext = () => {
-    if (currentSlide < slides.length - 1) {
-      setDirection(1);
-      setCurrentSlide(currentSlide + 1);
-    } else {
-      setOnboardingSeen();
-      router.push('/login');
+  const isLast = currentSlide === slides.length - 1
+  const progress = ((currentSlide + 1) / slides.length) * 100
+
+  const finish = useCallback(() => {
+    setOnboardingSeen()
+    router.push('/login')
+  }, [router])
+
+  const goNext = () => {
+    if (isLast) {
+      finish()
+      return
     }
-  };
+    setDirection(1)
+    setCurrentSlide((s) => s + 1)
+  }
 
-  const handleSkip = () => {
-    setOnboardingSeen();
-    router.push('/login');
-  };
+  const goPrev = () => {
+    if (currentSlide === 0) return
+    setDirection(-1)
+    setCurrentSlide((s) => s - 1)
+  }
 
-  const slide = slides[currentSlide];
-  const Icon = slide.icon;
-
-  const variants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 1000 : -1000,
-      opacity: 0,
-      scale: 0.5
-    }),
-    center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1,
-      scale: 1
-    },
-    exit: (direction: number) => ({
-      zIndex: 0,
-      x: direction < 0 ? 1000 : -1000,
-      opacity: 0,
-      scale: 0.5
-    })
-  } as const;
-
-  const iconVariants = {
-    initial: { scale: 0, rotate: -180 },
-    animate: { 
-      scale: 1, 
-      rotate: 0,
-      transition: {
-        type: "spring" as const,
-        stiffness: 260,
-        damping: 20,
-        delay: 0.2
-      }
-    }
-  } as const;
+  const slide = slides[currentSlide]
+  const Preview = slide.preview
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white flex flex-col overflow-hidden">
-      {/* Skip button */}
-      <motion.div 
-        className="p-4 flex justify-end"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <button
-          onClick={handleSkip}
-          className="text-sm text-gray-500 hover:text-gray-700 transition"
-        >
-          Passer
-        </button>
-      </motion.div>
+    <div className="min-h-screen flex flex-col bg-surface overflow-hidden">
+      <header className="relative z-10 px-5 pt-6 pb-2">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 balance-gradient rounded-xl flex items-center justify-center shadow-md shadow-primary-500/25">
+              <Wallet className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900 leading-tight">MES POCHES</p>
+              <p className="text-[10px] text-gray-500">Gestion financière</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={finish}
+            className="text-sm font-medium text-gray-500 hover:text-gray-800 px-2 py-1 touch-manipulation transition-colors"
+          >
+            Passer
+          </button>
+        </div>
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20 relative">
-        <AnimatePresence initial={false} custom={direction} mode="wait">
+        <div className="h-1 bg-gray-200/80 rounded-full overflow-hidden">
+          <motion.div
+            className="h-full balance-gradient rounded-full"
+            initial={false}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+          />
+        </div>
+        <p className="text-[11px] text-gray-400 mt-2 tabular-nums">
+          {currentSlide + 1} / {slides.length}
+        </p>
+      </header>
+
+      <main className="relative z-10 flex-1 flex flex-col min-h-0 px-5">
+        <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={currentSlide}
             custom={direction}
-            variants={variants}
+            variants={slideVariants}
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{
-              x: { type: "spring", stiffness: 300, damping: 30 },
-              opacity: { duration: 0.3 },
-              scale: { duration: 0.3 }
-            }}
-            className="absolute inset-0 flex flex-col items-center justify-center px-6 pointer-events-none"
+            transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+            className="flex-1 flex flex-col"
           >
-            {/* Icon */}
-            <motion.div
-              variants={iconVariants}
-              initial="initial"
-              animate="animate"
-              className={`w-32 h-32 bg-gradient-to-br ${slide.color} rounded-full flex items-center justify-center mb-8 shadow-lg pointer-events-auto`}
-            >
-              <Icon className="w-16 h-16 text-white" />
-            </motion.div>
+            <div className="flex-1 flex items-center justify-center py-4 min-h-[300px]">
+              <Preview />
+            </div>
 
-            {/* Title */}
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="text-3xl font-bold text-gray-900 mb-4 text-center pointer-events-auto"
-            >
-              {slide.title}
-            </motion.h1>
+            <div className="pb-4 text-center max-w-sm mx-auto">
+              <h1 className="text-2xl font-bold text-gray-900 tracking-tight leading-snug mb-2">
+                {slide.title}
+              </h1>
+              <p className="text-sm text-gray-600 leading-relaxed">{slide.description}</p>
 
-            {/* Description */}
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-              className="text-lg text-gray-600 text-center max-w-md mb-12 pointer-events-auto"
-            >
-              {slide.description}
-            </motion.p>
+              <ul className="flex flex-wrap justify-center gap-2 mt-4">
+                {slide.highlights.map((h) => (
+                  <li
+                    key={h}
+                    className="text-[11px] font-medium text-gray-600 bg-white border border-gray-100 px-2.5 py-1 rounded-lg shadow-sm"
+                  >
+                    {h}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </motion.div>
         </AnimatePresence>
+      </main>
 
-        {/* Dots - Fixed position */}
-        <div className="absolute bottom-32 left-0 right-0 flex justify-center gap-2 z-10">
-          {slides.map((_, index) => (
-            <motion.div
-              key={index}
-              initial={false}
-              animate={{
-                width: index === currentSlide ? 32 : 8,
-                backgroundColor: index === currentSlide ? '#0ea5e9' : '#d1d5db'
+      <footer className="relative z-10 px-5 pb-8 pt-2 space-y-4">
+        {isLast && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-center gap-2 text-xs text-gray-500"
+          >
+            <Shield className="w-4 h-4 text-primary-400" />
+            <span>Données sécurisées · Compte personnel</span>
+          </motion.div>
+        )}
+
+        <div className="flex gap-3">
+          {currentSlide > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              onClick={goPrev}
+              className="shrink-0 px-4"
+              aria-label="Étape précédente"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+          )}
+          <Button
+            type="button"
+            size="lg"
+            fullWidth
+            onClick={goNext}
+            className="flex items-center justify-center gap-2"
+          >
+            {isLast ? 'Commencer' : 'Continuer'}
+            <ArrowRight className="w-5 h-5" />
+          </Button>
+        </div>
+
+        <div className="flex justify-center gap-1.5">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => {
+                setDirection(i > currentSlide ? 1 : -1)
+                setCurrentSlide(i)
               }}
-              transition={{ duration: 0.3 }}
-              className="h-2 rounded-full"
+              aria-label={`Étape ${i + 1}`}
+              className={`h-1.5 rounded-full transition-all duration-300 touch-manipulation ${
+                i === currentSlide
+                  ? 'w-6 bg-primary-500'
+                  : 'w-1.5 bg-gray-300 hover:bg-gray-400'
+              }`}
             />
           ))}
         </div>
-
-        {/* Button - Fixed position */}
-        <motion.div
-          className="absolute bottom-8 left-6 right-6 z-10"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-        >
-          <Button
-            onClick={handleNext}
-            className="w-full flex items-center justify-center gap-2 relative z-10"
-          >
-            {currentSlide < slides.length - 1 ? 'Suivant' : 'Commencer'}
-            <ChevronRight className="w-5 h-5" />
-          </Button>
-        </motion.div>
-      </div>
+      </footer>
     </div>
-  );
+  )
 }

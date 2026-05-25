@@ -1,3 +1,5 @@
+@import '@uploadthing/react/styles.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,11 +9,33 @@
 }
 
 body {
-  @apply bg-gray-50 text-gray-900;
+  @apply bg-surface text-gray-900 antialiased;
 }
 
 @layer utilities {
   .touch-manipulation {
     touch-action: manipulation;
+  }
+
+  .balance-gradient {
+    background: linear-gradient(135deg, #8b7aff 0%, #5248e6 50%, #4338ca 100%);
+  }
+
+  .nav-gradient {
+    background: linear-gradient(180deg, #7c6fff 0%, #635bff 100%);
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl shadow-card;
+  }
+
+  .section-title {
+    @apply text-sm font-bold text-gray-900 tracking-wide uppercase;
+  }
+
+  .link-muted {
+    @apply text-sm font-medium text-primary-400;
   }
 }

@@ -1,207 +1,158 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
-import { Wallet, Transaction, MonthStats, analyticsApi } from '@/lib/api'
-import { offlineWalletApi, offlineTransactionApi } from '@/lib/offlineApi'
+import { useCallback, useState } from 'react'
+import Link from 'next/link'
+import { Wallet, Transaction, MonthStats, analyticsApi, walletApi, transactionApi } from '@/lib/api'
 import { getUser, isAuthenticated } from '@/lib/auth'
-import { formatCurrency, groupTransactionsByDate } from '@/lib/utils'
-import BottomNav from '@/components/BottomNav'
-import Header from '@/components/Header'
+import { CACHE_KEYS } from '@/lib/cache'
+import { useCachedData } from '@/hooks/useCachedData'
+import PageShell from '@/components/PageShell'
+import HomeHeader from '@/components/HomeHeader'
+import BalanceCard from '@/components/BalanceCard'
 import WalletCard from '@/components/WalletCard'
 import TransactionItem from '@/components/TransactionItem'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import EmptyState from '@/components/EmptyState'
 import Button from '@/components/Button'
-import Link from 'next/link'
-import { Plus, Wallet as WalletIcon, TrendingUp, TrendingDown, LogIn } from 'lucide-react'
+import { Wallet as WalletIcon } from 'lucide-react'
+import { useSubscription } from '@/hooks/useSubscription'
+
+interface HomeData {
+  wallets: Wallet[]
+  totalBalance: number
+  recentTransactions: Transaction[]
+  monthStats: MonthStats | null
+}
+
+function getInitialAuth() {
+  if (typeof window === 'undefined') return { loggedIn: false, name: '' }
+  const loggedIn = isAuthenticated()
+  const user = loggedIn ? getUser() : null
+  return {
+    loggedIn,
+    name: user ? user.name || user.email.split('@')[0] : '',
+  }
+}
 
 export default function HomePage() {
-  const [wallets, setWallets] = useState<Wallet[]>([])
-  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([])
-  const [monthStats, setMonthStats] = useState<MonthStats | null>(null)
-  const [totalBalance, setTotalBalance] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [userName, setUserName] = useState<string>('')
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [auth] = useState(getInitialAuth)
+  const [userName] = useState(auth.name)
+  const isLoggedIn = auth.loggedIn
+  const { isPremium, requirePremium } = useSubscription()
 
-  useEffect(() => {
-    // Vérifier l'authentification
-    const authenticated = isAuthenticated()
-    setIsLoggedIn(authenticated)
-    
-    if (authenticated) {
-    loadData()
-      // Charger le nom de l'utilisateur
-      const user = getUser()
-      if (user) {
-        setUserName(user.name || user.email.split('@')[0])
-      }
-    } else {
-      setLoading(false)
+  const fetchHome = useCallback(async (): Promise<HomeData> => {
+    const [walletsData, balanceData, transactionsData, statsData] = await Promise.all([
+      walletApi.getAll().catch(() => []),
+      walletApi.getTotalBalance().catch(() => ({ total: 0, wallets: [] })),
+      transactionApi.getAll().catch(() => []),
+      analyticsApi.getCurrentMonth().catch(() => null),
+    ])
+    const sorted = [...transactionsData].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    )
+    return {
+      wallets: walletsData,
+      totalBalance: balanceData.total,
+      recentTransactions: sorted.slice(0, 5),
+      monthStats: statsData,
     }
   }, [])
 
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      const [walletsData, balanceData, transactionsData, statsData] = await Promise.all([
-        offlineWalletApi.getAll().catch((err) => {
-          console.error('Erreur wallets:', err)
-          return []
-        }),
-        offlineWalletApi.getTotalBalance().catch((err) => {
-          console.error('Erreur balance:', err)
-          return { total: 0, wallets: [] }
-        }),
-        offlineTransactionApi.getAll().catch((err) => {
-          console.error('Erreur transactions:', err)
-          return []
-        }),
-        analyticsApi.getCurrentMonth().catch((err) => {
-          console.error('Erreur analytics:', err)
-          return null
-        })
-      ])
+  const { data, loading } = useCachedData(
+    CACHE_KEYS.home,
+    fetchHome,
+    isLoggedIn
+  )
 
-      setWallets(walletsData)
-      setTotalBalance(balanceData.total)
-      setRecentTransactions(transactionsData.slice(0, 5))
-      setMonthStats(statsData)
-    } catch (error) {
-      console.error('Erreur lors du chargement:', error)
-      toast.error('Erreur lors du chargement des données')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (loading) {
+  if (isLoggedIn && loading && !data) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header title="MES POCHES" />
+      <PageShell>
+        <HomeHeader userName={userName} isLoggedIn />
         <LoadingSpinner />
-        <BottomNav />
-      </div>
+      </PageShell>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <Header 
-        title={isLoggedIn && userName ? `Bonjour, ${userName}` : "MES POCHES"} 
-        showSettings={isLoggedIn}
-        action={!isLoggedIn ? (
-          <Link href="/login">
-            <button className="flex items-center gap-2 bg-primary-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-600 transition touch-manipulation">
-              <LogIn size={18} />
-              Connexion
-            </button>
-          </Link>
-        ) : undefined}
-      />
+    <PageShell>
+      <HomeHeader userName={userName} isLoggedIn={isLoggedIn} />
 
-      <main className="max-w-md mx-auto px-4 py-6 space-y-6">
-        {/* Solde Total */}
-        <div className="bg-primary-500 rounded-2xl p-6 text-white">
-          <p className="text-sm opacity-90 mb-1">Solde total</p>
-          <h2 className="text-4xl font-bold mb-4">
-            {formatCurrency(totalBalance)}
-          </h2>
-          
-          {monthStats && (
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2">
-                <TrendingUp size={18} />
-                <div>
-                  <p className="text-xs opacity-75">Ce mois</p>
-                  <p className="font-semibold">{formatCurrency(monthStats.totalIncome)}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <TrendingDown size={18} />
-                <div>
-                  <p className="text-xs opacity-75">Ce mois</p>
-                  <p className="font-semibold">{formatCurrency(monthStats.totalExpense)}</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Actions Rapides */}
-        <div className="grid grid-cols-2 gap-3">
-          <Link href="/transactions/new?type=income">
-            <Button variant="primary" fullWidth className="h-12">
-              <div className="flex items-center justify-center gap-2">
-                <Plus size={20} />
-                <span>Revenu</span>
-              </div>
-            </Button>
-          </Link>
-          <Link href="/transactions/new?type=expense">
-            <Button variant="outline" fullWidth className="h-12">
-              <div className="flex items-center justify-center gap-2">
-                <Plus size={20} />
-                <span>Dépense</span>
-              </div>
-            </Button>
-          </Link>
-        </div>
-
-        {/* Portefeuilles */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-gray-900">Mes portefeuilles</h3>
-            <Link href="/wallets" className="text-sm text-primary-500 font-medium">
-              Voir tout
-            </Link>
-          </div>
-
-          {wallets.length === 0 ? (
-            <EmptyState
-              icon={<WalletIcon size={48} />}
-              title="Aucun portefeuille"
-              description="Créez votre premier portefeuille pour commencer"
-              action={
-                <Link href="/wallets/new">
-                  <Button>Créer un portefeuille</Button>
-                </Link>
-              }
+      <main className="max-w-md mx-auto px-4 py-4 space-y-6">
+        {isLoggedIn && data ? (
+          <>
+            <BalanceCard
+              totalBalance={data.totalBalance}
+              monthExpense={data.monthStats?.totalExpense}
+              monthIncome={data.monthStats?.totalIncome}
             />
-          ) : (
-            <div className="space-y-3">
-              {wallets.slice(0, 3).map((wallet) => (
-                <WalletCard key={wallet._id} wallet={wallet} />
-              ))}
-            </div>
-          )}
-        </section>
 
-        {/* Transactions Récentes */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-gray-900">Transactions récentes</h3>
-            <Link href="/transactions" className="text-sm text-primary-500 font-medium">
-              Voir tout
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="section-title">Mes poches</h3>
+                <Link href="/wallets" className="link-muted">
+                  Voir tout
+                </Link>
+              </div>
+
+              {data.wallets.length === 0 ? (
+                <EmptyState
+                  icon={<WalletIcon size={48} className="text-primary-300" />}
+                  title="Aucune poche"
+                  description="Créez votre première poche pour commencer"
+                  action={
+                    <Link href="/wallets/new">
+                      <Button>Créer une poche</Button>
+                    </Link>
+                  }
+                />
+              ) : (
+                <div className="space-y-2.5">
+                  {data.wallets.slice(0, 4).map((wallet) => (
+                    <WalletCard key={wallet._id} wallet={wallet} />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-bold text-gray-900">Transactions récentes</h3>
+                <Link href="/transactions" className="link-muted">
+                  Voir tout
+                </Link>
+              </div>
+
+              {data.recentTransactions.length === 0 ? (
+                <div className="card p-8 text-center">
+                  <p className="text-gray-500">Aucune transaction</p>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {data.recentTransactions.map((transaction) => (
+                    <TransactionItem
+                      key={transaction._id}
+                      transaction={transaction}
+                      isPremium={isPremium}
+                      onRequirePremium={requirePremium}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
+        ) : !isLoggedIn ? (
+          <div className="card p-8 text-center space-y-4">
+            <WalletIcon size={56} className="mx-auto text-primary-400" />
+            <h2 className="text-xl font-bold text-gray-900">Bienvenue sur MES POCHES</h2>
+            <p className="text-gray-500 text-sm">
+              Connectez-vous pour gérer vos finances personnelles
+            </p>
+            <Link href="/login">
+              <Button fullWidth>Se connecter</Button>
             </Link>
           </div>
-
-          {recentTransactions.length === 0 ? (
-            <div className="bg-white rounded-lg p-8 border border-gray-200 text-center">
-              <p className="text-gray-500">Aucune transaction</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {recentTransactions.map((transaction) => (
-                <TransactionItem key={transaction._id} transaction={transaction} />
-              ))}
-            </div>
-          )}
-        </section>
+        ) : null}
       </main>
-
-      <BottomNav />
-    </div>
+    </PageShell>
   )
 }

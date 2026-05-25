@@ -1,6 +1,6 @@
 'use client'
 
-import BottomNav from '@/components/BottomNav'
+import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
 import { Smartphone, Wifi, Cloud, Shield, Zap, Heart } from 'lucide-react'
 
@@ -39,19 +39,19 @@ export default function AboutPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <PageShell>
       <Header title="À propos" showBack />
 
       <main className="max-w-md mx-auto px-4 py-6 space-y-6">
         {/* Logo et nom */}
-        <div className="bg-primary-500 rounded-2xl p-8 text-white text-center">
+        <div className="balance-gradient rounded-3xl p-8 text-white text-center shadow-lg shadow-primary-500/25">
           <h1 className="text-3xl font-bold mb-2">MES POCHES</h1>
           <p className="text-primary-100">Gestion financière personnelle</p>
           <p className="text-sm text-primary-200 mt-4">Version 1.0.0</p>
         </div>
 
         {/* Description */}
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="card p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">
             À propos de l'application
           </h2>
@@ -73,7 +73,7 @@ export default function AboutPage() {
               return (
                 <div
                   key={index}
-                  className="bg-white rounded-lg p-4 border border-gray-200"
+                  className="card p-4"
                 >
                   <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center mb-3">
                     <Icon size={20} className="text-primary-500" />
@@ -98,7 +98,6 @@ export default function AboutPage() {
         </div>
       </main>
 
-      <BottomNav />
-    </div>
+    </PageShell>
   )
 }

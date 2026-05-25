@@ -15,11 +15,11 @@ export default function Button({
   className = '',
   ...props
 }: ButtonProps) {
-  const baseStyles = 'font-semibold rounded-lg touch-manipulation transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+  const baseStyles = 'font-semibold rounded-xl touch-manipulation transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
   
   const variantStyles = {
-    primary: 'bg-primary-500 text-white active:bg-primary-600',
-    secondary: 'bg-gray-200 text-gray-900 active:bg-gray-300',
+    primary: 'bg-primary-500 text-white hover:bg-primary-600 active:bg-primary-700 shadow-sm shadow-primary-500/30',
+    secondary: 'bg-primary-100 text-primary-700 active:bg-primary-200',
     outline: 'border-2 border-primary-500 text-primary-500 active:bg-primary-50',
     ghost: 'text-primary-500 active:bg-primary-50',
   }

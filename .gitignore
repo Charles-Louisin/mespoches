@@ -1,3 +1,6 @@
+# Backend déployé séparément (Render) — repo frontend uniquement
+backend/
+
 node_modules/
 .next/
 out/

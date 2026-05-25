@@ -6,14 +6,55 @@ import { useRouter } from 'next/navigation'
 import { logout } from '@/lib/auth'
 import { toast } from 'sonner'
 import { useConfirm } from '@/hooks/useConfirm'
-import BottomNav from '@/components/BottomNav'
+import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
 import ConfirmModal from '@/components/ConfirmModal'
-import { Tag, LogOut, User, Info } from 'lucide-react'
+import ExportAllModal from '@/components/ExportAllModal'
+import { Tag, LogOut, User, Info, Crown, Download } from 'lucide-react'
+import { ExportFormat } from '@/lib/api'
+import { downloadBlob } from '@/lib/download'
+import { useSubscription } from '@/hooks/useSubscription'
+import { isPremiumRequiredError } from '@/lib/subscription'
+import { exportApi } from '@/lib/api'
+import ProBadge from '@/components/ProBadge'
 
 export default function SettingsPage() {
   const router = useRouter()
   const { confirm, confirmState, closeConfirm } = useConfirm()
+  const { isPremium, requirePremium } = useSubscription()
+  const [exportModalOpen, setExportModalOpen] = useState(false)
+  const [exporting, setExporting] = useState<ExportFormat | null>(null)
+
+  const handleExportAll = async (format: ExportFormat) => {
+    if (!isPremium) {
+      setExportModalOpen(false)
+      requirePremium(`Export ${format.toUpperCase()} réservé aux abonnés Premium`)
+      return
+    }
+    try {
+      setExporting(format)
+      const blob = await exportApi.downloadTransactions(format)
+      const ext = format === 'xlsx' ? 'xlsx' : format
+      downloadBlob(blob, `mes-poches-${Date.now()}.${ext}`)
+      toast.success(
+        format === 'pdf'
+          ? 'PDF téléchargé'
+          : format === 'xlsx'
+            ? 'Excel téléchargé'
+            : 'CSV téléchargé'
+      )
+      setExportModalOpen(false)
+    } catch (e) {
+      if (isPremiumRequiredError(e)) {
+        setExportModalOpen(false)
+        requirePremium(e.message)
+      } else toast.error(e instanceof Error ? e.message : 'Erreur export')
+    } finally {
+      setExporting(null)
+    }
+  }
+
+  const openExportModal = () => setExportModalOpen(true)
 
   const handleLogout = async () => {
     const confirmed = await confirm({
@@ -32,6 +73,26 @@ export default function SettingsPage() {
   }
 
   const menuItems = [
+    {
+      icon: Crown,
+      label: isPremium ? 'Mon abonnement Premium' : 'Passer à Premium',
+      description: isPremium
+        ? 'Toutes les fonctionnalités débloquées'
+        : 'Budgets, export, analytics et plus',
+      href: '/subscription',
+      color: 'text-amber-600',
+      bg: 'bg-amber-50',
+    },
+    {
+      icon: Download,
+      label: 'Exporter tout',
+      description: 'CSV, PDF ou Excel — toutes les transactions',
+      href: '#export',
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-50',
+      pro: true,
+      onClick: openExportModal,
+    },
     {
       icon: Tag,
       label: 'Gérer les catégories',
@@ -59,27 +120,26 @@ export default function SettingsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <PageShell>
       <Header title="Paramètres" showBack />
 
       <main className="max-w-md mx-auto px-4 py-6 space-y-6">
-        {/* Menu */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="card overflow-hidden">
           {menuItems.map((item, index) => {
             const Icon = item.icon
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors ${
-                  index !== menuItems.length - 1 ? 'border-b border-gray-200' : ''
-                }`}
-              >
+            const rowClass = `flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors w-full text-left ${
+              index !== menuItems.length - 1 ? 'border-b border-gray-200' : ''
+            }`
+            const inner = (
+              <>
                 <div className={`w-12 h-12 rounded-full ${item.bg} flex items-center justify-center`}>
                   <Icon size={24} className={item.color} />
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">{item.label}</p>
+                  <p className="font-medium text-gray-900 flex items-center gap-2 flex-wrap">
+                    {item.label}
+                    {'pro' in item && item.pro && !isPremium && <ProBadge />}
+                  </p>
                   <p className="text-sm text-gray-500">{item.description}</p>
                 </div>
                 <svg
@@ -95,19 +155,35 @@ export default function SettingsPage() {
                     d="M9 5l7 7-7 7"
                   />
                 </svg>
+              </>
+            )
+            if ('onClick' in item && item.onClick) {
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={item.onClick}
+                  className={rowClass}
+                  disabled={!!exporting}
+                >
+                  {inner}
+                </button>
+              )
+            }
+            return (
+              <Link key={item.href} href={item.href} className={rowClass}>
+                {inner}
               </Link>
             )
           })}
         </div>
 
-        {/* Informations */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
+        <div className="card p-4">
           <h3 className="text-sm font-semibold text-gray-500 mb-2">Application</h3>
           <p className="text-sm text-gray-600">MES POCHES</p>
           <p className="text-xs text-gray-400 mt-1">Version 1.0.0</p>
         </div>
 
-        {/* Bouton de déconnexion */}
         <button
           onClick={handleLogout}
           className="w-full bg-red-500 text-white rounded-lg p-4 font-semibold flex items-center justify-center gap-2 hover:bg-red-600 transition-colors touch-manipulation"
@@ -117,7 +193,14 @@ export default function SettingsPage() {
         </button>
       </main>
 
-      {/* Modal de confirmation */}
+      <ExportAllModal
+        isOpen={exportModalOpen}
+        onClose={() => !exporting && setExportModalOpen(false)}
+        onExport={handleExportAll}
+        exporting={exporting}
+        showProBadge={!isPremium}
+      />
+
       <ConfirmModal
         isOpen={confirmState.isOpen}
         onClose={closeConfirm}
@@ -128,8 +211,6 @@ export default function SettingsPage() {
         cancelText={confirmState.cancelText}
         variant={confirmState.variant}
       />
-
-      <BottomNav />
-    </div>
+    </PageShell>
   )
 }

@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'MES POCHES - Gestion Financière',
-  description: 'Application de gestion financière personnelle mobile-first avec mode offline',
+  description: 'Application de gestion financière personnelle',
   applicationName: 'MES POCHES',
   appleWebApp: {
     capable: true,

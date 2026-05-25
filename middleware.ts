@@ -3,26 +3,31 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('auth_token')?.value;
+  const emailVerified = request.cookies.get('email_verified')?.value === 'true';
   const { pathname } = request.nextUrl;
 
-  // Routes publiques
-  const publicRoutes = ['/login', '/onboarding'];
+  const publicRoutes = ['/login', '/onboarding', '/verify-email'];
   const isPublicRoute = publicRoutes.includes(pathname);
 
-  // Si pas de token et route protégée, rediriger vers onboarding/login
-  if (!token && !isPublicRoute) {
-    // Vérifier si l'onboarding a été vu (via un cookie ou localStorage - on va utiliser un cookie)
-    const onboardingSeen = request.cookies.get('onboarding_seen')?.value;
-    
-    if (onboardingSeen) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    } else {
-      return NextResponse.redirect(new URL('/onboarding', request.url));
-    }
+  // Token présent mais email non vérifié → page de vérification
+  if (token && !emailVerified && pathname !== '/verify-email') {
+    const pendingEmail = request.cookies.get('pending_email')?.value;
+    const url = pendingEmail
+      ? `/verify-email?email=${encodeURIComponent(pendingEmail)}`
+      : '/verify-email';
+    return NextResponse.redirect(new URL(url, request.url));
   }
 
-  // Si token présent et sur une route publique, rediriger vers l'accueil
-  if (token && isPublicRoute) {
+  if (!token && !isPublicRoute) {
+    const onboardingSeen = request.cookies.get('onboarding_seen')?.value;
+
+    if (onboardingSeen) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    return NextResponse.redirect(new URL('/onboarding', request.url));
+  }
+
+  if (token && emailVerified && isPublicRoute) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 

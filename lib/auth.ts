@@ -3,28 +3,43 @@ import Cookies from 'js-cookie';
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'user_data';
 const ONBOARDING_KEY = 'onboarding_seen';
+const EMAIL_VERIFIED_KEY = 'email_verified';
+const PENDING_EMAIL_KEY = 'pending_verification_email';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export interface User {
   id: string;
   email: string;
   name?: string;
+  role?: 'user' | 'admin';
+  plan?: 'free' | 'premium';
+  premiumUntil?: string | null;
+  isPremium?: boolean;
+  emailVerified?: boolean;
+  lastLoginAt?: string;
 }
 
 export interface AuthResponse {
   success: boolean;
-  data: {
+  data?: {
     user: User;
     token: string;
   };
   message?: string;
+  code?: string;
+  needsVerification?: boolean;
 }
 
-// Gestion du token
+async function parseAuthResponse(response: Response): Promise<AuthResponse> {
+  return response.json();
+}
+
 export const setToken = (token: string): void => {
-  Cookies.set(TOKEN_KEY, token, { 
-    expires: 30, // 30 jours
-    sameSite: 'strict', // Protection CSRF
-    secure: process.env.NODE_ENV === 'production' // HTTPS uniquement en prod
+  Cookies.set(TOKEN_KEY, token, {
+    expires: 30,
+    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
   });
 };
 
@@ -36,9 +51,21 @@ export const removeToken = (): void => {
   Cookies.remove(TOKEN_KEY);
 };
 
-// Gestion de l'utilisateur
+export const setEmailVerifiedCookie = (verified: boolean): void => {
+  if (verified) {
+    Cookies.set(EMAIL_VERIFIED_KEY, 'true', {
+      expires: 30,
+      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production',
+    });
+  } else {
+    Cookies.remove(EMAIL_VERIFIED_KEY);
+  }
+};
+
 export const setUser = (user: User): void => {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
+  setEmailVerifiedCookie(!!user.emailVerified);
 };
 
 export const getUser = (): User | null => {
@@ -53,65 +80,166 @@ export const getUser = (): User | null => {
 
 export const removeUser = (): void => {
   localStorage.removeItem(USER_KEY);
+  setEmailVerifiedCookie(false);
 };
 
-// Connexion
-export const login = async (email: string, password: string): Promise<AuthResponse> => {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+export const setPendingVerificationEmail = (email: string): void => {
+  sessionStorage.setItem(PENDING_EMAIL_KEY, email);
+  Cookies.set('pending_email', email, { expires: 1 });
+};
+
+export const getPendingVerificationEmail = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return (
+    sessionStorage.getItem(PENDING_EMAIL_KEY) ||
+    Cookies.get('pending_email') ||
+    null
+  );
+};
+
+export const clearPendingVerificationEmail = (): void => {
+  sessionStorage.removeItem(PENDING_EMAIL_KEY);
+  Cookies.remove('pending_email');
+};
+
+const persistAuth = (data: { user: User; token: string }) => {
+  setToken(data.token);
+  setUser(data.user);
+  clearPendingVerificationEmail();
+};
+
+export const login = async (
+  email: string,
+  password: string
+): Promise<AuthResponse> => {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password }),
   });
 
-  const data = await response.json();
-  
-  if (data.success) {
-    setToken(data.data.token);
-    setUser(data.data.user);
+  const data = await parseAuthResponse(response);
+
+  if (data.success && data.data) {
+    persistAuth(data.data);
+    return data;
+  }
+
+  if (data.code === 'EMAIL_NOT_VERIFIED') {
+    removeToken();
+    removeUser();
   }
 
   return data;
 };
 
-// Inscription
-export const register = async (email: string, password: string, name?: string): Promise<AuthResponse> => {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+export const register = async (
+  email: string,
+  password: string,
+  name?: string
+): Promise<AuthResponse> => {
   const response = await fetch(`${API_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, name })
+    body: JSON.stringify({ email, password, name }),
   });
 
-  const data = await response.json();
-  
-  if (data.success) {
-    setToken(data.data.token);
-    setUser(data.data.user);
+  const data = await parseAuthResponse(response);
+
+  if (data.success && data.needsVerification) {
+    setPendingVerificationEmail(email);
   }
 
   return data;
 };
 
-// Déconnexion
+export const verifyEmail = async (
+  email: string,
+  code: string
+): Promise<AuthResponse> => {
+  const response = await fetch(`${API_URL}/auth/verify-email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, code }),
+  });
+
+  const data = await parseAuthResponse(response);
+
+  if (data.success && data.data) {
+    persistAuth(data.data);
+  }
+
+  return data;
+};
+
+export const resendVerificationCode = async (
+  email: string
+): Promise<AuthResponse & { cooldownSeconds?: number }> => {
+  const response = await fetch(`${API_URL}/auth/resend-code`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+
+  const json = await response.json();
+
+  if (!json.success && json.code === 'RESEND_COOLDOWN') {
+    return {
+      ...json,
+      cooldownSeconds: json.data?.cooldownSeconds ?? 60,
+    };
+  }
+
+  return json;
+};
+
 export const logout = (): void => {
   removeToken();
   removeUser();
+  clearPendingVerificationEmail();
   window.location.href = '/';
 };
 
-// Vérification de l'authentification
 export const isAuthenticated = (): boolean => {
-  return !!getToken();
+  return !!getToken() && Cookies.get(EMAIL_VERIFIED_KEY) === 'true';
 };
 
-// Gestion de l'onboarding
 export const setOnboardingSeen = (): void => {
   localStorage.setItem(ONBOARDING_KEY, 'true');
-  // Ajouter aussi un cookie pour le middleware
   Cookies.set('onboarding_seen', 'true', { expires: 365 });
 };
 
 export const hasSeenOnboarding = (): boolean => {
-  return localStorage.getItem(ONBOARDING_KEY) === 'true' || Cookies.get('onboarding_seen') === 'true';
+  return (
+    localStorage.getItem(ONBOARDING_KEY) === 'true' ||
+    Cookies.get('onboarding_seen') === 'true'
+  );
+};
+
+export async function checkRegisterAvailability(params: {
+  email?: string;
+  name?: string;
+}): Promise<{
+  email?: { available: boolean };
+  name?: { available: boolean };
+}> {
+  const qs = new URLSearchParams();
+  if (params.email?.trim()) qs.set('email', params.email.trim());
+  if (params.name?.trim()) qs.set('name', params.name.trim());
+
+  const response = await fetch(
+    `${API_URL}/auth/check-availability?${qs.toString()}`
+  );
+  const data = await response.json();
+  if (!data.success) {
+    throw new Error(data.message || 'Erreur de vérification');
+  }
+  return data.data ?? {};
+}
+
+export const redirectToVerification = (email: string): void => {
+  removeToken();
+  removeUser();
+  setPendingVerificationEmail(email);
+  window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
 };

@@ -5,6 +5,7 @@ export interface ICategory {
   user_id: Types.ObjectId;
   name: string;
   type: 'income' | 'expense';
+  image_url?: string | null;
   created_at: Date;
 }
 
@@ -23,6 +24,11 @@ const categorySchema = new Schema<ICategory>({
     type: String,
     enum: ['income', 'expense'],
     required: [true, 'Le type est requis']
+  },
+  image_url: {
+    type: String,
+    default: null,
+    trim: true,
   },
   created_at: {
     type: Date,

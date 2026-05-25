@@ -114,6 +114,12 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'utfs.io', pathname: '/**' },
+      { protocol: 'https', hostname: 'ufs.sh', pathname: '/**' },
+    ],
+  },
 }
 
 module.exports = withPWA(nextConfig)

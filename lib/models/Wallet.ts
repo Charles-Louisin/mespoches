@@ -6,6 +6,7 @@ export interface IWallet {
   name: string;
   currency: string;
   current_balance: number;
+  image_url?: string | null;
   created_at: Date;
 }
 
@@ -29,6 +30,11 @@ const walletSchema = new Schema<IWallet>({
     type: Number,
     default: 0,
     min: [0, 'Le solde ne peut pas être négatif']
+  },
+  image_url: {
+    type: String,
+    default: null,
+    trim: true,
   },
   created_at: {
     type: Date,
