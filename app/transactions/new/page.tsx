@@ -4,7 +4,22 @@ import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { Wallet, Category, walletApi, transactionApi, categoryApi } from '@/lib/api'
+import {
+  Wallet,
+  Category,
+  SavingsGoal,
+  walletApi,
+  transactionApi,
+  plannedExpenseApi,
+  categoryApi,
+  savingsGoalApi,
+} from '@/lib/api'
+import {
+  isFutureUtcDay,
+  getTodayUtcDateInputValue,
+} from '@/lib/plannedExpenseDates'
+import PlannedExpensesInfoModal from '@/components/PlannedExpensesInfoModal'
+import { getUser } from '@/lib/auth'
 import { invalidateFinancialCaches } from '@/lib/cache'
 import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
@@ -13,6 +28,7 @@ import Input from '@/components/Input'
 import Select from '@/components/Select'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { useSubscription } from '@/hooks/useSubscription'
+import { Info } from 'lucide-react'
 
 function NewTransactionForm() {
   const { isPremium, requirePremium, handleApiError } = useSubscription()
@@ -32,10 +48,30 @@ function NewTransactionForm() {
   const [loading, setLoading] = useState(false)
   const [wallets, setWallets] = useState<Wallet[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([])
+  const [toSavings, setToSavings] = useState(false)
+  const [savingsGoalId, setSavingsGoalId] = useState('')
+  const [plannedInfoOpen, setPlannedInfoOpen] = useState(false)
+  const [hidePlannedHelp, setHidePlannedHelp] = useState(
+    () => !!getUser()?.hidePlannedExpensesHelp
+  )
+
+  const todayUtc = getTodayUtcDateInputValue()
+  const maxDateForIncomeTransfer = type !== 'expense' ? todayUtc : undefined
 
   useEffect(() => {
     loadData()
   }, [type])
+
+  useEffect(() => {
+    if (type === 'expense') {
+      setToSavings(false)
+      setSavingsGoalId('')
+    }
+    if (type !== 'expense' && isFutureUtcDay(date)) {
+      setDate(todayUtc)
+    }
+  }, [type, date, todayUtc])
 
   const loadData = async () => {
     try {
@@ -50,6 +86,11 @@ function NewTransactionForm() {
         const categoriesData = await categoryApi.getAll(type)
         setCategories(categoriesData)
       }
+
+      if (isPremium && (type === 'income' || type === 'transfer')) {
+        const goals = await savingsGoalApi.getAll().catch(() => [])
+        setSavingsGoals(goals)
+      }
     } catch (error) {
       console.error('Erreur:', error)
     }
@@ -58,8 +99,29 @@ function NewTransactionForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!amount || !walletId) {
+    if (!amount) {
       toast.error('Veuillez remplir tous les champs requis')
+      return
+    }
+
+    if (toSavings) {
+      if (!isPremium) {
+        requirePremium('L\'épargne est réservée aux abonnés Premium')
+        return
+      }
+      if (!savingsGoalId) {
+        toast.error('Choisissez un objectif d\'épargne')
+        return
+      }
+    }
+
+    if (!toSavings && !walletId) {
+      toast.error('Veuillez sélectionner une poche')
+      return
+    }
+
+    if (toSavings && type === 'transfer' && !walletId) {
+      toast.error('Veuillez sélectionner la poche source')
       return
     }
 
@@ -68,28 +130,59 @@ function NewTransactionForm() {
 
       const data = {
         amount: parseFloat(amount),
-        wallet_id: walletId,
+        wallet_id: walletId || undefined,
         category_id: categoryId || undefined,
         description: description || undefined,
         date: new Date(date).toISOString(),
+        savings_goal_id: toSavings ? savingsGoalId : undefined,
       }
 
       if (type === 'income') {
         await transactionApi.createIncome(data)
-        toast.success('Revenu enregistré avec succès !')
+        toast.success(
+          toSavings ? 'Épargne alimentée avec succès !' : 'Revenu enregistré avec succès !'
+        )
       } else if (type === 'expense') {
-        await transactionApi.createExpense(data)
-        toast.success('Dépense enregistrée avec succès !')
-      } else if (type === 'transfer') {
-        if (!destinationWalletId) {
-          toast.error('Veuillez sélectionner un portefeuille de destination')
-          return
+        if (isFutureUtcDay(date)) {
+          await plannedExpenseApi.create({
+            amount: data.amount,
+            wallet_id: walletId,
+            category_id: categoryId || undefined,
+            description: data.description,
+            scheduled_date: date,
+          })
+          toast.success(
+            'Dépense future enregistrée ! Elle sera débitée le jour prévu (UTC) si votre solde le permet.'
+          )
+        } else {
+          await transactionApi.createExpense({
+            ...data,
+            wallet_id: walletId,
+          })
+          toast.success('Dépense enregistrée avec succès !')
         }
-        await transactionApi.createTransfer({
-          ...data,
-          destination_wallet_id: destinationWalletId,
-        })
-        toast.success('Transfert effectué avec succès !')
+      } else if (type === 'transfer') {
+        if (toSavings) {
+          await transactionApi.createTransfer({
+            amount: data.amount,
+            wallet_id: walletId,
+            savings_goal_id: savingsGoalId,
+            description: data.description,
+            date: data.date,
+          })
+          toast.success('Transfert vers l\'épargne effectué !')
+        } else {
+          if (!destinationWalletId) {
+            toast.error('Veuillez sélectionner un portefeuille de destination')
+            return
+          }
+          await transactionApi.createTransfer({
+            ...data,
+            wallet_id: walletId,
+            destination_wallet_id: destinationWalletId,
+          })
+          toast.success('Transfert effectué avec succès !')
+        }
       }
 
       invalidateFinancialCaches()
@@ -118,6 +211,11 @@ function NewTransactionForm() {
     ...wallets.filter((w) => w._id !== walletId).map((w) => ({ value: w._id, label: w.name })),
   ]
 
+  const savingsGoalOptions = [
+    { value: '', label: 'Choisir un objectif' },
+    ...savingsGoals.map((g) => ({ value: g._id, label: g.title })),
+  ]
+
   const typeButtons: { key: typeof type; label: string; premium?: boolean }[] = [
     { key: 'income', label: 'Revenu' },
     { key: 'expense', label: 'Dépense' },
@@ -132,6 +230,19 @@ function NewTransactionForm() {
     setType(key)
   }
 
+  const toggleToSavings = () => {
+    if (!isPremium) {
+      requirePremium('L\'épargne est réservée aux abonnés Premium')
+      return
+    }
+    if (savingsGoals.length === 0) {
+      toast.error('Créez d\'abord un objectif d\'épargne')
+      return
+    }
+    setToSavings(!toSavings)
+    if (toSavings) setSavingsGoalId('')
+  }
+
   const addWalletLink = (
     <Link
       href="/wallets/new"
@@ -140,6 +251,9 @@ function NewTransactionForm() {
       + Ajouter
     </Link>
   )
+
+  const showSavingsOption =
+    isPremium && (type === 'income' || type === 'transfer') && savingsGoals.length > 0
 
   return (
     <PageShell>
@@ -185,17 +299,42 @@ function NewTransactionForm() {
             />
           </div>
 
-          <div className="card p-4 space-y-4">
-            <Select
-              label={type === 'transfer' ? 'Depuis' : 'Poche'}
-              value={walletId}
-              onChange={(e) => setWalletId(e.target.value)}
-              options={walletOptions}
-              labelAction={addWalletLink}
-              required
-            />
+          {showSavingsOption && (
+            <div className="card p-4 space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer touch-manipulation">
+                <input
+                  type="checkbox"
+                  checked={toSavings}
+                  onChange={toggleToSavings}
+                  className="w-5 h-5 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                />
+                <span className="text-sm font-medium text-gray-800">Vers épargne</span>
+              </label>
+              {toSavings && (
+                <Select
+                  label="Objectif d'épargne"
+                  value={savingsGoalId}
+                  onChange={(e) => setSavingsGoalId(e.target.value)}
+                  options={savingsGoalOptions}
+                  required
+                />
+              )}
+            </div>
+          )}
 
-            {type === 'transfer' && (
+          <div className="card p-4 space-y-4">
+            {(type !== 'income' || !toSavings) && (
+              <Select
+                label={type === 'transfer' ? 'Depuis' : 'Poche'}
+                value={walletId}
+                onChange={(e) => setWalletId(e.target.value)}
+                options={walletOptions}
+                labelAction={addWalletLink}
+                required
+              />
+            )}
+
+            {type === 'transfer' && !toSavings && (
               <Select
                 label="Vers"
                 value={destinationWalletId}
@@ -206,7 +345,7 @@ function NewTransactionForm() {
               />
             )}
 
-            {type !== 'transfer' && (
+            {type !== 'transfer' && !toSavings && (
               <Select
                 label="Catégorie (optionnel)"
                 value={categoryId}
@@ -223,29 +362,59 @@ function NewTransactionForm() {
               />
             )}
 
-          {/* Description */}
-          <Input
-            label="Description"
-            type="text"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Ex: Courses du mois"
-          />
-
             <Input
-              label="Date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
+              label="Description"
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Ex: Courses du mois"
             />
+
+            <div>
+              <Input
+                label="Date"
+                type="date"
+                value={date}
+                max={maxDateForIncomeTransfer}
+                onChange={(e) => setDate(e.target.value)}
+                required
+              />
+
+              {type === 'expense' && !hidePlannedHelp && (
+                <button
+                  type="button"
+                  onClick={() => setPlannedInfoOpen(true)}
+                  className="mt-1.5 w-full flex items-center justify-center gap-1.5 text-xs text-primary-600 font-medium touch-manipulation"
+                >
+                  <Info size={16} />
+                  Comment fonctionnent les dépenses prévues ?
+                </button>
+              )}
+            </div>
+
+            {type === 'expense' && isFutureUtcDay(date) && (
+              <p className="text-xs text-primary-700 bg-primary-50 rounded-lg px-3 py-2">
+                Date future : cette dépense sera planifiée et débitée automatiquement le jour
+                choisi (UTC), si le solde est suffisant.
+              </p>
+            )}
           </div>
 
           <Button type="submit" fullWidth size="lg" disabled={loading}>
-            {loading ? 'Enregistrement...' : 'Enregistrer'}
+            {loading
+              ? 'Enregistrement...'
+              : type === 'expense' && isFutureUtcDay(date)
+                ? 'Planifier la dépense'
+                : 'Enregistrer'}
           </Button>
         </form>
       </main>
+
+      <PlannedExpensesInfoModal
+        isOpen={plannedInfoOpen}
+        onClose={() => setPlannedInfoOpen(false)}
+        onDismissHelp={() => setHidePlannedHelp(true)}
+      />
     </PageShell>
   )
 }

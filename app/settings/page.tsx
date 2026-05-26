@@ -17,13 +17,29 @@ import { useSubscription } from '@/hooks/useSubscription'
 import { isPremiumRequiredError } from '@/lib/subscription'
 import { exportApi } from '@/lib/api'
 import ProBadge from '@/components/ProBadge'
+import Select from '@/components/Select'
+import { useCurrency } from '@/contexts/CurrencyContext'
+import { AppCurrency, WALLET_CURRENCIES } from '@/lib/currencies'
 
 export default function SettingsPage() {
   const router = useRouter()
   const { confirm, confirmState, closeConfirm } = useConfirm()
   const { isPremium, requirePremium } = useSubscription()
+  const { currency, setCurrency, loading: currencyLoading } = useCurrency()
   const [exportModalOpen, setExportModalOpen] = useState(false)
   const [exporting, setExporting] = useState<ExportFormat | null>(null)
+  const [savingCurrency, setSavingCurrency] = useState(false)
+
+  const handleCurrencyChange = async (value: string) => {
+    try {
+      setSavingCurrency(true)
+      await setCurrency(value as AppCurrency)
+    } catch {
+      /* toast géré dans le contexte */
+    } finally {
+      setSavingCurrency(false)
+    }
+  }
 
   const handleExportAll = async (format: ExportFormat) => {
     if (!isPremium) {
@@ -124,6 +140,23 @@ export default function SettingsPage() {
       <Header title="Paramètres" showBack />
 
       <main className="max-w-md mx-auto px-4 py-6 space-y-6">
+        <div className="card p-4 space-y-3">
+          <h3 className="text-sm font-semibold text-gray-500">Devise de l&apos;application</h3>
+          <p className="text-xs text-gray-500">
+            Tous les montants seront affichés dans cette devise. Par défaut : XAF.
+          </p>
+          <Select
+            label="Devise"
+            value={currency}
+            onChange={(e) => handleCurrencyChange(e.target.value)}
+            options={WALLET_CURRENCIES.map((c) => ({
+              value: c.value,
+              label: c.label,
+            }))}
+            disabled={currencyLoading || savingCurrency}
+          />
+        </div>
+
         <div className="card overflow-hidden">
           {menuItems.map((item, index) => {
             const Icon = item.icon

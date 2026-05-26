@@ -5,7 +5,8 @@ import { toast } from 'sonner'
 import ProFeature from '@/components/ProFeature'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { recurringApi, RecurringTransaction } from '@/lib/api'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
+import { useCurrency } from '@/contexts/CurrencyContext'
 import { Play } from 'lucide-react'
 
 interface RecurringSectionProps {
@@ -14,6 +15,7 @@ interface RecurringSectionProps {
 }
 
 export default function RecurringSection({ isPremium, onApiError }: RecurringSectionProps) {
+  const { formatAmount } = useCurrency()
   const [items, setItems] = useState<RecurringTransaction[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -64,7 +66,7 @@ export default function RecurringSection({ isPremium, onApiError }: RecurringSec
                 <div className="flex-1">
                   <p className="font-medium capitalize">{r.type}</p>
                   <p className="text-primary-600 font-semibold">
-                    {formatCurrency(r.amount)}
+                    {formatAmount(r.amount)}
                   </p>
                   <p className="text-xs text-gray-500">
                     Prochaine : {formatDate(r.next_run_date)}

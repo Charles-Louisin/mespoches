@@ -1,9 +1,15 @@
+import { getCurrencySymbol } from './currencies'
+
 export function formatCurrency(amount: number, currency: string = 'XAF'): string {
-  return new Intl.NumberFormat('fr-FR', {
+  const formatted = new Intl.NumberFormat('fr-FR', {
     style: 'decimal',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount) + ' ' + currency;
+  }).format(amount)
+
+  if (currency === 'EURO') return `${formatted}\u00a0€`
+  if (currency === 'DOLLARS') return `${formatted}\u00a0$`
+  return `${formatted} ${getCurrencySymbol(currency)}`
 }
 
 export function formatDate(date: string | Date): string {
@@ -43,7 +49,11 @@ export function operationsLabel(count: number): string {
   return count > 1 ? `${count} opérations` : `${count} opération`
 }
 
-export function getTransactionTypeLabel(type: 'income' | 'expense' | 'transfer'): string {
+export function getTransactionTypeLabel(
+  type: 'income' | 'expense' | 'transfer',
+  savingsGoalId?: string | null
+): string {
+  if (savingsGoalId) return 'Épargne'
   switch (type) {
     case 'income':
       return 'Revenu'
@@ -54,16 +64,42 @@ export function getTransactionTypeLabel(type: 'income' | 'expense' | 'transfer')
   }
 }
 
+function compareTransactionAsc(a: { date: string; created_at?: string }, b: { date: string; created_at?: string }) {
+  const diff = new Date(a.date).getTime() - new Date(b.date).getTime();
+  if (diff !== 0) return diff;
+  const ca = a.created_at ? new Date(a.created_at).getTime() : 0;
+  const cb = b.created_at ? new Date(b.created_at).getTime() : 0;
+  return ca - cb;
+}
+
+function compareTransactionDesc(a: { date: string; created_at?: string }, b: { date: string; created_at?: string }) {
+  return -compareTransactionAsc(a, b);
+}
+
+export function sortTransactionsByDateAsc<T extends { date: string; created_at?: string }>(
+  items: T[]
+): T[] {
+  return [...items].sort(compareTransactionAsc);
+}
+
+export function sortTransactionsByDateDesc<T extends { date: string; created_at?: string }>(
+  items: T[]
+): T[] {
+  return [...items].sort(compareTransactionDesc);
+}
+
 export function groupTransactionsByDate(transactions: any[]): Record<string, any[]> {
-  // Attendu: `transactions` déjà triées par date décroissante.
-  // On conserve l'ordre d'insertion des clés pour afficher les jours du plus récent au plus ancien.
   const grouped: Record<string, any[]> = {};
 
-  transactions.forEach((transaction) => {
+  sortTransactionsByDateDesc(transactions).forEach((transaction) => {
     const date = formatDate(transaction.date);
     if (!grouped[date]) grouped[date] = [];
     grouped[date].push(transaction);
   });
+
+  for (const key of Object.keys(grouped)) {
+    grouped[key].sort(compareTransactionDesc);
+  }
 
   return grouped;
 }

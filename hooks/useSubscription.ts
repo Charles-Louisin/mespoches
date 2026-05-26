@@ -27,6 +27,7 @@ export function useSubscription() {
           plan: me.plan,
           premiumUntil: me.premiumUntil,
           isPremium: me.isPremium,
+          currency: me.currency,
         })
       }
       return me

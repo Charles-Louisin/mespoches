@@ -1,21 +1,19 @@
 'use client'
 
 import Image from 'next/image'
-import { formatCurrency } from '@/lib/utils'
 import { Pencil, Trash2, Save, X } from 'lucide-react'
 import ImageUpload from '@/components/ImageUpload'
+import { useCurrency } from '@/contexts/CurrencyContext'
 
 interface WalletHeroCardProps {
   balance: number
-  currency: string
   imageUrl?: string | null
   editing: boolean
   formData: {
     name: string
-    currency: string
     image_url: string | null
   }
-  onFormChange: (data: { name: string; currency: string; image_url: string | null }) => void
+  onFormChange: (data: { name: string; image_url: string | null }) => void
   onEdit: () => void
   onDelete: () => void
   onSave: () => void
@@ -25,7 +23,6 @@ interface WalletHeroCardProps {
 
 export default function WalletHeroCard({
   balance,
-  currency,
   imageUrl,
   editing,
   formData,
@@ -36,6 +33,7 @@ export default function WalletHeroCard({
   onCancel,
   premiumRequired = false,
 }: WalletHeroCardProps) {
+  const { formatAmount } = useCurrency()
   const hasImage = !!imageUrl && !editing
 
   return (
@@ -62,9 +60,7 @@ export default function WalletHeroCard({
         {!editing ? (
           <>
             <p className="text-sm text-white/85 mb-1">Solde actuel</p>
-            <h2 className="text-4xl font-bold mb-4">
-              {formatCurrency(balance, currency)}
-            </h2>
+            <h2 className="text-4xl font-bold mb-4">{formatAmount(balance)}</h2>
             <div className="flex gap-2 justify-end">
               <button
                 type="button"
@@ -103,16 +99,6 @@ export default function WalletHeroCard({
                 onChange={(e) => onFormChange({ ...formData, name: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl text-gray-900 font-semibold"
                 placeholder="Ex: Cash"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-white/85 mb-2">Devise</label>
-              <input
-                type="text"
-                value={formData.currency}
-                onChange={(e) => onFormChange({ ...formData, currency: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl text-gray-900 font-semibold"
-                placeholder="XAF"
               />
             </div>
             <div className="flex gap-2 pt-2">

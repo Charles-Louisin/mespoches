@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { analyticsApi, MonthStats, CategoryStat, MonthComparison } from '@/lib/api'
-import { formatCurrency, operationsLabel } from '@/lib/utils'
+import { operationsLabel } from '@/lib/utils'
+import { useCurrency } from '@/contexts/CurrencyContext'
 import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -20,11 +21,6 @@ function monthLabel(month: number, year: number) {
   return `${MONTH_NAMES[month - 1]} ${year}`
 }
 
-function formatDelta(amount: number) {
-  const sign = amount > 0 ? '+' : amount < 0 ? '' : ''
-  return `${sign}${formatCurrency(amount)}`
-}
-
 function formatPct(value: number | null) {
   if (value === null || Number.isNaN(value)) return '—'
   const sign = value > 0 ? '+' : ''
@@ -32,6 +28,7 @@ function formatPct(value: number | null) {
 }
 
 export default function AnalyticsPage() {
+  const { formatAmount } = useCurrency()
   const { isPremium, loading: subLoading, handleApiError } = useSubscription()
   const now = new Date()
   const currentYear = now.getFullYear()
@@ -155,7 +152,7 @@ export default function AnalyticsPage() {
             <div>
               <p className="text-sm text-gray-500">Revenus</p>
               <p className="text-lg font-bold text-green-600">
-                {formatCurrency(monthStats.totalIncome)}
+                {formatAmount(monthStats.totalIncome)}
               </p>
             </div>
           </div>
@@ -169,7 +166,7 @@ export default function AnalyticsPage() {
             <div>
               <p className="text-sm text-gray-500">Dépenses</p>
               <p className="text-lg font-bold text-red-600">
-                {formatCurrency(monthStats.totalExpense)}
+                {formatAmount(monthStats.totalExpense)}
               </p>
             </div>
           </div>
@@ -183,7 +180,7 @@ export default function AnalyticsPage() {
             }`}
           >
             {monthStats.balance >= 0 ? '+' : ''}
-            {formatCurrency(monthStats.balance)}
+            {formatAmount(monthStats.balance)}
           </p>
         </div>
       </div>
@@ -314,6 +311,11 @@ function ComparisonRow({
   percent: number | null
   higherIsGood: boolean
 }) {
+  const { formatAmount } = useCurrency()
+  const formatDelta = (amount: number) => {
+    const sign = amount > 0 ? '+' : amount < 0 ? '' : ''
+    return `${sign}${formatAmount(amount)}`
+  }
   const improved =
     delta === 0 ? null : higherIsGood ? delta > 0 : delta < 0
   const Icon = delta === 0 ? Minus : improved ? TrendingUp : TrendingDown
@@ -327,12 +329,12 @@ function ComparisonRow({
   let explanation = 'Identique au mois précédent'
   if (delta > 0) {
     explanation = higherIsGood
-      ? `${formatCurrency(delta)} de plus qu'avant (en hausse)`
-      : `${formatCurrency(delta)} de plus qu'avant (attention)`
+      ? `${formatAmount(delta)} de plus qu'avant (en hausse)`
+      : `${formatAmount(delta)} de plus qu'avant (attention)`
   } else if (delta < 0) {
     explanation = higherIsGood
-      ? `${formatCurrency(Math.abs(delta))} de moins qu'avant`
-      : `${formatCurrency(Math.abs(delta))} de moins qu'avant (mieux)`
+      ? `${formatAmount(Math.abs(delta))} de moins qu'avant`
+      : `${formatAmount(Math.abs(delta))} de moins qu'avant (mieux)`
   }
 
   return (
@@ -342,8 +344,8 @@ function ComparisonRow({
         <Icon size={18} className={iconColor} />
       </div>
       <div className="flex justify-between text-sm text-gray-600">
-        <span>Ce mois : {formatCurrency(selectedValue)}</span>
-        <span>Mois préc. : {formatCurrency(previousValue)}</span>
+        <span>Ce mois : {formatAmount(selectedValue)}</span>
+        <span>Mois préc. : {formatAmount(previousValue)}</span>
       </div>
       <p className="text-sm font-semibold text-gray-900">
         Écart : {formatDelta(delta)} ({formatPct(percent)})
@@ -362,6 +364,7 @@ function CategoryBlock({
   stats: CategoryStat[]
   color: 'red' | 'green'
 }) {
+  const { formatAmount } = useCurrency()
   const total = stats.reduce((sum, s) => sum + s.total, 0)
   const bar = color === 'red' ? 'bg-red-500' : 'bg-green-500'
 
@@ -375,7 +378,7 @@ function CategoryBlock({
             <div key={index}>
               <div className="flex justify-between mb-1">
                 <span className="text-sm font-medium">{stat.category}</span>
-                <span className="text-sm font-bold">{formatCurrency(stat.total)}</span>
+                <span className="text-sm font-bold">{formatAmount(stat.total)}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div className={`${bar} h-2 rounded-full`} style={{ width: `${percentage}%` }} />

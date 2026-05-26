@@ -1,13 +1,17 @@
+'use client'
+
 import Link from 'next/link'
-import { formatCurrency } from '@/lib/utils'
 import { Wallet } from '@/lib/api'
 import EntityAvatar from '@/components/EntityAvatar'
+import { useCurrency } from '@/contexts/CurrencyContext'
 
 interface WalletCardProps {
   wallet: Wallet
 }
 
 export default function WalletCard({ wallet }: WalletCardProps) {
+  const { formatAmount } = useCurrency()
+
   return (
     <Link href={`/wallets/${wallet._id}`} className="block touch-manipulation">
       <div className="card px-4 py-3.5 active:scale-[0.99] transition-transform">
@@ -19,7 +23,7 @@ export default function WalletCard({ wallet }: WalletCardProps) {
           />
           <span className="flex-1 font-medium text-gray-900">{wallet.name}</span>
           <span className="font-semibold text-gray-900">
-            {formatCurrency(wallet.current_balance, wallet.currency)}
+            {formatAmount(wallet.current_balance)}
           </span>
         </div>
       </div>

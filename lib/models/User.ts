@@ -6,6 +6,10 @@ export interface IUser {
   email: string;
   password: string;
   name?: string;
+  role?: 'user' | 'admin';
+  plan?: 'free' | 'premium';
+  premium_until?: Date | null;
+  currency?: string;
   created_at: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -28,6 +32,25 @@ const userSchema = new Schema<IUser>({
   name: {
     type: String,
     trim: true
+  },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user',
+  },
+  plan: {
+    type: String,
+    enum: ['free', 'premium'],
+    default: 'free',
+  },
+  premium_until: {
+    type: Date,
+    default: null,
+  },
+  currency: {
+    type: String,
+    default: 'XAF',
+    trim: true,
   },
   created_at: {
     type: Date,

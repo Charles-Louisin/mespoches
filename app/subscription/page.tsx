@@ -69,8 +69,8 @@ export default function SubscriptionPage() {
           </div>
         ) : (
           <p className="text-sm text-gray-600 text-center">
-            Débloquez tout le potentiel de MES POCHES. Choisissez un forfait — le paiement
-            en ligne arrive bientôt.
+            Débloquez tout le potentiel de MES POCHES. Paiement par Mobile Money (MTN,
+            Orange) ou carte bancaire via CinetPay.
           </p>
         )}
 
@@ -116,9 +116,13 @@ export default function SubscriptionPage() {
           })}
         </div>
 
-        {!paymentAvailable && (
+        {paymentAvailable ? (
+          <p className="text-xs text-center text-gray-500">
+            Paiement sécurisé · Mobile Money & carte · XAF
+          </p>
+        ) : (
           <p className="text-xs text-center text-gray-400">
-            Paiement Mobile Money / carte bancaire — bientôt disponible
+            Paiement en ligne — configuration serveur requise (CinetPay)
           </p>
         )}
       </main>

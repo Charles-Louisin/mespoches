@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { Transaction, Wallet, Category } from '@/lib/api'
-import { formatCurrency, formatRelativeDate, getTransactionTypeLabel } from '@/lib/utils'
+import { Transaction, Wallet, Category, SavingsGoal } from '@/lib/api'
+import { formatRelativeDate, getTransactionTypeLabel } from '@/lib/utils'
+import { useCurrency } from '@/contexts/CurrencyContext'
 import EntityAvatar from '@/components/EntityAvatar'
 import TransactionExportButtons from '@/components/TransactionExportButtons'
 
@@ -17,6 +18,7 @@ export default function TransactionItem({
   isPremium = false,
   onRequirePremium,
 }: TransactionItemProps) {
+  const { formatAmount } = useCurrency()
   const wallet =
     typeof transaction.wallet_id === 'object'
       ? (transaction.wallet_id as Wallet)
@@ -27,10 +29,22 @@ export default function TransactionItem({
       ? (transaction.category_id as Category)
       : null
 
-  const typeLabel = getTransactionTypeLabel(transaction.type)
-  const categoryName = category?.name ?? transaction.description ?? typeLabel
+  const savingsGoal =
+    transaction.savings_goal_id && typeof transaction.savings_goal_id === 'object'
+      ? (transaction.savings_goal_id as SavingsGoal)
+      : null
+
+  const savingsGoalId =
+    typeof transaction.savings_goal_id === 'string'
+      ? transaction.savings_goal_id
+      : savingsGoal?._id
+
+  const typeLabel = getTransactionTypeLabel(transaction.type, savingsGoalId)
+  const categoryName =
+    savingsGoal?.title ?? category?.name ?? transaction.description ?? typeLabel
 
   const getAmountColor = () => {
+    if (savingsGoalId) return 'text-amber-600'
     switch (transaction.type) {
       case 'income':
         return 'text-green-600'
@@ -41,8 +55,15 @@ export default function TransactionItem({
     }
   }
 
-  const amountPrefix =
-    transaction.type === 'expense' ? '-' : transaction.type === 'income' ? '+' : ''
+  const amountPrefix = savingsGoalId
+    ? transaction.type === 'income'
+      ? '+'
+      : '-'
+    : transaction.type === 'expense'
+      ? '-'
+      : transaction.type === 'income'
+        ? '+'
+        : ''
 
   return (
     <div className="card px-4 py-3.5 active:scale-[0.99] transition-transform">
@@ -68,7 +89,7 @@ export default function TransactionItem({
 
         <p className={`font-bold text-base flex-shrink-0 ${getAmountColor()}`}>
           {amountPrefix}
-          {formatCurrency(transaction.amount, wallet?.currency || 'XAF')}
+          {formatAmount(transaction.amount)}
         </p>
       </Link>
       <div

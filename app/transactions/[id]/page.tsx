@@ -20,7 +20,8 @@ import Button from '@/components/Button'
 import Input from '@/components/Input'
 import Select from '@/components/Select'
 import LoadingSpinner from '@/components/LoadingSpinner'
-import { formatCurrency, formatDateTime } from '@/lib/utils'
+import { formatDateTime } from '@/lib/utils'
+import { useCurrency } from '@/contexts/CurrencyContext'
 import {
   ArrowDownRight,
   ArrowRightLeft,
@@ -40,6 +41,7 @@ interface TransactionDetailCache {
 export default function TransactionDetailPage() {
   const params = useParams()
   const id = params.id as string
+  const { formatAmount } = useCurrency()
   const { isPremium, requirePremium } = useSubscription()
 
   const [editing, setEditing] = useState(false)
@@ -360,7 +362,7 @@ export default function TransactionDetailPage() {
                 className={`text-xl font-bold ${getAmountColor(transaction.type)} whitespace-nowrap shrink-0`}
               >
                 {getAmountSign(transaction.type)}
-                {formatCurrency(transaction.amount, wallet?.currency || 'XAF')}
+                {formatAmount(transaction.amount)}
               </p>
             </div>
           )}
@@ -388,13 +390,13 @@ export default function TransactionDetailPage() {
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-gray-500">Solde avant</span>
                       <span className="font-semibold text-gray-900">
-                        {formatCurrency(transaction.balance_before, wallet?.currency || 'XAF')}
+                        {formatAmount(transaction.balance_before)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-gray-500">Solde après</span>
                       <span className="font-semibold text-gray-900">
-                        {formatCurrency(transaction.balance_after, wallet?.currency || 'XAF')}
+                        {formatAmount(transaction.balance_after)}
                       </span>
                     </div>
                   </>

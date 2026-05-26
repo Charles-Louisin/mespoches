@@ -4,15 +4,18 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
   Transaction,
+  PlannedExpense,
   transactionApi,
+  plannedExpenseApi,
   walletApi,
   categoryApi,
   Wallet,
   Category,
 } from '@/lib/api'
-import { CACHE_KEYS } from '@/lib/cache'
+import { CACHE_KEYS, invalidateFinancialCaches } from '@/lib/cache'
+import { toast } from 'sonner'
 import { useCachedData } from '@/hooks/useCachedData'
-import { formatDate } from '@/lib/utils'
+import { formatDate, sortTransactionsByDateDesc } from '@/lib/utils'
 import {
   filterTransactions,
   buildMonthOptions,
@@ -25,7 +28,11 @@ import TransactionHistoryFilters from '@/components/TransactionHistoryFilters'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import EmptyState from '@/components/EmptyState'
 import Button from '@/components/Button'
-import { History, Plus, ChevronDown, ChevronUp } from 'lucide-react'
+import { History, Plus, ChevronDown, ChevronUp, Info } from 'lucide-react'
+import PlannedExpenseItem from '@/components/PlannedExpenseItem'
+import PlannedExpensesInfoModal from '@/components/PlannedExpensesInfoModal'
+import EditPlannedExpenseModal from '@/components/EditPlannedExpenseModal'
+import { getUser } from '@/lib/auth'
 import UpgradeBanner from '@/components/UpgradeBanner'
 import { useSubscription } from '@/hooks/useSubscription'
 import { PLAN_LIMITS } from '@/lib/planLimits'
@@ -46,12 +53,18 @@ export default function TransactionsPage() {
   const [filters, setFilters] = useState<TransactionFiltersState>(defaultFilters)
   const [wallets, setWallets] = useState<Wallet[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [plannedExpenses, setPlannedExpenses] = useState<PlannedExpense[]>([])
+  const [plannedLoading, setPlannedLoading] = useState(true)
+  const [plannedInfoOpen, setPlannedInfoOpen] = useState(false)
+  const [hidePlannedHelp, setHidePlannedHelp] = useState(
+    () => !!getUser()?.hidePlannedExpensesHelp
+  )
+  const [editingPlanned, setEditingPlanned] = useState<PlannedExpense | null>(null)
+  const [cancellingId, setCancellingId] = useState<string | null>(null)
 
   const fetchTransactions = useCallback(async () => {
     const data = await transactionApi.getAll()
-    return [...data].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    )
+    return sortTransactionsByDateDesc(data)
   }, [])
 
   const { data: transactions, loading } = useCachedData(
@@ -67,6 +80,36 @@ export default function TransactionsPage() {
       })
       .catch(() => {})
   }, [])
+
+  const loadPlanned = useCallback(async () => {
+    try {
+      setPlannedLoading(true)
+      const items = await plannedExpenseApi.getAll({ status: 'scheduled' })
+      setPlannedExpenses(items)
+    } catch {
+      setPlannedExpenses([])
+    } finally {
+      setPlannedLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadPlanned()
+  }, [loadPlanned])
+
+  const handleCancelPlanned = async (id: string) => {
+    try {
+      setCancellingId(id)
+      await plannedExpenseApi.cancel(id)
+      invalidateFinancialCaches()
+      await loadPlanned()
+      toast.success('Dépense prévue annulée')
+    } catch (e) {
+      handleApiError(e, "Erreur lors de l'annulation")
+    } finally {
+      setCancellingId(null)
+    }
+  }
 
   const filtered = useMemo(() => {
     if (!transactions) return []
@@ -99,11 +142,14 @@ export default function TransactionsPage() {
       map.set(dayKey, arr)
     }
     const keys = Array.from(map.keys()).sort((a, b) => (a < b ? 1 : -1))
-    return keys.map((dayKey) => ({
-      dayKey,
-      label: formatDate(dayKey),
-      items: map.get(dayKey) || [],
-    }))
+    return keys.map((dayKey) => {
+      const items = sortTransactionsByDateDesc(map.get(dayKey) || [])
+      return {
+        dayKey,
+        label: formatDate(dayKey),
+        items,
+      }
+    })
   }, [filtered])
 
   const toggleDay = (dayKey: string) => {
@@ -159,6 +205,39 @@ export default function TransactionsPage() {
         )}
 
         <RecurringSection isPremium={isPremium} onApiError={handleApiError} />
+
+        {(plannedExpenses.length > 0 || !hidePlannedHelp) && (
+          <div className="flex items-center justify-between px-1">
+            <h3 className="section-title">Dépenses prévues</h3>
+            {!hidePlannedHelp && (
+              <button
+                type="button"
+                onClick={() => setPlannedInfoOpen(true)}
+                className="p-2 text-primary-600 touch-manipulation"
+                aria-label="Comment prévoir une dépense"
+              >
+                <Info size={20} />
+              </button>
+            )}
+          </div>
+        )}
+
+        {!plannedLoading && plannedExpenses.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="text-sm font-bold text-primary-700 px-1">
+              Transactions futures
+            </h4>
+            {plannedExpenses.map((item) => (
+              <PlannedExpenseItem
+                key={item._id}
+                item={item}
+                onEdit={setEditingPlanned}
+                onCancel={handleCancelPlanned}
+                cancelling={cancellingId === item._id}
+              />
+            ))}
+          </div>
+        )}
 
         {!hasData ? (
           <EmptyState
@@ -221,6 +300,22 @@ export default function TransactionsPage() {
           </div>
         )}
       </main>
+
+      <PlannedExpensesInfoModal
+        isOpen={plannedInfoOpen}
+        onClose={() => setPlannedInfoOpen(false)}
+        onDismissHelp={() => setHidePlannedHelp(true)}
+      />
+
+      <EditPlannedExpenseModal
+        item={editingPlanned}
+        isOpen={!!editingPlanned}
+        onClose={() => setEditingPlanned(null)}
+        onSaved={() => {
+          invalidateFinancialCaches()
+          loadPlanned()
+        }}
+      />
     </PageShell>
   )
 }

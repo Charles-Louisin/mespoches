@@ -17,6 +17,8 @@ export interface User {
   premiumUntil?: string | null;
   isPremium?: boolean;
   emailVerified?: boolean;
+  currency?: string;
+  hidePlannedExpensesHelp?: boolean;
   lastLoginAt?: string;
 }
 

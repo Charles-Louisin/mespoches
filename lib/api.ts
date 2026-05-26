@@ -2,9 +2,8 @@ import { getToken } from './auth';
 import { PREMIUM_REQUIRED_CODE } from './planLimits';
 import { PremiumRequiredError } from './subscription';
 
-// En frontend (Next.js), l’API pointe maintenant vers le backend séparé
-// Sur Vercel : configurez NEXT_PUBLIC_API_URL (ex: https://votre-backend.vercel.app/api)
-// En local : mettez http://localhost:5000/api dans .env.local
+// Frontend → backend API séparé (jamais les routes Next.js locales)
+// Local : NEXT_PUBLIC_API_URL=http://localhost:5000/api
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 interface ApiResponse<T> {
@@ -77,13 +76,16 @@ export async function fetchApiBlob(
 export const walletApi = {
   getAll: () => fetchApi<Wallet[]>('/wallets'),
   getById: (id: string) => fetchApi<Wallet>(`/wallets/${id}`),
-  getTotalBalance: () => fetchApi<{ total: number; wallets: Wallet[] }>('/wallets/total-balance'),
-  create: (data: { name: string; currency?: string; image_url?: string | null }) => 
+  getTotalBalance: () =>
+    fetchApi<{ total: number; totalSavings?: number; wallets: Wallet[] }>(
+      '/wallets/total-balance'
+    ),
+  create: (data: { name: string; image_url?: string | null }) =>
     fetchApi<Wallet>('/wallets', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  update: (id: string, data: { name?: string; currency?: string; image_url?: string | null }) =>
+  update: (id: string, data: { name?: string; image_url?: string | null }) =>
     fetchApi<Wallet>(`/wallets/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -91,7 +93,11 @@ export const walletApi = {
   delete: (id: string) =>
     fetchApi(`/wallets/${id}`, { method: 'DELETE' }),
   getHistory: (id: string) =>
-    fetchApi<{ wallet: Wallet; transactions: Transaction[] }>(`/wallets/${id}/history`),
+    fetchApi<{
+      wallet: Wallet;
+      transactions: Transaction[];
+      planned_expenses?: PlannedExpense[];
+    }>(`/wallets/${id}/history`),
 };
 
 // Transactions
@@ -204,6 +210,18 @@ export const subscriptionApi = {
     fetchApi<{ user: MeUser; isPremium: boolean; paymentAvailable: boolean }>(
       '/subscription/status'
     ),
+  createCheckout: (period: import('./planLimits').BillingPeriod) =>
+    fetchApi<{ paymentUrl: string; transactionId: string }>('/subscription/checkout', {
+      method: 'POST',
+      body: JSON.stringify({ period }),
+    }),
+  verifyPayment: (transactionId: string) =>
+    fetchApi<{
+      status: string;
+      isPremium: boolean;
+      premiumUntil: string | null;
+      user: MeUser;
+    }>(`/subscription/verify?transaction_id=${encodeURIComponent(transactionId)}`),
 };
 
 // Budgets (Premium)
@@ -244,7 +262,7 @@ export interface SavingsGoal {
   _id: string;
   title: string;
   target_amount: number;
-  wallet_id?: Wallet | string | null;
+  saved_amount?: number;
   deadline?: string | null;
   current_amount?: number;
   progress_percent?: number;
@@ -252,18 +270,83 @@ export interface SavingsGoal {
 
 export const savingsGoalApi = {
   getAll: () => fetchApi<SavingsGoal[]>('/savings-goals'),
+  getTotal: () => fetchApi<{ total: number }>('/savings-goals/total'),
   create: (data: {
     title: string;
     target_amount: number;
-    wallet_id?: string | null;
     deadline?: string | null;
   }) =>
     fetchApi<SavingsGoal>('/savings-goals', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  update: (
+    id: string,
+    data: {
+      title?: string;
+      target_amount?: number;
+      deadline?: string | null;
+    }
+  ) =>
+    fetchApi<SavingsGoal>(`/savings-goals/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
   delete: (id: string) =>
     fetchApi(`/savings-goals/${id}`, { method: 'DELETE' }),
+};
+
+// Dépenses prévues (fonctionnalité de base)
+export interface PlannedExpense {
+  _id: string;
+  wallet_id: Wallet | string;
+  category_id?: Category | string | null;
+  amount: number;
+  description: string;
+  scheduled_date: string;
+  status: 'scheduled' | 'executed' | 'cancelled';
+  cancelled_reason?: 'user' | 'insufficient_balance' | null;
+  executed_transaction_id?: string | null;
+  created_at: string;
+}
+
+export const plannedExpenseApi = {
+  getAll: (params?: { wallet_id?: string; status?: string }) => {
+    const search = new URLSearchParams();
+    if (params?.wallet_id) search.append('wallet_id', params.wallet_id);
+    if (params?.status) search.append('status', params.status);
+    const q = search.toString();
+    return fetchApi<PlannedExpense[]>(
+      `/planned-expenses${q ? `?${q}` : ''}`
+    );
+  },
+  create: (data: {
+    amount: number;
+    wallet_id: string;
+    category_id?: string;
+    description?: string;
+    scheduled_date: string;
+  }) =>
+    fetchApi<PlannedExpense>('/planned-expenses', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (
+    id: string,
+    data: {
+      amount?: number;
+      wallet_id?: string;
+      category_id?: string | null;
+      description?: string;
+      scheduled_date?: string;
+    }
+  ) =>
+    fetchApi<PlannedExpense>(`/planned-expenses/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  cancel: (id: string) =>
+    fetchApi(`/planned-expenses/${id}`, { method: 'DELETE' }),
 };
 
 // Transactions récurrentes (Premium)
@@ -271,7 +354,7 @@ export interface RecurringTransaction {
   _id: string;
   type: 'income' | 'expense';
   amount: number;
-  wallet_id: Wallet | string;
+  wallet_id: Wallet | string | null;
   category_id?: Category | string | null;
   description: string;
   frequency: 'weekly' | 'monthly';
@@ -312,6 +395,11 @@ export const exportApi = {
 export const authApi = {
   me: () =>
     fetchApi<MeUser>('/auth/me'),
+  updateMe: (data: { currency?: string; hidePlannedExpensesHelp?: boolean }) =>
+    fetchApi<MeUser>('/auth/me', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
   deleteMe: () =>
     fetchApi<{ message: string }>('/auth/me', { method: 'DELETE' }),
 };
@@ -342,7 +430,7 @@ export interface Transaction {
   _id: string;
   type: 'income' | 'expense' | 'transfer';
   amount: number;
-  wallet_id: Wallet | string;
+  wallet_id: Wallet | string | null;
   destination_wallet_id?: Wallet | string;
   category_id?: Category | string;
   description: string;
@@ -351,6 +439,7 @@ export interface Transaction {
   balance_after: number;
   transfer_group_id?: string | null;
   is_transfer_mirror?: boolean;
+  savings_goal_id?: SavingsGoal | string | null;
   created_at: string;
   updated_at?: string;
   updatedAt?: string;
@@ -366,16 +455,18 @@ export interface Category {
 
 export interface TransactionInput {
   amount: number;
-  wallet_id: string;
+  wallet_id?: string;
   category_id?: string;
   description?: string;
   date?: string;
+  savings_goal_id?: string;
 }
 
 export interface TransferInput {
   amount: number;
   wallet_id: string;
-  destination_wallet_id: string;
+  destination_wallet_id?: string;
+  savings_goal_id?: string;
   description?: string;
   date?: string;
 }
@@ -417,6 +508,8 @@ export interface MeUser {
   plan?: 'free' | 'premium';
   premiumUntil?: string | null;
   isPremium?: boolean;
+  currency?: string;
+  hidePlannedExpensesHelp?: boolean;
   created_at: string;
   lastLoginAt?: string | null;
 }

@@ -38,7 +38,7 @@ export async function GET(
       .populate('wallet_id')
       .populate('destination_wallet_id')
       .populate('category_id')
-      .sort({ date: -1 });
+      .sort({ date: -1, created_at: -1 });
 
     return NextResponse.json({
       success: true,

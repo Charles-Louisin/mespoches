@@ -43,7 +43,10 @@ function transactionSearchBlob(t: Transaction): string {
     t.description,
     getCategoryName(t),
     getWalletName(t),
-    getTransactionTypeLabel(t.type),
+    getTransactionTypeLabel(
+      t.type,
+      typeof t.savings_goal_id === 'string' ? t.savings_goal_id : null
+    ),
     t.type,
     monthStr,
     d.toLocaleDateString('fr-FR'),

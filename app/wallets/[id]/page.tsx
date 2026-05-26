@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Wallet, Transaction, walletApi } from '@/lib/api'
+import { Wallet, Transaction, PlannedExpense, walletApi, plannedExpenseApi } from '@/lib/api'
 import { CACHE_KEYS, invalidateFinancialCaches, setCache } from '@/lib/cache'
 import { useCachedData } from '@/hooks/useCachedData'
 import { groupTransactionsByDate } from '@/lib/utils'
@@ -14,6 +14,8 @@ import WalletHeroCard from '@/components/WalletHeroCard'
 import TransactionItem from '@/components/TransactionItem'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ConfirmModal from '@/components/ConfirmModal'
+import PlannedExpenseItem from '@/components/PlannedExpenseItem'
+import EditPlannedExpenseModal from '@/components/EditPlannedExpenseModal'
 import { useSubscription } from '@/hooks/useSubscription'
 import { isPremiumRequiredError } from '@/lib/subscription'
 
@@ -27,7 +29,6 @@ export default function WalletDetailPage() {
   const [editing, setEditing] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
-    currency: '',
     image_url: null as string | null,
   })
 
@@ -44,11 +45,13 @@ export default function WalletDetailPage() {
 
   const wallet = data?.wallet ?? null
   const transactions = data?.transactions ?? []
+  const plannedExpenses = data?.planned_expenses ?? []
+  const [cancellingId, setCancellingId] = useState<string | null>(null)
+  const [editingPlanned, setEditingPlanned] = useState<PlannedExpense | null>(null)
 
   const syncForm = useCallback((w: Wallet) => {
     setFormData({
       name: w.name,
-      currency: w.currency,
       image_url: w.image_url ?? null,
     })
   }, [])
@@ -84,6 +87,33 @@ export default function WalletDetailPage() {
       }
       const message = error instanceof Error ? error.message : 'Erreur lors de la modification'
       toast.error(message)
+    }
+  }
+
+  const handleCancelPlanned = async (plannedId: string) => {
+    const confirmed = await confirm({
+      title: 'Annuler cette dépense prévue ?',
+      message: 'Elle ne sera pas débitée à la date prévue.',
+      confirmText: 'Oui, annuler',
+      cancelText: 'Non',
+      variant: 'warning',
+    })
+    if (!confirmed) return
+
+    try {
+      setCancellingId(plannedId)
+      await plannedExpenseApi.cancel(plannedId)
+      invalidateFinancialCaches()
+      const fresh = await walletApi.getHistory(id)
+      setCache(CACHE_KEYS.wallet(id), fresh)
+      setData(fresh)
+      toast.success('Dépense prévue annulée')
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Erreur lors de l'annulation"
+      toast.error(message)
+    } finally {
+      setCancellingId(null)
     }
   }
 
@@ -143,7 +173,6 @@ export default function WalletDetailPage() {
       <main className="max-w-md mx-auto px-4 py-4 space-y-6">
         <WalletHeroCard
           balance={wallet.current_balance}
-          currency={wallet.currency}
           imageUrl={wallet.image_url}
           editing={editing}
           formData={formData}
@@ -157,6 +186,25 @@ export default function WalletDetailPage() {
           onCancel={handleCancelEdit}
           premiumRequired={!isPremium}
         />
+
+        {plannedExpenses.length > 0 && (
+          <div>
+            <h3 className="text-base font-bold text-gray-900 mb-3">
+              Transactions futures
+            </h3>
+            <div className="space-y-2.5">
+              {plannedExpenses.map((item: PlannedExpense) => (
+                <PlannedExpenseItem
+                  key={item._id}
+                  item={item}
+                  onEdit={setEditingPlanned}
+                  onCancel={handleCancelPlanned}
+                  cancelling={cancellingId === item._id}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         <div>
           <h3 className="text-base font-bold text-gray-900 mb-3">
@@ -188,6 +236,18 @@ export default function WalletDetailPage() {
           )}
         </div>
       </main>
+
+      <EditPlannedExpenseModal
+        item={editingPlanned}
+        isOpen={!!editingPlanned}
+        onClose={() => setEditingPlanned(null)}
+        onSaved={async () => {
+          invalidateFinancialCaches()
+          const fresh = await walletApi.getHistory(id)
+          setCache(CACHE_KEYS.wallet(id), fresh)
+          setData(fresh)
+        }}
+      />
 
       <ConfirmModal
         isOpen={confirmState.isOpen}

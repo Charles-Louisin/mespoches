@@ -17,7 +17,6 @@ export default function NewWalletPage() {
   const router = useRouter()
   const { isPremium, requirePremium } = useSubscription()
   const [name, setName] = useState('')
-  const [currency, setCurrency] = useState('XAF')
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -31,7 +30,7 @@ export default function NewWalletPage() {
 
     try {
       setLoading(true)
-      await walletApi.create({ name, currency, image_url: imageUrl })
+      await walletApi.create({ name, image_url: imageUrl })
       toast.success('Poche créée avec succès !')
       invalidateFinancialCaches()
       router.push('/wallets')
@@ -67,15 +66,6 @@ export default function NewWalletPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Ex: Cash, MTN Money..."
-            required
-          />
-
-          <Input
-            label="Devise"
-            type="text"
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-            placeholder="XAF"
             required
           />
 

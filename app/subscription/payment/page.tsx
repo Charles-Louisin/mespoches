@@ -1,15 +1,17 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
 import Button from '@/components/Button'
+import LoadingSpinner from '@/components/LoadingSpinner'
 import { SUBSCRIPTION_PLANS, type BillingPeriod } from '@/lib/planLimits'
+import { subscriptionApi } from '@/lib/api'
 import { formatCurrency } from '@/lib/utils'
-import { CreditCard, AlertCircle } from 'lucide-react'
+import { CreditCard, Smartphone, AlertCircle } from 'lucide-react'
 
 function PaymentContent() {
   const searchParams = useSearchParams()
@@ -20,10 +22,40 @@ function PaymentContent() {
       ? SUBSCRIPTION_PLANS[period]
       : SUBSCRIPTION_PLANS.monthly
 
-  const handlePay = () => {
-    toast.info(
-      'Le paiement n\'est pas encore activé. Vous serez notifié dès que le service sera disponible.',
-      { duration: 5000 }
+  const [paymentAvailable, setPaymentAvailable] = useState<boolean | null>(null)
+  const [paying, setPaying] = useState(false)
+
+  useEffect(() => {
+    subscriptionApi
+      .getPlans()
+      .then((data) => setPaymentAvailable(data.paymentAvailable))
+      .catch(() => setPaymentAvailable(false))
+  }, [])
+
+  const handlePay = async () => {
+    if (!paymentAvailable) {
+      toast.error('Le paiement en ligne n\'est pas encore activé sur ce serveur.')
+      return
+    }
+
+    setPaying(true)
+    try {
+      const { paymentUrl } = await subscriptionApi.createCheckout(period)
+      window.location.href = paymentUrl
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Impossible de démarrer le paiement'
+      toast.error(message)
+      setPaying(false)
+    }
+  }
+
+  if (paymentAvailable === null) {
+    return (
+      <PageShell>
+        <Header title="Paiement" showBack />
+        <LoadingSpinner />
+      </PageShell>
     )
   }
 
@@ -49,37 +81,50 @@ function PaymentContent() {
           </div>
         </div>
 
-        <div className="card p-4 flex gap-3 bg-amber-50 border border-amber-100">
-          <AlertCircle className="text-amber-600 shrink-0" size={22} />
-          <div className="text-sm text-amber-900">
-            <p className="font-semibold">Paiement pas encore disponible</p>
-            <p className="mt-1 text-amber-800">
-              L&apos;intégration Mobile Money et carte bancaire est en cours. Vous
-              pourrez finaliser votre abonnement ici très prochainement.
-            </p>
+        {!paymentAvailable && (
+          <div className="card p-4 flex gap-3 bg-amber-50 border border-amber-100">
+            <AlertCircle className="text-amber-600 shrink-0" size={22} />
+            <div className="text-sm text-amber-900">
+              <p className="font-semibold">Paiement non configuré</p>
+              <p className="mt-1 text-amber-800">
+                L&apos;administrateur doit configurer les clés CinetPay sur le serveur.
+              </p>
+            </div>
           </div>
+        )}
+
+        <div className="card p-5 space-y-3">
+          <p className="text-sm font-medium text-gray-700">Moyens de paiement</p>
+          <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+            <Smartphone size={20} className="text-primary-500" />
+            <div>
+              <span className="text-gray-900 font-medium">Mobile Money</span>
+              <p className="text-xs text-gray-500">MTN MoMo · Orange Money</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+            <CreditCard size={20} className="text-primary-500" />
+            <span className="text-gray-900 font-medium">Carte bancaire</span>
+          </div>
+          <p className="text-xs text-gray-500">
+            Paiement sécurisé par CinetPay. Vous serez redirigé vers leur page de
+            paiement.
+          </p>
         </div>
 
-        <div className="card p-5 opacity-60 pointer-events-none space-y-3">
-          <p className="text-sm font-medium text-gray-500">Moyens de paiement (à venir)</p>
-          <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
-            <CreditCard size={20} className="text-gray-400" />
-            <span className="text-gray-600">Carte bancaire</span>
-          </div>
-          <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
-            <span className="text-gray-400 font-bold text-xs">MM</span>
-            <span className="text-gray-600">Mobile Money (MTN / Orange)</span>
-          </div>
-        </div>
-
-        <Button className="w-full" onClick={handlePay}>
-          Payer {formatCurrency(plan.priceXaf)}
+        <Button
+          className="w-full"
+          onClick={handlePay}
+          disabled={!paymentAvailable || paying}
+        >
+          {paying ? 'Redirection…' : `Payer ${formatCurrency(plan.priceXaf)}`}
         </Button>
 
         <button
           type="button"
           onClick={() => router.push('/subscription')}
           className="w-full text-sm text-gray-500 py-2"
+          disabled={paying}
         >
           Retour aux offres
         </button>

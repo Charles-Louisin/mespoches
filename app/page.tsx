@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react'
 import Link from 'next/link'
 import { Wallet, Transaction, MonthStats, analyticsApi, walletApi, transactionApi } from '@/lib/api'
+import { sortTransactionsByDateDesc } from '@/lib/utils'
 import { getUser, isAuthenticated } from '@/lib/auth'
 import { CACHE_KEYS } from '@/lib/cache'
 import { useCachedData } from '@/hooks/useCachedData'
@@ -16,10 +17,13 @@ import EmptyState from '@/components/EmptyState'
 import Button from '@/components/Button'
 import { Wallet as WalletIcon } from 'lucide-react'
 import { useSubscription } from '@/hooks/useSubscription'
+import BudgetsSection from '@/components/BudgetsSection'
+import SavingsGoalsSection from '@/components/SavingsGoalsSection'
 
 interface HomeData {
   wallets: Wallet[]
   totalBalance: number
+  totalSavings: number
   recentTransactions: Transaction[]
   monthStats: MonthStats | null
 }
@@ -38,21 +42,25 @@ export default function HomePage() {
   const [auth] = useState(getInitialAuth)
   const [userName] = useState(auth.name)
   const isLoggedIn = auth.loggedIn
-  const { isPremium, requirePremium } = useSubscription()
+  const { isPremium, requirePremium, handleApiError } = useSubscription()
+
+  const onApiError = (err: unknown, msg?: string) => {
+    if (handleApiError(err)) return true
+    return false
+  }
 
   const fetchHome = useCallback(async (): Promise<HomeData> => {
     const [walletsData, balanceData, transactionsData, statsData] = await Promise.all([
       walletApi.getAll().catch(() => []),
-      walletApi.getTotalBalance().catch(() => ({ total: 0, wallets: [] })),
+      walletApi.getTotalBalance().catch(() => ({ total: 0, totalSavings: 0, wallets: [] })),
       transactionApi.getAll().catch(() => []),
       analyticsApi.getCurrentMonth().catch(() => null),
     ])
-    const sorted = [...transactionsData].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    )
+    const sorted = sortTransactionsByDateDesc(transactionsData)
     return {
       wallets: walletsData,
       totalBalance: balanceData.total,
+      totalSavings: balanceData.totalSavings ?? 0,
       recentTransactions: sorted.slice(0, 5),
       monthStats: statsData,
     }
@@ -82,6 +90,7 @@ export default function HomePage() {
           <>
             <BalanceCard
               totalBalance={data.totalBalance}
+              totalSavings={isPremium ? data.totalSavings : undefined}
               monthExpense={data.monthStats?.totalExpense}
               monthIncome={data.monthStats?.totalIncome}
             />
@@ -113,6 +122,21 @@ export default function HomePage() {
                 </div>
               )}
             </section>
+
+            {isPremium && (
+              <>
+                <BudgetsSection
+                  isPremium={isPremium}
+                  onApiError={onApiError}
+                  variant="home"
+                />
+                <SavingsGoalsSection
+                  isPremium={isPremium}
+                  onApiError={onApiError}
+                  variant="home"
+                />
+              </>
+            )}
 
             <section>
               <div className="flex items-center justify-between mb-3">
