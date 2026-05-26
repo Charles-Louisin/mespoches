@@ -66,11 +66,13 @@ export const setEmailVerifiedCookie = (verified: boolean): void => {
 };
 
 export const setUser = (user: User): void => {
+  if (typeof window === 'undefined') return;
   localStorage.setItem(USER_KEY, JSON.stringify(user));
   setEmailVerifiedCookie(!!user.emailVerified);
 };
 
 export const getUser = (): User | null => {
+  if (typeof window === 'undefined') return null;
   const userData = localStorage.getItem(USER_KEY);
   if (!userData) return null;
   try {
@@ -81,11 +83,13 @@ export const getUser = (): User | null => {
 };
 
 export const removeUser = (): void => {
+  if (typeof window === 'undefined') return;
   localStorage.removeItem(USER_KEY);
   setEmailVerifiedCookie(false);
 };
 
 export const setPendingVerificationEmail = (email: string): void => {
+  if (typeof window === 'undefined') return;
   sessionStorage.setItem(PENDING_EMAIL_KEY, email);
   Cookies.set('pending_email', email, { expires: 1 });
 };
@@ -100,6 +104,7 @@ export const getPendingVerificationEmail = (): string | null => {
 };
 
 export const clearPendingVerificationEmail = (): void => {
+  if (typeof window === 'undefined') return;
   sessionStorage.removeItem(PENDING_EMAIL_KEY);
   Cookies.remove('pending_email');
 };
@@ -207,11 +212,13 @@ export const isAuthenticated = (): boolean => {
 };
 
 export const setOnboardingSeen = (): void => {
+  if (typeof window === 'undefined') return;
   localStorage.setItem(ONBOARDING_KEY, 'true');
   Cookies.set('onboarding_seen', 'true', { expires: 365 });
 };
 
 export const hasSeenOnboarding = (): boolean => {
+  if (typeof window === 'undefined') return false;
   return (
     localStorage.getItem(ONBOARDING_KEY) === 'true' ||
     Cookies.get('onboarding_seen') === 'true'
