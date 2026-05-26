@@ -2,7 +2,16 @@
 
 import { useCallback, useState } from 'react'
 import Link from 'next/link'
-import { Wallet, Transaction, MonthStats, analyticsApi, walletApi, transactionApi } from '@/lib/api'
+import {
+  Wallet,
+  Transaction,
+  MonthStats,
+  analyticsApi,
+  walletApi,
+  transactionApi,
+  budgetApi,
+  savingsGoalApi,
+} from '@/lib/api'
 import { sortTransactionsByDateDesc } from '@/lib/utils'
 import { getUser, isAuthenticated } from '@/lib/auth'
 import { CACHE_KEYS } from '@/lib/cache'
@@ -24,6 +33,8 @@ interface HomeData {
   wallets: Wallet[]
   totalBalance: number
   totalSavings: number
+  budgetCount: number
+  savingsGoalsCount: number
   recentTransactions: Transaction[]
   monthStats: MonthStats | null
 }
@@ -50,21 +61,30 @@ export default function HomePage() {
   }
 
   const fetchHome = useCallback(async (): Promise<HomeData> => {
-    const [walletsData, balanceData, transactionsData, statsData] = await Promise.all([
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth() + 1
+
+    const [walletsData, balanceData, transactionsData, statsData, budgetsData, goalsData] =
+      await Promise.all([
       walletApi.getAll().catch(() => []),
       walletApi.getTotalBalance().catch(() => ({ total: 0, totalSavings: 0, wallets: [] })),
       transactionApi.getAll().catch(() => []),
       analyticsApi.getCurrentMonth().catch(() => null),
+      isPremium ? budgetApi.getAll(year, month).catch(() => []) : Promise.resolve([]),
+      isPremium ? savingsGoalApi.getAll().catch(() => []) : Promise.resolve([]),
     ])
     const sorted = sortTransactionsByDateDesc(transactionsData)
     return {
       wallets: walletsData,
       totalBalance: balanceData.total,
       totalSavings: balanceData.totalSavings ?? 0,
+      budgetCount: budgetsData.length,
+      savingsGoalsCount: goalsData.length,
       recentTransactions: sorted.slice(0, 5),
       monthStats: statsData,
     }
-  }, [])
+  }, [isPremium])
 
   const { data, loading } = useCachedData(
     CACHE_KEYS.home,
@@ -90,7 +110,7 @@ export default function HomePage() {
           <>
             <BalanceCard
               totalBalance={data.totalBalance}
-              totalSavings={isPremium ? data.totalSavings : undefined}
+              totalSavings={isPremium && data.totalSavings > 0 ? data.totalSavings : undefined}
               monthExpense={data.monthStats?.totalExpense}
               monthIncome={data.monthStats?.totalIncome}
             />
@@ -123,13 +143,17 @@ export default function HomePage() {
               )}
             </section>
 
-            {isPremium && (
+            {isPremium && data.budgetCount > 0 && (
               <>
                 <BudgetsSection
                   isPremium={isPremium}
                   onApiError={onApiError}
                   variant="home"
                 />
+              </>
+            )}
+            {isPremium && data.savingsGoalsCount > 0 && (
+              <>
                 <SavingsGoalsSection
                   isPremium={isPremium}
                   onApiError={onApiError}

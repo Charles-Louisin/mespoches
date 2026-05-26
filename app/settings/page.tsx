@@ -10,7 +10,7 @@ import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
 import ConfirmModal from '@/components/ConfirmModal'
 import ExportAllModal from '@/components/ExportAllModal'
-import { Tag, LogOut, User, Info, Crown, Download } from 'lucide-react'
+import { LogOut, User, Info, Crown, Download } from 'lucide-react'
 import { ExportFormat } from '@/lib/api'
 import { downloadBlob } from '@/lib/download'
 import { useSubscription } from '@/hooks/useSubscription'
@@ -108,14 +108,6 @@ export default function SettingsPage() {
       bg: 'bg-emerald-50',
       pro: true,
       onClick: openExportModal,
-    },
-    {
-      icon: Tag,
-      label: 'Gérer les catégories',
-      description: 'Créer et modifier vos catégories',
-      href: '/categories',
-      color: 'text-primary-500',
-      bg: 'bg-primary-50'
     },
     {
       icon: User,

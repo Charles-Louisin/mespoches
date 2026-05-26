@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { Download, Settings, LogIn } from 'lucide-react'
+import { Download, LogIn } from 'lucide-react'
 import { usePwaInstall } from '@/hooks/usePwaInstall'
+import HeaderActions from '@/components/HeaderActions'
 
 interface HomeHeaderProps {
   userName?: string
@@ -39,13 +40,7 @@ export default function HomeHeader({ userName, isLoggedIn }: HomeHeaderProps) {
                     <Download size={22} strokeWidth={1.75} />
                   </button>
                 )}
-                <Link
-                  href="/settings"
-                  className="p-2 text-gray-600 hover:text-primary-500 touch-manipulation"
-                  title="Paramètres"
-                >
-                  <Settings size={22} strokeWidth={1.75} />
-                </Link>
+                <HeaderActions />
               </>
             ) : (
               <Link

@@ -1,8 +1,8 @@
 'use client'
 
-import { ArrowLeft, Settings } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import HeaderActions from '@/components/HeaderActions'
 
 interface HeaderProps {
   title: string
@@ -43,15 +43,7 @@ export default function Header({
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {action}
-            {showSettings && (
-              <Link
-                href="/settings"
-                className="p-2 text-gray-600 hover:text-primary-500 rounded-xl transition touch-manipulation"
-                title="Paramètres"
-              >
-                <Settings size={20} />
-              </Link>
-            )}
+            {showSettings && <HeaderActions iconSize={20} />}
           </div>
         </div>
       </div>

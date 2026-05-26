@@ -15,7 +15,7 @@ import { formatCurrency } from '@/lib/utils'
 import { Check, Crown } from 'lucide-react'
 
 const PREMIUM_FEATURES = [
-  'Poches et catégories illimitées',
+  'Catégories illimitées',
   'Historique complet (au-delà de 3 mois)',
   'Transferts entre poches',
   'Images personnalisées',

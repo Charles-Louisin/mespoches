@@ -36,7 +36,6 @@ import { getUser } from '@/lib/auth'
 import UpgradeBanner from '@/components/UpgradeBanner'
 import { useSubscription } from '@/hooks/useSubscription'
 import { PLAN_LIMITS } from '@/lib/planLimits'
-import RecurringSection from '@/components/RecurringSection'
 
 const defaultFilters: TransactionFiltersState = {
   q: '',
@@ -203,8 +202,6 @@ export default function TransactionsPage() {
             monthOptions={monthOptions}
           />
         )}
-
-        <RecurringSection isPremium={isPremium} onApiError={handleApiError} />
 
         {(plannedExpenses.length > 0 || !hidePlannedHelp) && (
           <div className="flex items-center justify-between px-1">

@@ -28,10 +28,12 @@ import Input from '@/components/Input'
 import Select from '@/components/Select'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { useSubscription } from '@/hooks/useSubscription'
+import { useCurrency } from '@/contexts/CurrencyContext'
 import { Info } from 'lucide-react'
 
 function NewTransactionForm() {
   const { isPremium, requirePremium, handleApiError } = useSubscription()
+  const { formatAmount } = useCurrency()
   const router = useRouter()
   const searchParams = useSearchParams()
   const typeParam = searchParams.get('type')
@@ -255,6 +257,18 @@ function NewTransactionForm() {
   const showSavingsOption =
     isPremium && (type === 'income' || type === 'transfer') && savingsGoals.length > 0
 
+  const showSourceWallet = type !== 'income' || !toSavings
+  const selectedWallet = wallets.find((w) => w._id === walletId) ?? null
+  const parsedAmount = parseFloat(amount)
+  const amountExceedsBalance =
+    showSourceWallet &&
+    !!selectedWallet &&
+    !!amount &&
+    !Number.isNaN(parsedAmount) &&
+    parsedAmount > 0 &&
+    (type === 'expense' || type === 'transfer') &&
+    parsedAmount > selectedWallet.current_balance
+
   return (
     <PageShell>
       <Header title="Nouvelle transaction" showBack />
@@ -287,6 +301,14 @@ function NewTransactionForm() {
             <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
               Montant
             </label>
+            {showSourceWallet && selectedWallet && (
+              <p className="text-xs text-center text-gray-500 mb-2">
+                Solde actuel :{' '}
+                <span className="font-semibold text-gray-700">
+                  {formatAmount(selectedWallet.current_balance)}
+                </span>
+              </p>
+            )}
             <input
               type="number"
               step="0.01"
@@ -295,8 +317,15 @@ function NewTransactionForm() {
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0"
               required
-              className="w-full text-3xl font-bold text-center text-primary-600 bg-transparent border-0 focus:outline-none focus:ring-0"
+              className={`w-full text-3xl font-bold text-center bg-transparent border-0 focus:outline-none focus:ring-0 ${
+                amountExceedsBalance ? 'text-red-500' : 'text-primary-600'
+              }`}
             />
+            {amountExceedsBalance && (
+              <p className="text-xs text-red-500 text-center mt-2">
+                Montant supérieur au solde de la poche
+              </p>
+            )}
           </div>
 
           {showSavingsOption && (

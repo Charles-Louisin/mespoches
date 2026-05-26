@@ -183,7 +183,7 @@ function PreviewBottomNav({ activeHref }: { activeHref: string }) {
   ]
   const rightItems = [
     { href: '/wallets', icon: WalletIcon, label: 'Portefeuilles' },
-    { href: '/analytics', icon: BarChart3, label: 'Analyse' },
+    { href: '/categories', icon: Tag, label: 'Catégories' },
   ]
 
   const NavItem = ({

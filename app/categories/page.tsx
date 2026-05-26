@@ -20,12 +20,11 @@ import { Tag, Plus, Pencil, Trash2 } from 'lucide-react'
 import { useSubscription } from '@/hooks/useSubscription'
 import { isPremiumRequiredError } from '@/lib/subscription'
 import UpgradeBanner from '@/components/UpgradeBanner'
-import BudgetsSection from '@/components/BudgetsSection'
 import { PLAN_LIMITS } from '@/lib/planLimits'
 
 export default function CategoriesPage() {
   const { confirm, confirmState, closeConfirm } = useConfirm()
-  const { isPremium, requirePremium, handleApiError } = useSubscription()
+  const { isPremium, requirePremium } = useSubscription()
   const fetchCategories = useCallback(() => categoryApi.getAll(), [])
   const { data: categories, loading, setData } = useCachedData(
     CACHE_KEYS.categories,
@@ -299,8 +298,6 @@ export default function CategoriesPage() {
             )}
           </>
         )}
-
-        <BudgetsSection isPremium={isPremium} onApiError={handleApiError} />
       </main>
 
       {/* Modal de confirmation */}
