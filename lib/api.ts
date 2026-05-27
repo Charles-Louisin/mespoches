@@ -29,6 +29,15 @@ async function fetchApi<T>(
     },
   });
 
+  const contentType = response.headers.get('content-type') ?? '';
+  if (!contentType.includes('application/json')) {
+    const fallback =
+      response.status === 404
+        ? 'Route API introuvable'
+        : `Erreur serveur (${response.status})`;
+    throw new Error(fallback);
+  }
+
   const data: ApiResponse<T> = await response.json();
 
   if (!response.ok || !data.success) {
@@ -151,6 +160,8 @@ export const transactionApi = {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
+  delete: (id: string) =>
+    fetchApi<{ message?: string }>(`/transactions/${id}`, { method: 'DELETE' }),
 };
 
 // Categories

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import {
@@ -28,10 +28,13 @@ import {
   ArrowUpRight,
   Pencil,
   Save,
+  Trash2,
   X,
 } from 'lucide-react'
 import TransactionExportActions from '@/components/TransactionExportActions'
 import { useSubscription } from '@/hooks/useSubscription'
+import ConfirmModal from '@/components/ConfirmModal'
+import { useConfirm } from '@/hooks/useConfirm'
 
 interface TransactionDetailCache {
   transaction: Transaction
@@ -40,12 +43,15 @@ interface TransactionDetailCache {
 
 export default function TransactionDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const id = params.id as string
   const { formatAmount } = useCurrency()
   const { isPremium, requirePremium } = useSubscription()
+  const { confirm, confirmState, closeConfirm } = useConfirm()
 
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [wallets, setWallets] = useState<Wallet[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [formData, setFormData] = useState({
@@ -151,6 +157,30 @@ export default function TransactionDetailPage() {
     setEditing(false)
   }
 
+  const handleDelete = async () => {
+    if (!transaction) return
+    const confirmed = await confirm({
+      title: 'Supprimer la transaction ?',
+      message: 'Cette action est irréversible.',
+      confirmText: 'Oui, supprimer',
+      cancelText: 'Annuler',
+    })
+    if (!confirmed) return
+
+    try {
+      setDeleting(true)
+      await transactionApi.delete(id)
+      invalidateFinancialCaches()
+      toast.success('Transaction supprimée')
+      router.push('/transactions')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Erreur lors de la suppression'
+      toast.error(message)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const wallet =
     transaction && typeof transaction.wallet_id === 'object'
       ? (transaction.wallet_id as Wallet)
@@ -254,14 +284,25 @@ export default function TransactionDetailPage() {
         showBack
         action={
           canEdit && !editing ? (
-            <button
-              type="button"
-              onClick={handleStartEdit}
-              className="p-2 text-primary-500 touch-manipulation"
-              aria-label="Modifier"
-            >
-              <Pencil size={20} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={handleStartEdit}
+                className="p-2 text-primary-500 touch-manipulation"
+                aria-label="Modifier"
+              >
+                <Pencil size={20} />
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="p-2 text-red-600 touch-manipulation disabled:opacity-50"
+                aria-label="Supprimer"
+              >
+                <Trash2 size={20} />
+              </button>
+            </div>
           ) : undefined
         }
       />
@@ -444,6 +485,15 @@ export default function TransactionDetailPage() {
           </>
         )}
       </main>
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        onClose={closeConfirm}
+        onConfirm={confirmState.onConfirm}
+        confirmText={confirmState.confirmText}
+        cancelText={confirmState.cancelText}
+      />
     </PageShell>
   )
 }
