@@ -1,0 +1,35 @@
+GET
+Statut du transfert
+Retrouvez ci-dessous la description, le corps de requête attendu et les exemples de réponses pour cet endpoint.
+
+URL de l’endpoint
+
+GET
+{{baseUrl}}/v1/transfer/{transaction_id}
+Description
+Instructions
+En plus de la notification de transaction, vous pouvez utiliser le statut de transaction pour vérifier en temps réel le statut actuel d'un paiement. En pratique, cela peut être utile lorsque les notifications ne sont pas envoyées (par ex. lorsque les utilisateurs ne valident pas leurs paiements).
+
+Réponses
+SUCCESS
+200
+{
+    "code": 100,
+    "status": "SUCCESS",
+    "merchant_transaction_id": "MY-ORDER-ID-0808100",
+    "transaction_id": "3794955185b04d32956cfb65cd8b744f",
+    "amount": "100",
+    "fee_amount": "2",
+    "user": {
+        "name": "Account Test",
+        "email": "[EMAIL_ADDRESS]",
+        "phone_number": "+2250102002201"
+    }
+}
+ERROR
+422
+{
+    "code": 404,
+    "status": "NOT_FOUND",
+    "description": "Not found"
+}

@@ -1,0 +1,17 @@
+GET
+Solde
+Retrouvez ci-dessous la description, le corps de requête attendu et les exemples de réponses pour cet endpoint.
+
+URL de l’endpoint
+
+GET
+{{baseUrl}}/v1/balances
+Réponses
+Solde
+200
+{
+    "code": 200,
+    "status": "OK",
+    "available_balance": "249711.74",
+    "currency": "XOF"
+}

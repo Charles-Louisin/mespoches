@@ -1,0 +1,58 @@
+Numéros de Test
+Cette section fournit le contexte fonctionnel et les règles utiles avant l’intégration.
+
+Description
+Numéros de Test
+Ces numéros sont utilisables uniquement en sandbox. Pour obtenir un test fiable, partez toujours du pays de votre compte puis choisissez un numéro compatible avec la méthode de paiement utilisée.
+
+Règle simple
+Choisissez le pays correspondant à votre compte.
+Choisissez une méthode de paiement compatible (OM_CI, MTN_CI, WAVE_CI, etc.).
+Utilisez un préfixe opérateur valide pour ce pays.
+Remplacez les 4 derniers chiffres du numéro par le scénario voulu.
+Exemple : si vous testez OM_CI, utilisez un numéro Orange Côte d'Ivoire. N'utilisez pas un numéro MTN, Wave ou Sénégal pour ce test.
+
+Signification des 4 derniers chiffres
+4 derniers chiffres	Statut API attendu	Signification métier
+0700	200	Succès immédiat
+0701	101 puis 200	Pending puis succès après quelques secondes
+0703	300	Échec immédiat
+0704	101 puis 300	Pending puis échec après quelques secondes
+0706	101	Pending infini
+Utilisez uniquement ces suffixes pour garder des tests reproductibles. Évitez les autres valeurs.
+
+Bases de numéros par pays
+Les exemples ci-dessous montrent la base locale. Vous devez ensuite remplacer xxxx par le scénario souhaité.
+
+Pays	Indicatif	Base locale (xxxx = scénario)	Opérateur exemple	Exemple succès (0700)
+Côte d'Ivoire (CI)	+225	070707xxxx (10 chiffres)	Orange (07)	+2250707070700
+Sénégal (SN)	+221	77777xxxx (9 chiffres)	Orange (77)	+221777770700
+Mali (ML)	+223	6666xxxx (8 chiffres)	Orange (66)	+22366660700
+Guinée (GN)	+224	62222xxxx (9 chiffres)	Orange (62)	+224622220700
+Burkina Faso (BF)	+226	0505xxxx (8 chiffres)	Orange (05)	+22605050700
+Niger (NE)	+227	9898xxxx (8 chiffres)	Airtel (98)	+22798980700
+Togo (TG)	+228	9090xxxx (8 chiffres)	Moov (90)	+22890900700
+Bénin (BJ)	+229	6060xxxx (8 chiffres)	Moov (60)	+22960600700
+Cameroun (CM)	+237	69999xxxx (9 chiffres)	Orange (69)	+237699990700
+RD Congo (CD)	+243	80000xxxx (9 chiffres)	Orange (80)	+243800000700
+Cas particuliers
+WAVE : le parcours passe généralement par une redirection vers une page de test (launch_url). Vérifiez surtout la redirection, le retour utilisateur et la notification finale.
+Autres opérateurs : le test suit le scénario porté par les 4 derniers chiffres.
+Transfert : si la section Transfert fournit déjà un numéro sandbox imposé, cette consigne reste prioritaire pour les tests de transfert.
+Comment utiliser les numéros de test
+Pour votre compte Cameroun (CM), choisissez d’abord une méthode de paiement compatible, puis utilisez un numéro de test du même pays et du même opérateur.
+1. Commencez par le pays du compte
+
+Votre compte courant est rattaché à Cameroun (CM). Les exemples de ce pays sont les plus pertinents pour vos tests sandbox.
+
+2. Gardez la cohérence opérateur / payment_method
+
+Exemple: si vous envoyez `OM_CI`, utilisez un numéro Orange Côte d’Ivoire. N’utilisez pas un numéro MTN, Wave ou un autre pays pour ce test.
+
+3. Le scénario correspond aux 4 derniers chiffres
+
+`0700` = succès immédiat, `0701` = pending puis succès, `0703` = échec immédiat, `0704` = pending puis échec, `0706` = pending infini. Évitez les autres suffixes pour garder des tests reproductibles.
+
+4. Cas particulier des transferts
+
+Pour les transferts, suivez d’abord la consigne spécifique de la section Transfert si un numéro sandbox imposé y est déjà fourni.

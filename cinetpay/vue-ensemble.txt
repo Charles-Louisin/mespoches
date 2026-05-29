@@ -1,0 +1,26 @@
+Vue d'ensemble
+Cette section fournit le contexte fonctionnel et les règles utiles avant l’intégration.
+
+Description
+Présentation
+Bienvenue dans la documentation de l'API CinetPay. Cette documentation décrit les différentes opérations que vous pouvez effectuer avec notre API. Cette section présente les bases pour démarrer avec l'API CinetPay, y compris les prérequis et les environnements disponibles.
+
+Utilisation de l'API
+Avec votre api_key et votre api_password, vous pourrez consommer l'API CinetPay en suivant la documentation fournie. Veillez à garder vos informations d'authentification en sécurité et à ne les partager qu'avec des personnes autorisées.
+
+🌍 Important — un compte = un pays.
+Vos identifiants api_key / api_password ne fonctionnent que pour le pays rattaché à votre compte marchand. Pour opérer dans un autre pays, demandez l'ouverture d'un compte dédié à ce pays. Détails dans la section Authentification.
+
+✅ Avant de commencer — lecture indispensable
+Avant d'écrire la moindre ligne de code, prenez 5 minutes pour parcourir ces deux sections. Elles regroupent les pièges qui font perdre des semaines à beaucoup de marchands.
+
+1. 📘 Bonnes pratiques
+La section Bonnes pratiques détaille les recommandations à suivre pour une intégration robuste : authentification, idempotence, gestion des erreurs, sécurité, performance, monitoring, jeu de tests sandbox. C'est votre check-list de mise en production.
+
+2. 🔐 Notification de transaction
+La section Notification de transaction explique le mécanisme webhook (IPN). Lisez impérativement l'avertissement de sécurité tout en haut : un webhook est par définition appelable par n'importe qui, vous ne devez jamais vous fier au statut envoyé dans le payload. Toujours re-vérifier le statut canonique via GET /v1/payment/{merchant_transaction_id} avant de débloquer une commande.
+
+3. 🧪 Numéros de test
+Servez-vous des Numéros de test documentés pour reproduire les statuts SUCCESS, FAILED, PENDING, INSUFFICIENT_BALANCE en sandbox.
+
+💡 Conseil : configurez les variables account_key et account_password dans votre client API, et utilisez l'environnement sandbox (api.cinetpay.net) pour vos premiers tests.

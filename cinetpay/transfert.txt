@@ -1,0 +1,73 @@
+POST
+Transfert
+Retrouvez ci-dessous la description, le corps de requête attendu et les exemples de réponses pour cet endpoint.
+
+URL de l’endpoint
+
+POST
+{{baseUrl}}/v1/transfer
+Description
+Paramètres de la requête
+Le corps de la requête doit être au format JSON et inclure les propriétés suivantes :
+
+Paramètre	Type	Requis	Description
+currency	String	Oui	Devise de paiement. Peut être : XOF, XAF, GNF. Vous devez envoyer la même devise que celle de votre compte.
+payment_method	String	Oui	Méthode de paiement. Voir ci-dessous et la section des codes de paiement et de transfert pour les valeurs possibles.
+merchant_transaction_id	String	Oui	Identifiant de transaction marchand. Doit être unique dans le système.
+amount	Integer	Oui	Montant du paiement.
+phone_number	String	Oui	Numéro de téléphone. Doit être un numéro valide pour le pays.
+reason	String	Oui	Motif du transfert.
+notify_url	String	Oui	doit être une URL valide. URL de notification utilisée après l'opération de transfert.
+Remarque : En sandbox, veuillez utiliser ce numéro pour vos tests de transferts (+2250707000001)
+Corps de requête
+{
+    "currency": "XOF",
+    "merchant_transaction_id": "MY-ORDER-ID-08082115",
+    "phone_number": "+2250707000001",
+    "amount": 100,
+    "payment_method": "OM_CI",
+    "reason": "Rechargement de compte",
+    "notify_url": "{{merchantUrl}}"
+}
+Réponses
+SUCCESS
+200
+{
+    "code": 100,
+    "status": "SUCCESS",
+    "merchant_transaction_id": "MY-ORDER-ID-08082115",
+    "transaction_id": "69c9c46c18384f89852924ab88686058",
+    "amount": 100,
+    "fee_amount": 2,
+    "user": {
+        "name": "Doe John",
+        "email": "john.doe@gmail.com",
+        "phone_number": "+2250707000000"
+    }
+}
+PENDING
+200
+{
+    "code": 2002,
+    "status": "PENDING",
+    "merchant_transaction_id": "0cac6b2e-1ba4-4924-8716-46784fc9589e",
+    "transaction_id": "dc1f6d3d-432f-4333-924e-714df5e53dfa",
+    "notify_token": "8fecf943b2484d50815b9980331dd53e",
+    "amount": "200",
+    "fee_amount": "0",
+    "phone_number": "+2250707200200",
+    "currency": "XOF"
+}
+FAILED
+200
+{
+    "code": 2002,
+    "status": "PENDING",
+    "merchant_transaction_id": "0cac6b2e-1ba4-4924-8716-46784fc9589e",
+    "transaction_id": "dc1f6d3d-432f-4333-924e-714df5e53dfa",
+    "notify_token": "8fecf943b2484d50815b9980331dd53e",
+    "amount": "200",
+    "fee_amount": "0",
+    "phone_number": "+2250707200200",
+    "currency": "XOF"
+}

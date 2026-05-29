@@ -1,0 +1,42 @@
+Méthodes de paiement
+Cette section fournit le contexte fonctionnel et les règles utiles avant l’intégration.
+
+Description
+Pays	Code pays	Opérateur	Indicatif	Nombre de chiffres	Préfixe opérateur	Méthode de paiement	Encaissement	Décaissement	Disponible	Devise
+Côte d'Ivoire	CI	Orange	+225	10	07	OM_CI	Oui	Oui	Oui	XOF
+Côte d'Ivoire	CI	Moov	+225	10	01	MOOV_CI	Oui	Oui	Oui	XOF
+Côte d'Ivoire	CI	MTN	+225	10	05	MTN_CI	Oui	Oui	Oui	XOF
+Côte d'Ivoire	CI	Wave	+225	10	01, 05, 07	WAVE_CI	Oui	Oui	Oui	XOF
+Burkina Faso	BF	Orange	+226	8	05, 76, 75, 55, 07, 06, 54, 57	OM_BF	Oui	Oui	Oui	XOF
+Burkina Faso	BF	Moov	+226	8	50	MOOV_BF	Oui	Oui	Oui	XOF
+Burkina Faso	BF	Wave	+226	8	70, 71	WAVE_BF	Oui	Oui	Oui	XOF
+Mali	ML	Orange	+223	8	66	OM_ML	Oui	Oui	Oui	XOF
+Mali	ML	Moov	+223	8	80	MOOV_ML	Oui	Oui	Oui	XOF
+Sénégal	SN	Orange	+221	9	77	OM_SN	Oui	Oui	Oui	XOF
+Sénégal	SN	Free	+221	9	78	FREE_SN	Oui	Non	Oui	XOF
+Sénégal	SN	Expresso	+221	9	70	EXPRESSO_SN	Non	Non	Non	XOF
+Sénégal	SN	Wave	+221	9	76	WAVE_SN	Oui	Oui	Oui	XOF
+Togo	TG	Moov	+228	8	90	MOOV_TG	Oui	Oui	Oui	XOF
+Togo	TG	Togocell	+228	8	92	TMONEY_TG	Oui	Oui	Oui	XOF
+Guinée	GN	Orange	+224	9	62	OM_GN	Oui	Oui	Oui	GNF
+Guinée	GN	MTN	+224	9	65	MTN_GN	Oui	Oui	Oui	GNF
+Cameroun	CM	Orange	+237	9	69	OM_CM	Oui	Oui	Oui	XAF
+Cameroun	CM	MTN	+237	9	65	MTN_CM	Oui	Oui	Oui	XAF
+Bénin	BJ	Moov	+229	8	60	MOOV_BJ	Oui	Oui	Oui	XOF
+Bénin	BJ	MTN	+229	8	61	MTN_BJ	Oui	Oui	Oui	XOF
+RD Congo	CD	Orange	+243	9	80, 84, 85, 89	OM_CD	Oui	Oui	Oui	CDF
+RD Congo	CD	Airtel	+243	9	97, 99	AIRTEL_CD	Oui	Oui	Oui	CDF
+RD Congo	CD	Mpesa	+243	9	81, 82	MPESA_CD	Oui	Oui	Oui	CDF
+RD Congo	CD	Africel	+243	9	90	AFRICELL_CD	Non	Non	Non	CDF
+Niger	NE	Airtel	+227	8	98	AIRTEL_NE	Oui	Oui	Oui	XOF
+Niger	NE	Moov	+227	8	94	MOOV_NE	Oui	Oui	Oui	XOF
+Niger	NE	Zamani	+227	8	91	ZAMANI_NE	Oui	Oui	Oui	
+Tchad	TD	Airtel	+235	8	66	AIRTEL_TD	Bientôt	Bientôt	Bientôt	XAF
+Tchad	TD	Moov	+235	8	63	MOOV_TD	Bientôt	Bientôt	Bientôt	XAF
+Congo	CG	Airtel	+242	9	06	AIRTEL_CG	Bientôt	Bientôt	Bientôt	XAF
+Congo	CG	MTN	+242	9	05	MTN_CG	Bientôt	Bientôt	Bientôt	XAF
+République centrafricaine	CF	Orange	+236	8	75	OM_CF	Bientôt	Bientôt	Bientôt	XAF
+République centrafricaine	CF	Telecel	+236	8	77	TELECEL_CF	Bientôt	Bientôt	Bientôt	XAF
+Gabon	GA	Airtel	+241	8	07	AIRTEL_GA	Bientôt	Bientôt	Bientôt	XAF
+Gabon	GA	Moov	+241	8	06	MOOV_GA	Bientôt	Bientôt	Bientôt	XAF
+Guinée équatoriale	GQ	Muni	+240	9		MUNI_GQ	Bientôt	Bientôt	Bientôt	XAF

@@ -54,6 +54,9 @@ function SuccessContent() {
         setPremiumUntil(data.premiumUntil)
         setState('success')
         toast.success('Bienvenue dans MES POCHES Premium !')
+      } else if (data.status === 'failed') {
+        setState('error')
+        toast.error('Le paiement a échoué ou a été annulé.')
       } else if (data.status === 'pending') {
         setState('pending')
       } else {

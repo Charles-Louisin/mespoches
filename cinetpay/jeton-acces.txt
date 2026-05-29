@@ -1,0 +1,30 @@
+POST
+Jeton d'accès
+Retrouvez ci-dessous la description, le corps de requête attendu et les exemples de réponses pour cet endpoint.
+
+URL de l’endpoint
+
+POST
+{{baseUrl}}/v1/oauth/login
+Corps de requête
+{
+    "api_key":"{{account_key}}",
+    "api_password": "{{account_password}}"
+}
+Réponses
+SUCCESS
+200
+{
+    "code": 200,
+    "status": "OK",
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvYXBpLnBheW1ldHJfgc3QudGVzdFwvdjFcL29hdXRoXC9sb2dpbiIsImlhdCI6MTYwMDM0MTQ1OCwiZXhwIjoxNjAwNDI3ODU4LCJuYmYiOjE2MDAzNDENTgsImp0aSI6nRYcjZ6NXRdDemcwWDVMeUYiLCJzdWIiOjIsInBydiI6Ijg3ZTBhZjFlZjlmZDE1ODEyZmRlYzk3MTUzYTE0ZTBiMDQ3NTQ2YWEiLCJ1c2VyX2lkIjoyfQ.oBCbNhmKIusxmtSuFR7_fOGElP0sMyjWBEAFx66AY4M",
+    "token_type": "bearer",
+    "expires_in": 86400
+}
+ERROR
+422
+{
+    "code": 1005,
+    "status": "INVALID_CREDENTIALS",
+    "description": "The requested service needs credentials, but the ones provided were invalid."
+}

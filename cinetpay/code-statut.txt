@@ -1,0 +1,24 @@
+Codes de statut
+Cette section fournit le contexte fonctionnel et les règles utiles avant l’intégration.
+
+Description
+code	status	Message	Statut final
+200	OK	Opération réussie	Non
+100	SUCCESS	transaction traitée avec succès	Oui
+-1	OPERATION_ERROR	Une erreur s'est produite	Non
+404	NOT_FOUND	Introuvable	Non
+1005	INVALID_CREDENTIALS	Le service demandé nécessite des identifiants, mais ceux fournis sont invalides.	Non
+1004	INVALID_PARAMS	Les paramètres fournis pour l'opération sont invalides	Non
+1003	EXPIRED_TOKEN	Le jeton d'authentification a expiré	Non
+1002	INVALID_TOKEN	Le jeton d'authentification est invalide	Non
+1200	TRANSACTION_EXIST	La transaction existe déjà	Oui
+2001	INITIATED	Opération initiée en attente d'action de l'utilisateur	Non
+2002	PENDING	L'utilisateur a commencé le paiement	Non
+2003	EXPIRED	L'opération a expiré, l'utilisateur n'a pas confirmé le paiement.	Non
+2004	OTP_ERROR	Le code OTP fourni est incorrect	Non
+2008	OTP_EXPIRED	Le code OTP fourni a expiré	Non
+2005	INSUFFICIENT_BALANCE	Le marchand n'a pas suffisamment de solde pour valider l'opération	Oui
+2006	USER_NOT_FOUND	L'utilisateur n'existe pas	Non
+2007	USER_IS_BLOCKED	L'utilisateur a été bloqué	Non
+2010	FAILED	Le paiement a échoué	Oui
+2011	NOT_ALLOWED	Cette IP n'est pas en liste blanche	Non

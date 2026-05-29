@@ -1,0 +1,156 @@
+Notification de transaction
+Cette section fournit le contexte fonctionnel et les règles utiles avant l’intégration.
+
+Description
+⚠️ Avertissement sécurité — À LIRE EN PREMIER
+Ne faites JAMAIS confiance au statut transmis dans le webhook.
+
+Le payload reçu par votre notify_url est un simple appel HTTP entrant. N'importe qui ayant l'URL de votre webhook (qui est par définition exposée publiquement) peut forger une fausse notification et vous envoyer un faux status=SUCCESS pour vous faire débloquer une commande qui n'a en réalité jamais été payée. Le notify_token lui-même peut être deviné ou intercepté si votre intégration est compromise.
+
+La règle d'or : à chaque réception d'un webhook, votre code doit immédiatement appeler GET /v1/payment/{merchant_transaction_id} (ou GET /v1/transfer/{transaction_id} pour les transferts) pour récupérer le statut canonique signé par CinetPay. Ne vous fiez QUE à cette réponse, jamais au contenu du payload entrant.
+
+Concrètement, le webhook doit être traité comme un simple signal « regardez votre transaction », pas comme une source de vérité. Le seul endroit où vivent les statuts authentiques, c'est l'API CinetPay.
+
+Schéma de l'attaque vs flux sécurisé
+❌ Approche dangereuse — vous faites confiance au payload entrant
+   ┌─────────────┐                   ┌──────────────────┐
+   │  Attaquant  │ ─── HTTP POST ──▶ │ Votre notify_url │
+   │  malveillant│  status=SUCCESS    │  (exposée)       │
+   └─────────────┘                   └────────┬─────────┘
+                                              │
+                                              ▼
+                                   Votre code lit le payload
+                                   et marque la commande payée
+                                              │
+                                              ▼
+                                       💸 LIVRAISON SANS PAIEMENT
+✅ Approche sécurisée — vous re-vérifiez auprès de CinetPay
+   ┌─────────────┐                   ┌──────────────────┐
+   │  Attaquant  │ ─── HTTP POST ──▶ │ Votre notify_url │
+   │  malveillant│  status=SUCCESS    │                  │
+   └─────────────┘                   └────────┬─────────┘
+                                              │  GET /v1/payment/{merchant_transaction_id}
+                                              ▼
+                                   ┌────────────────────┐
+                                   │     API CinetPay   │
+                                   │  (source de vérité)│
+                                   └────────┬───────────┘
+                                              │  status réel : "WAITING" ❌
+                                              ▼
+                                   La commande N'EST PAS marquée payée
+                                              │
+                                              ▼
+                                       🛡️ ATTAQUE NEUTRALISÉE
+Comparatif
+Étape	❌ Approche dangereuse	✅ Approche sécurisée
+Réception webhook	Lit status depuis le payload	Lit uniquement transaction_id depuis le payload
+Décision	Se fie à la valeur reçue	Appelle GET /v1/payment/{merchant_transaction_id}
+Source de vérité	Le payload (manipulable)	La réponse de l'API CinetPay (signée)
+Risque	Livraison sans paiement réel	Aucun — l'attaquant ne peut pas falsifier la réponse de l'API
+Introduction
+La notification est un mécanisme à mettre en place afin de synchroniser automatiquement les paiements avec votre site marchand. CinetPay appellera ce lien après chaque mise à jour pour vous notifier les changements de statut pendant une transaction. À la fin d'un paiement, CinetPay appelle systématiquement l'URL de notification du service concerné. L'objectif de cet appel est d'informer le marchand du statut de sa transaction. Le marchand peut alors valider sa commande si le paiement est vérifié et accepté.
+
+Notification
+Lorsque la transaction (paiement ou transfert) a un statut final (SUCCESS ou FAILED) ! CinetPay enverra une notification de paiement à votre notify_url avec les paramètres suivants :
+
+notify_token : c'est le même que celui présent dans la réponse du paiement web, assurez-vous que ce jeton correspond à celui envoyé dans la notification POST. Ainsi, vous validerez l'authenticité de la notification.
+
+merchant_transaction_id : représente l'identifiant unique de votre commande envoyé dans la requête
+
+transaction_id : représente l'identifiant unique de la commande pour cette opération.
+
+Le corps de la requête est au format JSON comme suit :
+
+URL de notification
+Lorsque vous effectuez une demande de paiement via l'API CinetPay, vous devez fournir trois URL importantes pour la gestion des notifications et des redirections après paiement. Voici une explication détaillée de chaque URL :
+
+1. URL de succès
+"success_url" : "https://nomadhook.com/h/d80e6247-9f7f-4f77-aef9-b331ce417805"
+
+Cette URL est utilisée pour rediriger l'utilisateur après un paiement réussi. Une fois le paiement terminé avec succès, l'utilisateur sera automatiquement redirigé vers cette URL. Assurez-vous que cette page fournit une confirmation visuelle et les détails de la transaction.
+
+2. URL d'échec
+"failed_url" : "https://nomadhook.com/h/d80e6247-9f7f-4f77-aef9-b331ce417805/cancel/"
+
+Cette URL est utilisée pour rediriger l'utilisateur en cas d'échec du paiement ou d'annulation par l'utilisateur. Si le paiement ne peut pas être complété pour une raison quelconque, l'utilisateur sera redirigé vers cette URL. Cette page doit informer l'utilisateur de l'échec de la transaction et proposer des options pour réessayer le paiement ou contacter le support.
+
+3. URL de notification
+"notify_url": "https://nomadhook.com/h/d80e6247-9f7f-4f77-aef9-b331ce417805/notification"
+
+Cette URL est utilisée par le serveur CinetPay pour envoyer des notifications sur le statut du paiement. Une fois le paiement traité, CinetPay enverra une requête POST à cette URL contenant les détails de la transaction et son statut. Vous devez implémenter un endpoint à cette URL pour recevoir et traiter ces notifications. Assurez-vous que votre endpoint peut gérer les requêtes de manière sécurisée et mettre à jour le statut de la transaction dans votre système.
+
+Lorsque la transaction (paiement ou retrait) a un statut final (SUCCESS ou FAILED) ! CinetPay enverra la notification de paiement à votre notify_url avec les paramètres suivants :
+
+notify_token : c'est le même que celui présent dans la réponse du paiement web. Assurez-vous que ce jeton correspond à celui envoyé dans la notification POST. Ainsi, vous validerez l'authenticité de la notification.
+
+merchant_transaction_id : représente l'identifiant unique de votre commande envoyé dans la requête
+
+transaction_id : représente notre identifiant unique de commande pour cette opération.
+
+C'est une requête POST JSON
+
+Ci-dessous le format
+
+{
+  "notify_token": "4bbd93ce1824ca005b8df92069a6b56cca005b8",
+  "merchant_transaction_id": "63e0fe766f390",
+  "transaction_id": "50901a80c84b4edcb4f50ae864bfa7c5",
+  "user": {
+    "name": "Jaqn HGHAR",
+    "email": "jaqen@gmail.com",
+    "phone_number": "+2250700356615"
+  }
+}
+
+Une fois la notification reçue, vous devez vérifier dans notre système le statut final de la transaction.
+
+Implémentation côté marchand
+Quelques points à respecter pour une intégration solide :
+
+1. Validation rapide et différée
+Répondez HTTP 200 sous 10 secondes dès la réception. Si vous traitez la commande, débloquez les stocks ou envoyez un email, faites-le dans un job asynchrone. Sinon CinetPay considère la notification comme échouée et la réessayera, ce qui peut provoquer du double traitement.
+
+2. Vérifier le notify_token
+Comparez le notify_token reçu dans le corps de la requête avec celui renvoyé lors de l'initialisation du paiement. C'est votre garantie d'authenticité.
+
+if (! hash_equals($expectedNotifyToken, $request->input('notify_token'))) {
+    return response('Invalid token', 403);
+}
+3. Confirmer le statut final
+Ne vous fiez jamais uniquement au contenu du webhook : interrogez systématiquement l'endpoint GET /v1/payment/{merchant_transaction_id} (ou /v1/transfer/{transaction_id}) pour obtenir le statut canonique avant de marquer la commande comme payée.
+
+4. Idempotence côté webhook
+Stockez le transaction_id de la dernière notification traitée. Si vous le recevez à nouveau, ignorez la requête (en répondant tout de même HTTP 200) — il est normal qu'une notification soit livrée plusieurs fois.
+
+5. Politique de retry
+Si votre endpoint répond avec un code ≠ 2xx, CinetPay réessaie selon un back-off (1 min, 5 min, 30 min, 2 h, 6 h…). Au-delà d'un certain nombre d'échecs, la notification est marquée comme non délivrable. Dans ce cas, vérifiez régulièrement le statut via GET /v1/payment/{merchant_transaction_id} pour rattraper les transactions.
+
+🔌 Configuration de votre notify_url
+Quelques règles non négociables pour que les notifications soient correctement reçues :
+
+Exigence	Détail
+Accessible publiquement	L'URL doit être joignable depuis Internet, sans authentification (pas de Basic Auth, pas de session, pas de cookie, pas de token applicatif). CinetPay ne pourra pas s'authentifier à votre place.
+HTTPS obligatoire en production	Tous les schémas doivent être https://. Les URLs en http:// sont rejetées en prod. Le certificat doit être valide (pas auto-signé).
+Méthode POST	Les notifications de statut sont envoyées en POST avec un corps JSON. C'est la méthode principale à supporter.
+Méthode GET recommandée	Acceptez aussi le GET sur la même URL : il sert à des sondes de santé (vérification que l'endpoint est joignable avant l'envoi de la première notification). Vous pouvez répondre HTTP 200 avec un corps vide.
+Pas de redirection	Évitez les codes 3xx (redirect). Beaucoup de clients HTTP ne suivent pas automatiquement les redirections sur les POST. Servez le contenu directement à l'URL annoncée.
+Réponse rapide HTTP 200	Répondez 200 OK dans les 10 secondes. Toute autre réponse (4xx, 5xx, timeout) est interprétée comme un échec et déclenche un retry.
+Idempotent	La même notification peut arriver plusieurs fois (cas de timeout, retry réseau). Dédupliquez sur transaction_id.
+Pas de WAF / firewall trop agressif	Si vous utilisez un WAF (Cloudflare, AWS WAF…), ajoutez les IPs CinetPay à la liste blanche. Sinon les notifications peuvent être silencieusement bloquées.
+Exemple d'URL valide
+✅ https://api.monboutique.com/cinetpay/notify
+✅ https://shop.example.com/webhooks/cinetpay
+
+Exemples d'URL invalides
+❌ http://... (HTTP non chiffré)
+❌ https://localhost/... (non joignable depuis Internet)
+❌ https://...?auth=token (l'authentification doit être appliquée à l'intérieur de votre code, pas dans l'URL)
+❌ https://shop.example.com/admin/notify (URL derrière une authentification d'administration)
+
+Vérifier que votre notify_url est bien accessible
+Avant la mise en production, testez votre endpoint depuis l'extérieur :
+
+curl -i -X POST https://votre-domaine.com/cinetpay/notify \
+     -H "Content-Type: application/json" \
+     -d '{"transaction_id": "test-123"}'
+Vous devez recevoir un HTTP/1.1 200 OK rapidement. Si vous obtenez 401, 403, 404, 500 ou un timeout, corrigez avant de passer en production.

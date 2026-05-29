@@ -1,0 +1,42 @@
+GET
+Statut du paiement
+Retrouvez ci-dessous la description, le corps de requête attendu et les exemples de réponses pour cet endpoint.
+
+URL de l’endpoint
+
+GET
+{{baseUrl}}/v1/payment/{merchant_transaction_id}
+Description
+En plus de la notification de transaction, vous pouvez utiliser le statut de transaction qui permet de consulter en temps réel le statut actuel d'un paiement. En pratique, cela peut être utile lorsque les notifications ne sont pas envoyées (par exemple lorsque les utilisateurs ne valident pas leurs paiements).
+
+Vous placez le merchant_transaction_id dans l'URL ou le transaction_id renvoyé après l'initialisation.
+
+Vous pouvez également utiliser le paramètre merchant_transaction_id, qui est votre identifiant de transaction de votre côté.
+
+Réponses
+ERROR
+200
+{
+    "code": 2005,
+    "status": "INSUFFICIENT_BALANCE",
+    "merchant_transaction_id": "7879",
+    "transaction_id": "66f069cc27f34d5788a62dea0d3b8645",
+    "user": {
+        "name": "Doe John",
+        "email": "john.doe@gmail.com",
+        "phone_number": "+2250707000000"
+    }
+}
+SUCCESS
+200
+{
+    "code": 100,
+    "status": "SUCCESS",
+    "merchant_transaction_id": "MY-ORDER-ID-08082116",
+    "transaction_id": "3de579e7ec43451a9463d45d21a4cf48",
+    "user": {
+        "name": "Doe John",
+        "email": "john.doe@gmail.com",
+        "phone_number": "+2250707000000"
+    }
+}

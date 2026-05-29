@@ -1,0 +1,137 @@
+POST
+Initialisation de la transaction de paiement web
+Retrouvez ci-dessous la description, le corps de requête attendu et les exemples de réponses pour cet endpoint.
+
+URL de l’endpoint
+
+POST
+{{baseUrl}}/v1/payment
+Description
+Paramètres de la requête
+Le corps de la requête doit être au format JSON et inclure les propriétés suivantes :
+
+Propriété	Type	Requis	Description
+currency	String	Oui	Devise de paiement. Valeurs possibles : XOF, XAF, GNF, CDF.
+payment_method	String	Non	Méthode de paiement (voir ci-dessous et la section des codes de paiement et de transfert pour les valeurs possibles). Si une méthode de paiement est définie, elle sera affichée au moment du paiement, sinon toutes les méthodes du pays seront affichées.
+merchant_transaction_id	String	Oui	Identifiant de transaction marchand.
+amount	Integer	Oui	Montant du paiement.
+lang	String	Oui	Langue. Valeurs possibles : "fr" et "en".
+designation	String	Oui	Libellé du paiement.
+client_email	String	Oui	Adresse e-mail client valide.
+client_phone_number	String	Non	Numéro de téléphone du client.
+client_first_name	String	Oui	Prénom du client. Minimum 2 caractères, maximum 255 caractères.
+client_last_name	String	Oui	Nom du client. Minimum 2 caractères, maximum 255 caractères.
+direct_pay	Boolean	Non	Si défini, le mode de paiement direct sera activé. Valeurs possibles : true ou false.
+otp_code	String	Non	Code OTP pour la validation du paiement. Minimum 4 caractères, maximum 6 caractères (selon la méthode de paiement utilisée).
+success_url	String	Oui	URL du site vers laquelle le client sera redirigé lorsque le paiement est réussi et qu'il choisit de retourner sur votre site.
+failed_url	String	Oui	URL du site vers laquelle le client sera redirigé en cas d'échec du paiement et qu'il choisit de retourner sur votre site.
+notify_url	String	Oui	URL de notification utilisée par le backend de paiement web pour notifier le backend marchand du statut de la transaction (voir plus de détails dans « Notification de transaction »). Cette notification n'est envoyée que lorsque le processus est confirmé et se termine par un statut « SUCCESS » ou « FAILED ».
+Remarque
+
+Notez que le champ merchant_transaction_id doit être unique dans le système.
+
+Les champs merchant_transaction_id et reference sont limités à 30 caractères, et success_url, failed_url et notify_url à 120 caractères
+
+Le champ client_phone_number doit être renseigné si vous ne voulez pas que votre client modifie son numéro lors de la confirmation du paiement sur la passerelle. De plus, une option doit être activée sur votre compte pour l'autoriser.
+
+Vous devez rediriger votre client vers la payment_url afin d'effectuer le paiement
+
+Votre compte est lié à une seule devise ; vous devez envoyer la même devise que celle de votre compte
+
+Après l'initiation du paiement, vous obtiendrez la payment_url. Vous devez y envoyer votre client afin qu'il puisse payer
+
+Vous disposez d'un compte (account_key/account_password) dans chaque pays pour lequel vous souhaitez traiter. Nous utilisons donc le jeton généré à partir de votre account_key pour identifier le pays et le fixer sur le formulaire de paiement.
+
+Mode de paiement direct
+Il permet d'effectuer l'intégralité du processus de paiement sans rediriger les utilisateurs vers notre page de passerelle. Pour les méthodes de paiement qui prennent en charge ce type de processus, les utilisateurs resteront dans votre application et finaliseront l'ensemble du processus de paiement (dépôt) sur place.
+
+Les paramètres suivants doivent être ajoutés dans votre requête d'initialisation du paiement pour effectuer un paiement direct :
+
+direct_pay (boolean true/false) : doit toujours être défini à true, pour profiter de la fonctionnalité de paiement direct (paiement sans passer par notre passerelle)
+
+otp_code (Orange uniquement) : un code à 4 ou 6 chiffres (selon votre pays) fourni par l'utilisateur final. Vous devez préparer un champ pour permettre à l'utilisateur de saisir ce code OTP et le renvoyer dans la requête vers notre API.
+
+client_phone_number doit également être renseigné lorsque vous utilisez le mode de paiement direct (ex : +2250707000000)
+
+- NOUVEAUX PARAMÈTRES REÇUS DANS LA RÉPONSE
+
+Après l'envoi de la requête avec les paramètres spécifiés ci-dessus, vous recevrez une réponse de notre part contenant les éléments suivants :
+
+{
+    "code": 200,
+    "status": "OK",
+    "merchant_transaction_id": "1ee9f52a2704628c81590242d1c176b51240d7b5fd7e4bae9",
+    "notify_token": "0554967cbd9c439198827cb5dfd845f1",
+    "transaction_id": "4dc38466f77a4114a82bfc0d7a618213",
+    "merchant_transaction_id": "TEST_SN_PO0190",
+    "payment_token": "ksjksjd239232938238dj923",
+    "payment_url":
+    "https://secure.cinetpay.net/payment/1ee9f52a2704628c81590242d1c176b51240
+d7b5fd7e4bae9",
+     "details": {
+          "code": 2010,
+          "status": "FAILED",
+          "message": "Paiement échoué",
+          "must_be_redirected": false
+      }
+}
+
+Le seul nouveau paramètre ajouté dans cette réponse est details. Il s'agit d'un objet qui contient toutes les informations concernant votre statut de paiement direct. À l'intérieur, vous trouverez les paramètres suivants :
+
+code : un code d'état numérique qui précise le statut du paiement.
+
+status : une valeur chaîne qui précise également le statut du paiement. Vous devez vous baser sur ce statut pour traiter le paiement de votre côté. Ses valeurs peuvent être :
+
+SUCCESS : l'utilisateur a été débité avec succès et le paiement est réussi.
+FAILED : l'utilisateur n'a pas finalisé le paiement ou une erreur est survenue au niveau de l'opérateur.
+INITIATED : le paiement est en cours de traitement par l'utilisateur
+PENDING : le paiement est toujours en cours de traitement par l'utilisateur
+message : ce texte doit être affiché à l'utilisateur
+
+Une fois le paiement initialisé avec succès, vous devez vérifier la valeur du champ must_be_redirected dans la réponse puis rediriger l'utilisateur vers payment_url si la valeur du champ est définie sur true.
+
+Corps de requête
+{
+    "currency": "XOF",
+    "payment_method": "OM",
+    "merchant_transaction_id": "MY-ORDER-ID-124347776",
+    "otp_code": 1234,
+    "amount": 100,
+    "success_url": "{{merchantUrl}}/success",
+    "failed_url": "{{merchantUrl}}/failed",
+    "notify_url": "{{merchantUrl}}/notification",
+    "lang": "fr",
+    "designation": "Payment CinetPay",
+    "client_first_name": "Jaqen",
+    "client_last_name": "Hghar",
+    "client_phone_number": "+2250707000000",
+    "client_email": "[EMAIL_ADDRESS]",
+    "direct_pay": false
+}
+Réponses
+SUCCESS
+200
+
+{
+    "code": 200,
+    "status": "OK",
+    "merchant_transaction_id": "1ef969cf5da467dc98c70242f6c351d52eb3ff889b0f4f9e94078a1a0da6a2a3",
+    "notify_token": "382a2329ae0647f896fa70283fa087cc",
+    "transaction_id": "4c9a7225819943fe9f1eab6ef5b573a5",
+    "merchant_transaction_id": "k0oqli6ns26xyrf",
+    "payment_token": "ksjksjd239232938238dj923",
+    "payment_url": "BASEPAYURL/payment/1ef969cf5da467dc98c70242f6c351d52eb3ff889b0f4f9e94078a1a0da6a2a3",
+    "details": {
+        "code": 2001,
+        "status": "INITIATED",
+        "message": "Veuillez cliquer sur le lien pour continuer le paiement",
+        "must_be_redirected": true
+    }
+}
+ERROR
+422
+{
+    "code": 1200,
+    "status": "TRANSACTION_EXIST",
+    "description": "La transaction existe déjà"
+}

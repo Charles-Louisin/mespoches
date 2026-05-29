@@ -215,16 +215,21 @@ export const subscriptionApi = {
     fetchApi<{
       plans: typeof import('./planLimits').SUBSCRIPTION_PLANS;
       paymentAvailable: boolean;
+      sandbox?: boolean;
       message: string;
+      paymentMethods?: { id: string; label: string; code: string | null }[];
     }>('/subscription/plans'),
   getStatus: () =>
     fetchApi<{ user: MeUser; isPremium: boolean; paymentAvailable: boolean }>(
       '/subscription/status'
     ),
-  createCheckout: (period: import('./planLimits').BillingPeriod) =>
+  createCheckout: (
+    period: import('./planLimits').BillingPeriod,
+    paymentMethod: 'all' | 'orange' | 'mtn' = 'all'
+  ) =>
     fetchApi<{ paymentUrl: string; transactionId: string }>('/subscription/checkout', {
       method: 'POST',
-      body: JSON.stringify({ period }),
+      body: JSON.stringify({ period, payment_method: paymentMethod }),
     }),
   verifyPayment: (transactionId: string) =>
     fetchApi<{

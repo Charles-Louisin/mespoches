@@ -1,0 +1,83 @@
+Limites d'opération
+Cette section fournit le contexte fonctionnel et les règles utiles avant l’intégration.
+
+Description
+pays	code_pays	opérateur	limites de dépôt	limites de transfert
+Côte d'Ivoire	CI	Orange	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Côte d'Ivoire	CI	Moov	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Côte d'Ivoire	CI	MTN	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Côte d'Ivoire	CI	Wave	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Burkina Faso	BF	Orange	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Burkina Faso	BF	Moov	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Burkina Faso	BF	Wave	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Mali	ML	Orange	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Mali	ML	Moov	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Sénégal	SN	Orange	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Sénégal	SN	Free	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Sénégal	SN	Expresso	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Sénégal	SN	Wave	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Togo	TG	Moov	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Togo	TG	Togocell	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Guinée	GN	Orange	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Guinée	GN	MTN	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Cameroun	CM	Orange	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Cameroun	CM	MTN	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Bénin	BJ	Moov	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Bénin	BJ	MTN	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+RD Congo	CD	Orange	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+RD Congo	CD	Airtel	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+RD Congo	CD	Mpesa	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+RD Congo	CD	Africell	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000
+Niger	NE	Airtel	min : 300
+max: 2 000 000	min : 500
+max: 1 500 000

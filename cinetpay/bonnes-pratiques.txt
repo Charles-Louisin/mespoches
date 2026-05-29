@@ -1,0 +1,66 @@
+Bonnes pratiques
+Cette section fournit le contexte fonctionnel et les règles utiles avant l’intégration.
+
+Description
+Bonnes pratiques pour l'intégration avec l'API CinetPay
+Cette page rassemble les recommandations à suivre pour une intégration robuste, sécurisée et durable avec l'API CinetPay.
+
+1. Authentification
+Stockez vos identifiants (account_key, account_password) dans des variables d'environnement ou un gestionnaire de secrets, jamais en dur dans le code source ni dans un dépôt Git.
+Faites tourner régulièrement votre account_password depuis votre espace marchand → Développeur.
+Restreignez l'accès à votre intégration via la liste blanche d'IP disponible dans votre tableau de bord.
+Le jeton d'accès renvoyé par /v1/oauth/login est valide 5 minutes. Mettez-le en cache et rafraîchissez-le à l'expiration plutôt qu'à chaque requête.
+2. Idempotence
+Fournissez systématiquement un merchant_transaction_id unique par opération (UUID v4 recommandé). C'est votre clé de référence côté CinetPay.
+Si vous renvoyez deux fois la même requête avec le même merchant_transaction_id, CinetPay retournera la transaction existante au lieu d'en créer une nouvelle. Cela protège contre les doubles débits en cas de timeout réseau.
+Côté webhook, dédupliquez les notifications sur la base de transaction_id — il peut arriver qu'une même notification soit envoyée plusieurs fois.
+3. Gestion des notifications (IPN)
+Répondez HTTP 200 dans les 10 secondes. Mettez la logique métier en file d'attente (job asynchrone) et traitez-la après avoir répondu.
+Vérifiez systématiquement le notify_token reçu — il prouve l'authenticité de la notification.
+Vérifiez le statut final via GET /v1/payment/{merchant_transaction_id} ou GET /v1/transfer/{transaction_id} avant de débloquer la commande, ne vous fiez jamais uniquement au payload du webhook.
+Si votre endpoint répond avec un code ≠ 2xx, CinetPay réessaiera plusieurs fois selon une politique de back-off.
+4. Gestion des erreurs
+Encadrez chaque appel HTTP avec un try / catch et journalisez l'api_status, l'api_message et le transaction_id retournés.
+Implémentez une stratégie de retry à back-off exponentiel sur les erreurs réseau (connection timeout, DNS, 5xx) — typiquement 3 tentatives espacées de 1s, 4s, 16s.
+Ne réessayez jamais sur une erreur 4xx (validation) sans corriger les paramètres : c'est une erreur définitive qui se reproduira.
+Centralisez les codes de statut connus dans une enum / constante côté code pour éviter de dépendre de chaînes magiques.
+5. Sécurité
+HTTPS obligatoire sur toutes les URL : notify_url, success_url, failed_url, et bien sûr les appels sortants vers api.cinetpay.co.
+Ne logguez jamais votre account_password, ni le contenu d'un notify_token complet (masquez tout sauf les 4 derniers caractères).
+Validez systématiquement le contenu reçu côté webhook : type des champs, montant attendu, devise, statut autorisé pour la transition demandée.
+Activez la liste blanche d'IP côté serveur en production : seuls les serveurs CinetPay doivent pouvoir appeler votre notify_url.
+6. Performance & disponibilité
+Réutilisez votre client HTTP (connection pool) plutôt que d'ouvrir une nouvelle connexion à chaque requête.
+Configurez un connect_timeout de 5 secondes et un timeout global de 15 secondes pour ne pas bloquer votre application.
+Pour les opérations en masse (mass payouts), groupez vos requêtes et étalez-les dans le temps pour respecter les limites de débit.
+Surveillez le taux d'échec par opérateur : un pic isolé peut indiquer un incident côté opérateur télécom à signaler au support.
+7. Tests & sandbox
+Utilisez l'environnement sandbox (api.cinetpay.net) pour tous vos tests d'intégration. Aucune transaction réelle n'y est exécutée.
+Servez-vous des numéros de test documentés dans la section dédiée pour reproduire les statuts SUCCESS, FAILED, PENDING, INSUFFICIENT_BALANCE.
+Pour valider votre webhook avant la mise en prod, dirigez-le temporairement vers un service comme nomadhook.com ou un tunnel local (ngrok, cloudflared) afin d'inspecter le contenu reçu.
+8. Monitoring & support
+Tracez chaque transaction de bout en bout : requête sortante, réponse, notification reçue, statut final vérifié.
+Conservez les logs au moins 90 jours pour faciliter les enquêtes en cas de litige.
+Mettez en place une alerte si le taux d'échec passe au-dessus d'un seuil (ex. > 10% sur 1h) — cela vous prévient avant que vos utilisateurs ne le signalent.
+Pour toute anomalie persistante, contactez le support en fournissant le transaction_id CinetPay et l'horodatage UTC précis.
+
+Bonnes pratiques de sécurité
+Réduisez le risque d’exposition accidentelle de vos identifiants API sur GitHub, dans le front-end ou dans vos outils internes.
+GitHub
+Backend only
+Rotation rapide
+Ne poussez jamais vos clés sur GitHub
+
+Gardez vos clés et mots de passe API hors des dépôts Git. Utilisez des variables d’environnement et ajoutez les fichiers sensibles au `.gitignore`.
+
+N’exposez pas vos secrets côté front
+
+La clé API et le mot de passe API doivent rester côté serveur. Ne les injectez jamais dans JavaScript, HTML ou une application mobile distribuée.
+
+Limitez les appels à vos serveurs autorisés
+
+Utilisez la liste blanche IP pour restreindre l’accès API à vos serveurs ou passerelles connues, surtout en production.
+
+Renouvelez vos secrets au moindre doute
+
+Si une clé a pu être exposée dans un dépôt, un ticket, un screenshot ou un outil tiers, changez immédiatement le mot de passe API.
