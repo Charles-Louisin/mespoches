@@ -17,7 +17,7 @@ interface AppLogoProps {
   alt?: string;
 }
 
-/** Logo officiel MES POCHES (monogramme MP). */
+/** Logo officiel MES POCHES — affichage circulaire. */
 export default function AppLogo({
   size = 'md',
   className = '',
@@ -33,7 +33,7 @@ export default function AppLogo({
       width={px}
       height={px}
       priority={priority}
-      className={`rounded-2xl object-cover shrink-0 ${className}`}
+      className={`rounded-full object-cover shrink-0 aspect-square ${className}`}
       unoptimized
     />
   );

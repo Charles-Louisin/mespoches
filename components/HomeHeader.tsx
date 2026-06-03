@@ -25,7 +25,7 @@ export default function HomeHeader({ userName, isLoggedIn }: HomeHeaderProps) {
               </>
             ) : (
               <>
-                <AppLogo size="xs" className="rounded-lg" />
+                <AppLogo size="xs" />
                 <span>MES POCHES</span>
               </>
             )}

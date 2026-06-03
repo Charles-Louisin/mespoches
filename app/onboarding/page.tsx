@@ -79,7 +79,7 @@ export default function OnboardingPage() {
       <header className="relative z-10 px-5 pt-6 pb-2">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
-            <AppLogo size="sm" priority className="rounded-xl shadow-md shadow-[#2563EB]/25" />
+            <AppLogo size="sm" priority className="shadow-md shadow-[#2563EB]/25" />
             <div>
               <p className="text-sm font-bold text-gray-900 leading-tight">MES POCHES</p>
               <p className="text-[10px] text-gray-500">Gestion financière</p>

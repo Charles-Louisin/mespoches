@@ -142,10 +142,9 @@ export default function SettingsPage() {
         <div className="card p-4 space-y-3">
           <h3 className="text-sm font-semibold text-gray-500">Devise de l&apos;application</h3>
           <p className="text-xs text-gray-500">
-            Tous les montants seront affichés dans cette devise. Par défaut : XAF.
+            Choisissez votre devise. Par défaut : XAF.
           </p>
           <Select
-            label="Devise"
             value={currency}
             onChange={(e) => handleCurrencyChange(e.target.value)}
             options={WALLET_CURRENCIES.map((c) => ({
@@ -216,7 +215,7 @@ export default function SettingsPage() {
             <h3 className="text-sm font-semibold text-gray-900">Informations légales</h3>
           </div>
           <p className="text-xs text-gray-500">
-            Politique de confidentialité, CGU et mentions légales (requis Play Store).
+            Politique de confidentialité, CGU et mentions légales.
           </p>
           <div className="space-y-1">
             <Link
@@ -226,25 +225,6 @@ export default function SettingsPage() {
               Tous les documents légaux
               <span aria-hidden>→</span>
             </Link>
-            {legalLinks.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-gray-50 transition-colors text-sm text-gray-700"
-              >
-                <Icon size={16} className="text-gray-400 shrink-0" />
-                {label}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div className="card p-4 flex items-center gap-3">
-          <AppLogo size="sm" />
-          <div>
-            <h3 className="text-sm font-semibold text-gray-500">Application</h3>
-            <p className="text-sm text-gray-600">MES POCHES</p>
-            <p className="text-xs text-gray-400 mt-0.5">Version 1.0.0</p>
           </div>
         </div>
 

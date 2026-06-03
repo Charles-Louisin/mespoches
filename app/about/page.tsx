@@ -14,19 +14,9 @@ export default function AboutPage() {
       description: 'Utilisable dans le navigateur, en PWA ou via l’app Android'
     },
     {
-      icon: Wifi,
-      title: 'Mode hors ligne',
-      description: 'Consultation et saisie possibles sans connexion, avec synchronisation au retour en ligne'
-    },
-    {
-      icon: Cloud,
-      title: 'Synchronisation',
-      description: 'Vos données sont enregistrées sur nos serveurs lorsque vous êtes connecté'
-    },
-    {
       icon: Shield,
       title: 'Compte sécurisé',
-      description: 'Connexion par e-mail et mot de passe, session protégée (JWT)'
+      description: 'Connexion par e-mail et mot de passe, session protégée'
     },
     {
       icon: Zap,
@@ -36,7 +26,7 @@ export default function AboutPage() {
     {
       icon: Heart,
       title: 'Premium optionnel',
-      description: 'Budgets, objectifs d’épargne, export, analytics et plus (abonnement payant)'
+      description: 'Budgets, objectifs d’épargne, export, analytics et plus'
     }
   ]
 
@@ -48,11 +38,10 @@ export default function AboutPage() {
         {/* Logo et nom */}
         <div className="rounded-3xl p-8 text-center shadow-lg shadow-[#2563EB]/20 bg-[#2563EB] text-white">
           <div className="flex justify-center mb-4">
-            <AppLogo size="xl" className="rounded-[1.75rem] ring-4 ring-white/20" />
+            <AppLogo size="xl" className="ring-4 ring-white/20" />
           </div>
           <h1 className="text-3xl font-bold mb-2">MES POCHES</h1>
-          <p className="text-blue-100">Gestion financière personnelle</p>
-          <p className="text-sm text-blue-200/80 mt-4">Version 1.0.0</p>
+          <p className="text-blue-100">vos finances, en poche</p>
         </div>
 
         {/* Description */}
@@ -95,16 +84,6 @@ export default function AboutPage() {
           </div>
         </div>
 
-       
-
-        <div className="card p-4">
-          <Link
-            href="/legal"
-            className="text-sm font-semibold text-primary-600"
-          >
-            Informations légales (confidentialité, CGU)
-          </Link>
-        </div>
 
         <div className="text-center text-sm text-gray-500 py-4">
           <p className="mt-2">© 2026 MES POCHES</p>

@@ -55,7 +55,7 @@ export default function AppBootLoader() {
       <div className="relative flex flex-col items-center">
         {/* Anneau pulsant */}
         <motion.div
-          className="absolute rounded-[2rem] border-2 border-white/40"
+          className="absolute rounded-full border-2 border-white/40"
           style={{ width: 136, height: 136, top: -8, left: -8 }}
           animate={{ scale: [1, 1.18, 1], opacity: [0.5, 0, 0.5] }}
           transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
@@ -72,13 +72,13 @@ export default function AppBootLoader() {
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
           >
-            <AppLogo size="xl" priority className="rounded-[1.75rem] shadow-2xl ring-4 ring-white/25" />
+            <AppLogo size="xl" priority className="shadow-2xl ring-4 ring-white/25" />
           </motion.div>
         </motion.div>
 
         {/* Reflet balayant */}
         <motion.div
-          className="absolute inset-0 rounded-[1.75rem] overflow-hidden pointer-events-none"
+          className="absolute inset-0 rounded-full overflow-hidden pointer-events-none"
           style={{ width: 120, height: 120 }}
           aria-hidden
         >

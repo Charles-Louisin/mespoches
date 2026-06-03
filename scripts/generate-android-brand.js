@@ -4,9 +4,14 @@
 const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
+const { toCircularBuffer } = require('./logo-circular');
 
 const root = path.join(__dirname, '..');
-const logoPath = path.join(root, 'public/logo.png');
+const logoSource =
+  [path.join(root, 'public/logo1.jpeg'), path.join(root, 'public/logo.png')].find((p) =>
+    fs.existsSync(p)
+  ) || path.join(root, 'public/logo.png');
+const logoPath = logoSource;
 const resDir = path.join(root, 'android/app/src/main/res');
 
 const BRAND = { r: 37, g: 99, b: 235 }; // #2563EB
@@ -42,7 +47,7 @@ async function solidBg(width, height) {
 }
 
 async function renderLogo(size) {
-  return sharp(logoPath).resize(size, size, { fit: 'cover' }).png().toBuffer();
+  return toCircularBuffer(logoPath, size);
 }
 
 async function makeSplash(folder, { w, h }) {
