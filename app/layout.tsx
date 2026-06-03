@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google'
 import { Toaster } from 'sonner'
 import SyncIndicator from '@/components/SyncIndicator'
 import Providers from '@/components/Providers'
+import CapacitorBridge from '@/components/CapacitorBridge'
+import AppBootLoader from '@/components/AppBootLoader'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -51,6 +53,8 @@ export default function RootLayout({
     <html lang="fr">
       <body className={inter.className}>
         <Providers>{children}</Providers>
+        <AppBootLoader />
+        <CapacitorBridge />
         <SyncIndicator />
         <Toaster position="top-center" richColors duration={3000} />
       </body>

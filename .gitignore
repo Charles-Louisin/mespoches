@@ -22,3 +22,7 @@ public/worker-*.js
 public/worker-*.js.map
 public/fallback-*.js
 public/fallback-*.js.map
+
+# Capacitor — conserver android/ dans git ; ignorer builds locaux lourds si besoin
+# android/app/build/
+# android/.gradle/

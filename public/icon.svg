@@ -1,22 +1,28 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect width="512" height="512" rx="115" fill="#0ea5e9"/>
-  
-  <!-- Wallet Shape -->
-  <g transform="translate(90, 120)">
-    <!-- Main wallet body -->
-    <rect x="0" y="40" width="332" height="240" rx="24" fill="white" opacity="0.95"/>
-    
-    <!-- Wallet flap -->
-    <path d="M 0 64 L 0 40 C 0 26.7 10.7 16 24 16 L 308 16 C 321.3 16 332 26.7 332 40 L 332 64 Z" fill="white" opacity="0.85"/>
-    
-    <!-- Card slot (darker) -->
-    <rect x="24" y="100" width="284" height="50" rx="12" fill="#0284c7" opacity="0.3"/>
-    
-    <!-- Money symbol -->
-    <text x="166" y="220" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="#0284c7" text-anchor="middle">₣</text>
-    
-    <!-- Accent line -->
-    <rect x="24" y="64" width="120" height="4" rx="2" fill="#0284c7"/>
-  </g>
+  <defs>
+    <linearGradient id="bg" x1="64" y1="48" x2="448" y2="464" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8b7aff"/>
+      <stop offset="0.55" stop-color="#635bff"/>
+      <stop offset="1" stop-color="#4338ca"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="120" y1="100" x2="360" y2="380" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <ellipse cx="256" cy="200" rx="180" ry="120" fill="url(#shine)"/>
+  <!-- Portefeuille -->
+  <rect x="96" y="168" width="320" height="208" rx="36" fill="#ffffff" fill-opacity="0.96"/>
+  <path d="M96 220C96 194 116 174 142 174H370C396 174 416 194 416 220V208H96V220Z" fill="#e0dcff"/>
+  <!-- Carte -->
+  <rect x="128" y="248" width="256" height="56" rx="14" fill="#635bff" fill-opacity="0.18"/>
+  <rect x="148" y="264" width="88" height="10" rx="5" fill="#635bff" fill-opacity="0.45"/>
+  <rect x="148" y="282" width="140" height="8" rx="4" fill="#5248e6" fill-opacity="0.35"/>
+  <!-- Symbole monétaire -->
+  <text x="256" y="358" font-family="system-ui,Segoe UI,sans-serif" font-size="88" font-weight="800" fill="#5248e6" text-anchor="middle">FCFA</text>
+  <!-- Poche / pièce -->
+  <circle cx="392" cy="196" r="44" fill="#fbbf24"/>
+  <circle cx="392" cy="196" r="32" fill="#f59e0b"/>
+  <text x="392" y="208" font-family="system-ui,sans-serif" font-size="36" font-weight="800" fill="#ffffff" text-anchor="middle">₣</text>
 </svg>

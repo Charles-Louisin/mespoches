@@ -10,7 +10,8 @@ import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
 import ConfirmModal from '@/components/ConfirmModal'
 import ExportAllModal from '@/components/ExportAllModal'
-import { LogOut, User, Info, Crown, Download } from 'lucide-react'
+import NativePermissionsCard from '@/components/NativePermissionsCard'
+import { LogOut, User, Info, Crown, Download, Scale, Shield, FileText } from 'lucide-react'
 import { ExportFormat } from '@/lib/api'
 import { downloadBlob } from '@/lib/download'
 import { useSubscription } from '@/hooks/useSubscription'
@@ -88,6 +89,12 @@ export default function SettingsPage() {
     router.push('/login')
   }
 
+  const legalLinks = [
+    { href: '/legal/privacy', label: 'Confidentialité', icon: Shield },
+    { href: '/legal/terms', label: "Conditions d'utilisation", icon: FileText },
+    { href: '/legal/mentions', label: 'Mentions légales', icon: Scale },
+  ]
+
   const menuItems = [
     {
       icon: Crown,
@@ -124,7 +131,7 @@ export default function SettingsPage() {
       href: '/about',
       color: 'text-gray-500',
       bg: 'bg-gray-50'
-    }
+    },
   ]
 
   return (
@@ -148,6 +155,8 @@ export default function SettingsPage() {
             disabled={currencyLoading || savingCurrency}
           />
         </div>
+
+        <NativePermissionsCard />
 
         <div className="card overflow-hidden">
           {menuItems.map((item, index) => {
@@ -201,6 +210,35 @@ export default function SettingsPage() {
               </Link>
             )
           })}
+        </div>
+
+        <div className="card p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Scale size={18} className="text-primary-500" />
+            <h3 className="text-sm font-semibold text-gray-900">Informations légales</h3>
+          </div>
+          <p className="text-xs text-gray-500">
+            Politique de confidentialité, CGU et mentions légales (requis Play Store).
+          </p>
+          <div className="space-y-1">
+            <Link
+              href="/legal"
+              className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-primary-50 text-primary-700 font-semibold text-sm hover:bg-primary-100 transition-colors"
+            >
+              Tous les documents légaux
+              <span aria-hidden>→</span>
+            </Link>
+            {legalLinks.map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-gray-50 transition-colors text-sm text-gray-700"
+              >
+                <Icon size={16} className="text-gray-400 shrink-0" />
+                {label}
+              </Link>
+            ))}
+          </div>
         </div>
 
         <div className="card p-4">

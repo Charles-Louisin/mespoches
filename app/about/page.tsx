@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
 import { Smartphone, Wifi, Cloud, Shield, Zap, Heart } from 'lucide-react'
@@ -8,33 +9,33 @@ export default function AboutPage() {
   const features = [
     {
       icon: Smartphone,
-      title: 'Application PWA',
-      description: 'Installable sur mobile et desktop comme une app native'
+      title: 'Application web & mobile',
+      description: 'Utilisable dans le navigateur, en PWA ou via l’app Android'
     },
     {
       icon: Wifi,
-      title: 'Mode offline',
-      description: 'Fonctionne sans connexion internet'
+      title: 'Mode hors ligne',
+      description: 'Consultation et saisie possibles sans connexion, avec synchronisation au retour en ligne'
     },
     {
       icon: Cloud,
-      title: 'Synchronisation auto',
-      description: 'Vos données se synchronisent automatiquement'
+      title: 'Synchronisation',
+      description: 'Vos données sont enregistrées sur nos serveurs lorsque vous êtes connecté'
     },
     {
       icon: Shield,
-      title: 'Sécurisé',
-      description: 'Authentification JWT et données chiffrées'
+      title: 'Compte sécurisé',
+      description: 'Connexion par e-mail et mot de passe, session protégée (JWT)'
     },
     {
       icon: Zap,
-      title: 'Rapide',
-      description: 'Performance optimale avec cache intelligent'
+      title: 'Formule gratuite',
+      description: 'Poches, transactions, catégories et historique (3 derniers mois)'
     },
     {
       icon: Heart,
-      title: 'Gratuit',
-      description: 'Application 100% gratuite et open source'
+      title: 'Premium optionnel',
+      description: 'Budgets, objectifs d’épargne, export, analytics et plus (abonnement payant)'
     }
   ]
 
@@ -92,7 +93,15 @@ export default function AboutPage() {
 
        
 
-        {/* Footer */}
+        <div className="card p-4">
+          <Link
+            href="/legal"
+            className="text-sm font-semibold text-primary-600"
+          >
+            Informations légales (confidentialité, CGU)
+          </Link>
+        </div>
+
         <div className="text-center text-sm text-gray-500 py-4">
           <p className="mt-2">© 2026 MES POCHES</p>
         </div>
