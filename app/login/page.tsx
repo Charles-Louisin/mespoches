@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Wallet, Eye, EyeOff } from 'lucide-react'
+import AppLogo from '@/components/AppLogo'
+import { Eye, EyeOff } from 'lucide-react'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
 import {
@@ -227,9 +228,7 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
           <div className="flex flex-col items-center mb-8">
-            <div className="w-20 h-20 balance-gradient rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-primary-500/30">
-              <Wallet className="w-10 h-10 text-white" />
-            </div>
+            <AppLogo size="lg" priority className="mb-4 shadow-lg shadow-[#2563EB]/30" />
             <h1 className="text-3xl font-bold text-gray-900">MES POCHES</h1>
             <p className="text-gray-500 mt-2 text-center">
               {isLogin ? 'Connectez-vous à votre compte' : 'Créez votre compte'}

@@ -2,7 +2,8 @@
 
 import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, ChevronLeft, Shield, Wallet } from 'lucide-react'
+import { ArrowRight, ChevronLeft, Shield } from 'lucide-react'
+import AppLogo from '@/components/AppLogo'
 import { motion, AnimatePresence } from 'framer-motion'
 import Button from '@/components/Button'
 import { setOnboardingSeen } from '@/lib/auth'
@@ -78,9 +79,7 @@ export default function OnboardingPage() {
       <header className="relative z-10 px-5 pt-6 pb-2">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 balance-gradient rounded-xl flex items-center justify-center shadow-md shadow-primary-500/25">
-              <Wallet className="w-5 h-5 text-white" />
-            </div>
+            <AppLogo size="sm" priority className="rounded-xl shadow-md shadow-[#2563EB]/25" />
             <div>
               <p className="text-sm font-bold text-gray-900 leading-tight">MES POCHES</p>
               <p className="text-[10px] text-gray-500">Gestion financière</p>

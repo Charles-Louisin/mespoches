@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
+import AppLogo from '@/components/AppLogo'
 import { Smartphone, Wifi, Cloud, Shield, Zap, Heart } from 'lucide-react'
 
 export default function AboutPage() {
@@ -45,10 +46,13 @@ export default function AboutPage() {
 
       <main className="max-w-md mx-auto px-4 py-6 space-y-6">
         {/* Logo et nom */}
-        <div className="balance-gradient rounded-3xl p-8 text-white text-center shadow-lg shadow-primary-500/25">
+        <div className="rounded-3xl p-8 text-center shadow-lg shadow-[#2563EB]/20 bg-[#2563EB] text-white">
+          <div className="flex justify-center mb-4">
+            <AppLogo size="xl" className="rounded-[1.75rem] ring-4 ring-white/20" />
+          </div>
           <h1 className="text-3xl font-bold mb-2">MES POCHES</h1>
-          <p className="text-primary-100">Gestion financière personnelle</p>
-          <p className="text-sm text-primary-200 mt-4">Version 1.0.0</p>
+          <p className="text-blue-100">Gestion financière personnelle</p>
+          <p className="text-sm text-blue-200/80 mt-4">Version 1.0.0</p>
         </div>
 
         {/* Description */}

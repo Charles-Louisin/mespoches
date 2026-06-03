@@ -11,7 +11,7 @@ export default function CapacitorBridge() {
 
     StatusBar.setStyle({ style: Style.Light }).catch(() => {});
     if (Capacitor.getPlatform() === 'android') {
-      StatusBar.setBackgroundColor({ color: '#635bff' }).catch(() => {});
+      StatusBar.setBackgroundColor({ color: '#2563EB' }).catch(() => {});
     }
   }, []);
 

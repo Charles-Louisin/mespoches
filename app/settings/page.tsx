@@ -18,6 +18,7 @@ import { isPremiumRequiredError } from '@/lib/subscription'
 import { exportApi } from '@/lib/api'
 import ProBadge from '@/components/ProBadge'
 import Select from '@/components/Select'
+import AppLogo from '@/components/AppLogo'
 import { useCurrency } from '@/contexts/CurrencyContext'
 import { AppCurrency, WALLET_CURRENCIES } from '@/lib/currencies'
 
@@ -238,10 +239,13 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="card p-4">
-          <h3 className="text-sm font-semibold text-gray-500 mb-2">Application</h3>
-          <p className="text-sm text-gray-600">MES POCHES</p>
-          <p className="text-xs text-gray-400 mt-1">Version 1.0.0</p>
+        <div className="card p-4 flex items-center gap-3">
+          <AppLogo size="sm" />
+          <div>
+            <h3 className="text-sm font-semibold text-gray-500">Application</h3>
+            <p className="text-sm text-gray-600">MES POCHES</p>
+            <p className="text-xs text-gray-400 mt-0.5">Version 1.0.0</p>
+          </div>
         </div>
 
         <button

@@ -1,20 +1,18 @@
 /**
- * Génère icônes launcher + écrans splash Android depuis public/icon.svg
- * Usage: node scripts/generate-android-brand.js
+ * Génère icônes launcher + écrans splash Android depuis public/logo.png
  */
 const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 
 const root = path.join(__dirname, '..');
-const inputSvg = path.join(root, 'public/icon.svg');
+const logoPath = path.join(root, 'public/logo.png');
 const resDir = path.join(root, 'android/app/src/main/res');
 
-const BRAND = { r: 99, g: 91, b: 255 }; // #635bff
-const BRAND_DARK = { r: 67, g: 56, b: 202 }; // #4338ca
+const BRAND = { r: 37, g: 99, b: 235 }; // #2563EB
 
 const splashSizes = {
-  'drawable': { w: 1080, h: 1920 },
+  drawable: { w: 1080, h: 1920 },
   'drawable-port-mdpi': { w: 320, h: 480 },
   'drawable-port-hdpi': { w: 480, h: 800 },
   'drawable-port-xhdpi': { w: 720, h: 1280 },
@@ -35,53 +33,40 @@ const launcherSizes = {
   'mipmap-xxxhdpi': 192,
 };
 
-async function gradientBg(width, height) {
-  const svg = `
-    <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#8b7aff"/>
-          <stop offset="50%" style="stop-color:#635bff"/>
-          <stop offset="100%" style="stop-color:#4338ca"/>
-        </linearGradient>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#g)"/>
-    </svg>`;
-  return sharp(Buffer.from(svg)).png().toBuffer();
+async function solidBg(width, height) {
+  return sharp({
+    create: { width, height, channels: 3, background: BRAND },
+  })
+    .png()
+    .toBuffer();
 }
 
-async function logoPng(size) {
-  return sharp(inputSvg).resize(size, size, { fit: 'contain' }).png().toBuffer();
+async function renderLogo(size) {
+  return sharp(logoPath).resize(size, size, { fit: 'cover' }).png().toBuffer();
 }
 
 async function makeSplash(folder, { w, h }) {
-  const logoSize = Math.round(Math.min(w, h) * 0.28);
-  const bg = await gradientBg(w, h);
-  const logo = await logoPng(logoSize);
+  const logoSize = Math.round(Math.min(w, h) * 0.32);
+  const bg = await solidBg(w, h);
+  const logo = await renderLogo(logoSize);
   const outDir = path.join(resDir, folder);
   fs.mkdirSync(outDir, { recursive: true });
-  const outPath = path.join(outDir, 'splash.png');
   await sharp(bg)
     .composite([{ input: logo, gravity: 'center' }])
     .png()
-    .toFile(outPath);
+    .toFile(path.join(outDir, 'splash.png'));
   console.log(`  splash → ${folder}/splash.png (${w}×${h})`);
 }
 
 async function makeLauncher(folder, size) {
   const outDir = path.join(resDir, folder);
   fs.mkdirSync(outDir, { recursive: true });
-  const icon = await sharp(inputSvg).resize(size, size).png().toBuffer();
-  const fgSize = Math.round(size * 0.72);
-  const fg = await logoPng(fgSize);
+  const fgSize = Math.round(size * 0.88);
+  const fg = await renderLogo(fgSize);
   const pad = Math.round((size - fgSize) / 2);
+
   const composed = await sharp({
-    create: {
-      width: size,
-      height: size,
-      channels: 4,
-      background: BRAND,
-    },
+    create: { width: size, height: size, channels: 4, background: BRAND },
   })
     .composite([{ input: fg, top: pad, left: pad }])
     .png()
@@ -104,11 +89,11 @@ async function makeLauncher(folder, size) {
 }
 
 async function main() {
-  if (!fs.existsSync(inputSvg)) {
-    console.error('icon.svg introuvable');
+  if (!fs.existsSync(logoPath)) {
+    console.error('logo.png introuvable');
     process.exit(1);
   }
-  console.log('🎨 Génération brand Android MES POCHES…\n');
+  console.log('🎨 Brand Android MES POCHES…\n');
   for (const [folder, dim] of Object.entries(splashSizes)) {
     await makeSplash(folder, dim);
   }

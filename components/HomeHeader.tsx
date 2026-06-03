@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Download, LogIn } from 'lucide-react'
+import AppLogo from '@/components/AppLogo'
 import { usePwaInstall } from '@/hooks/usePwaInstall'
 import HeaderActions from '@/components/HeaderActions'
 
@@ -17,13 +18,16 @@ export default function HomeHeader({ userName, isLoggedIn }: HomeHeaderProps) {
     <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur-sm">
       <div className="max-w-md mx-auto px-4 pt-4 pb-2">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-gray-900">
+          <h1 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             {isLoggedIn && userName ? (
               <>
                 Salut, <span className="font-bold">{userName}</span>
               </>
             ) : (
-              'MES POCHES'
+              <>
+                <AppLogo size="xs" className="rounded-lg" />
+                <span>MES POCHES</span>
+              </>
             )}
           </h1>
           <div className="flex items-center gap-1">

@@ -24,6 +24,7 @@ import TransactionItem from '@/components/TransactionItem'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import EmptyState from '@/components/EmptyState'
 import Button from '@/components/Button'
+import AppLogo from '@/components/AppLogo'
 import { Wallet as WalletIcon } from 'lucide-react'
 import { useSubscription } from '@/hooks/useSubscription'
 import BudgetsSection from '@/components/BudgetsSection'
@@ -190,7 +191,7 @@ export default function HomePage() {
           </>
         ) : !isLoggedIn ? (
           <div className="card p-8 text-center space-y-4">
-            <WalletIcon size={56} className="mx-auto text-primary-400" />
+            <AppLogo size="lg" className="mx-auto shadow-md shadow-[#2563EB]/20" />
             <h2 className="text-xl font-bold text-gray-900">Bienvenue sur MES POCHES</h2>
             <p className="text-gray-500 text-sm">
               Connectez-vous pour gérer vos finances personnelles
