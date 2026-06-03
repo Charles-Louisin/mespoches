@@ -7,7 +7,7 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera'
 import { UploadButton, useUploadThing } from '@/lib/uploadthing'
 import { ImagePlus, X, Crown, Camera as CameraIcon } from 'lucide-react'
 import { toast } from 'sonner'
-import { isNativeApp, requestCameraPermission } from '@/lib/capacitor/native-permissions'
+import { isNativeApp, requestCameraAndGalleryPermission } from '@/lib/capacitor/native-permissions'
 
 interface ImageUploadProps {
   value?: string | null
@@ -30,9 +30,14 @@ export default function ImageUpload({
   const pickNativePhoto = async (source: CameraSource) => {
     try {
       setNativeUploading(true)
-      const perm = await requestCameraPermission()
-      if (perm !== 'granted') {
-        toast.error('Autorisez la caméra dans Paramètres → Application mobile')
+      await requestCameraAndGalleryPermission()
+      const check = await Camera.checkPermissions()
+      if (check.camera !== 'granted' && source === CameraSource.Camera) {
+        toast.error('Autorisez la caméra dans les paramètres du téléphone')
+        return
+      }
+      if (check.photos !== 'granted' && source === CameraSource.Photos) {
+        toast.error('Autorisez l’accès aux photos dans les paramètres du téléphone')
         return
       }
       const photo = await Camera.getPhoto({

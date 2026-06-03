@@ -10,7 +10,6 @@ import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
 import ConfirmModal from '@/components/ConfirmModal'
 import ExportAllModal from '@/components/ExportAllModal'
-import NativePermissionsCard from '@/components/NativePermissionsCard'
 import { LogOut, User, Info, Crown, Download, Scale, Shield, FileText } from 'lucide-react'
 import { ExportFormat } from '@/lib/api'
 import { downloadBlob } from '@/lib/download'
@@ -155,8 +154,6 @@ export default function SettingsPage() {
             disabled={currencyLoading || savingCurrency}
           />
         </div>
-
-        <NativePermissionsCard />
 
         <div className="card overflow-hidden">
           {menuItems.map((item, index) => {
