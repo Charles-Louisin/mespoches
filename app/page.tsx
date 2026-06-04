@@ -29,6 +29,7 @@ import { Wallet as WalletIcon } from 'lucide-react'
 import { useSubscription } from '@/hooks/useSubscription'
 import BudgetsSection from '@/components/BudgetsSection'
 import SavingsGoalsSection from '@/components/SavingsGoalsSection'
+import AppLogo from '@/components/AppLogo'
 
 interface HomeData {
   wallets: Wallet[]
