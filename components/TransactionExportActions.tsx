@@ -2,6 +2,7 @@
 
 import ProBadge from '@/components/ProBadge'
 import TransactionExportButtons from '@/components/TransactionExportButtons'
+import { useSubscription } from '@/hooks/useSubscription'
 
 interface TransactionExportActionsProps {
   transactionId: string
@@ -14,11 +15,13 @@ export default function TransactionExportActions({
   isPremium,
   onRequirePremium,
 }: TransactionExportActionsProps) {
+  const { showProBadge } = useSubscription()
+
   return (
     <section className="card p-5 space-y-3">
       <div className="flex items-center gap-2">
         <h2 className="text-sm font-bold text-gray-900">Exporter cette transaction</h2>
-        {!isPremium && <ProBadge />}
+        {showProBadge && <ProBadge />}
       </div>
       <p className="text-xs text-gray-500">
         CSV, PDF ou fichier Excel (.xlsx).

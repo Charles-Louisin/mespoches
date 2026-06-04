@@ -46,7 +46,7 @@ const defaultFilters: TransactionFiltersState = {
 }
 
 export default function TransactionsPage() {
-  const { isPremium, handleApiError, requirePremium } = useSubscription()
+  const { isPremium, showProBadge, handleApiError, requirePremium } = useSubscription()
   const [openDays, setOpenDays] = useState<Set<string>>(new Set())
   const [openDaysInitialized, setOpenDaysInitialized] = useState(false)
   const [filters, setFilters] = useState<TransactionFiltersState>(defaultFilters)
@@ -186,7 +186,7 @@ export default function TransactionsPage() {
       />
 
       <main className="max-w-md mx-auto px-4 py-4 space-y-3">
-        {!isPremium && (
+        {showProBadge && (
           <UpgradeBanner
             compact
             message={`Historique limité aux ${PLAN_LIMITS.FREE_HISTORY_MONTHS} derniers mois en gratuit`}

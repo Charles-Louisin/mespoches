@@ -7,6 +7,7 @@ import ProBadge from '@/components/ProBadge'
 import { exportApi, ExportFormat } from '@/lib/api'
 import { downloadBlob } from '@/lib/download'
 import { isPremiumRequiredError } from '@/lib/subscription'
+import { useSubscription } from '@/hooks/useSubscription'
 
 const FORMATS: {
   id: ExportFormat
@@ -32,6 +33,7 @@ export default function TransactionExportButtons({
   onRequirePremium,
   layout = 'row',
 }: TransactionExportButtonsProps) {
+  const { showProBadge } = useSubscription()
   const [loading, setLoading] = useState<ExportFormat | null>(null)
 
   const handleExport = async (
@@ -67,7 +69,7 @@ export default function TransactionExportButtons({
 
   return (
     <div className="space-y-1">
-      {!isPremium && (
+      {showProBadge && (
         <div className="flex justify-end">
           <ProBadge />
         </div>

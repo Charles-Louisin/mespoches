@@ -7,7 +7,7 @@ import { useSubscription } from '@/hooks/useSubscription'
 
 export default function BottomNav() {
   const pathname = usePathname()
-  const { isPremium } = useSubscription()
+  const { showProBadge } = useSubscription()
 
   const leftItems = [
     { href: '/', icon: Home, label: 'Accueil' },
@@ -46,7 +46,7 @@ export default function BottomNav() {
           }`}
         >
           <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-          {premium && !isPremium && (
+          {premium && showProBadge && (
             <span className="absolute -top-1 -right-1.5 text-[9px] bg-amber-400 text-amber-900 px-1 rounded font-bold leading-none">
               Pro
             </span>

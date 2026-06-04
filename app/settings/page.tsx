@@ -10,7 +10,7 @@ import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
 import ConfirmModal from '@/components/ConfirmModal'
 import ExportAllModal from '@/components/ExportAllModal'
-import { LogOut, User, Info, Crown, Download, Scale, Shield, FileText } from 'lucide-react'
+import { LogOut, User, Info, Crown, Download, Scale, Shield, FileText, Sparkles } from 'lucide-react'
 import { ExportFormat } from '@/lib/api'
 import { downloadBlob } from '@/lib/download'
 import { useSubscription } from '@/hooks/useSubscription'
@@ -25,7 +25,7 @@ import { AppCurrency, WALLET_CURRENCIES } from '@/lib/currencies'
 export default function SettingsPage() {
   const router = useRouter()
   const { confirm, confirmState, closeConfirm } = useConfirm()
-  const { isPremium, requirePremium } = useSubscription()
+  const { isPremium, showProBadge, requirePremium } = useSubscription()
   const { currency, setCurrency, loading: currencyLoading } = useCurrency()
   const [exportModalOpen, setExportModalOpen] = useState(false)
   const [exporting, setExporting] = useState<ExportFormat | null>(null)
@@ -117,6 +117,14 @@ export default function SettingsPage() {
       onClick: openExportModal,
     },
     {
+      icon: Sparkles,
+      label: 'Automatisation',
+      description: 'SMS Mobile Money, scan IA, transactions à valider',
+      href: '/automation',
+      color: 'text-violet-600',
+      bg: 'bg-violet-50',
+    },
+    {
       icon: User,
       label: 'Mon profil',
       description: 'Informations du compte',
@@ -169,7 +177,7 @@ export default function SettingsPage() {
                 <div className="flex-1">
                   <p className="font-medium text-gray-900 flex items-center gap-2 flex-wrap">
                     {item.label}
-                    {'pro' in item && item.pro && !isPremium && <ProBadge />}
+                    {'pro' in item && item.pro && showProBadge && <ProBadge />}
                   </p>
                   <p className="text-sm text-gray-500">{item.description}</p>
                 </div>
@@ -242,7 +250,7 @@ export default function SettingsPage() {
         onClose={() => !exporting && setExportModalOpen(false)}
         onExport={handleExportAll}
         exporting={exporting}
-        showProBadge={!isPremium}
+        showProBadge={showProBadge}
       />
 
       <ConfirmModal

@@ -365,6 +365,99 @@ export const plannedExpenseApi = {
     fetchApi(`/planned-expenses/${id}`, { method: 'DELETE' }),
 };
 
+// Transactions en attente de validation (SMS, notifications, IA)
+export interface PendingTransaction {
+  _id: string;
+  status: 'pending' | 'validated' | 'rejected';
+  source: 'sms' | 'notification' | 'ai_scan' | 'manual';
+  type: 'income' | 'expense';
+  amount: number;
+  operator: 'orange' | 'mtn' | 'unknown';
+  counterparty: string;
+  description: string;
+  date: string;
+  raw_text: string;
+  wallet_id?: Wallet | string | null;
+  category_id?: Category | string | null;
+  confidence: number;
+  pattern?: 'transfer_out' | 'transfer_in' | 'payment' | 'withdrawal' | 'unknown';
+  transaction_id?: string;
+  ai_enriched?: boolean;
+  validated_transaction_id?: string | null;
+  created_at: string;
+}
+
+export const pendingTransactionApi = {
+  getAll: (status = 'pending') =>
+    fetchApi<PendingTransaction[]>(`/pending-transactions?status=${status}`),
+  getCount: () =>
+    fetchApi<{ count: number }>('/pending-transactions/count'),
+  getById: (id: string) =>
+    fetchApi<PendingTransaction>(`/pending-transactions/${id}`),
+  update: (
+    id: string,
+    data: Partial<{
+      amount: number;
+      type: 'income' | 'expense';
+      wallet_id: string;
+      category_id: string | null;
+      description: string;
+      date: string;
+    }>
+  ) =>
+    fetchApi<PendingTransaction>(`/pending-transactions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  validate: (
+    id: string,
+    data?: Partial<{
+      amount: number;
+      type: 'income' | 'expense';
+      wallet_id: string;
+      category_id: string | null;
+      description: string;
+      date: string;
+    }>
+  ) =>
+    fetchApi<{ pending: PendingTransaction; transactionId: string }>(
+      `/pending-transactions/${id}/validate`,
+      { method: 'POST', body: JSON.stringify(data || {}) }
+    ),
+  reject: (id: string) =>
+    fetchApi<PendingTransaction>(`/pending-transactions/${id}/reject`, {
+      method: 'POST',
+    }),
+  parseSms: (text: string) =>
+    fetchApi<PendingTransaction>('/pending-transactions/parse-sms', {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    }),
+  parseNotification: (title: string, body: string) =>
+    fetchApi<PendingTransaction>('/pending-transactions/parse-notification', {
+      method: 'POST',
+      body: JSON.stringify({ title, body }),
+    }),
+  aiScan: (image: string, mimeType = 'image/jpeg') =>
+    fetchApi<PendingTransaction[]>('/pending-transactions/ai-scan', {
+      method: 'POST',
+      body: JSON.stringify({ image, mimeType }),
+    }),
+  getHabitsSummary: () =>
+    fetchApi<{
+      habits: Array<{
+        counterparty: string;
+        pattern: string;
+        type: string;
+        description: string;
+        validation_count: number;
+      }>;
+      identity: { names: string[]; phones: string[] };
+      total: number;
+      recurrenceAnalysis?: string;
+    }>('/pending-transactions/habits/summary'),
+};
+
 // Transactions récurrentes (Premium)
 export interface RecurringTransaction {
   _id: string;

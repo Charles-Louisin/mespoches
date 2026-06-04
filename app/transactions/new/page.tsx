@@ -32,7 +32,7 @@ import { useCurrency } from '@/contexts/CurrencyContext'
 import { Info } from 'lucide-react'
 
 function NewTransactionForm() {
-  const { isPremium, requirePremium, handleApiError } = useSubscription()
+  const { isPremium, showProBadge, requirePremium, handleApiError } = useSubscription()
   const { formatAmount } = useCurrency()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -288,7 +288,7 @@ function NewTransactionForm() {
                 }`}
               >
                 {label}
-                {premium && !isPremium && (
+                {premium && showProBadge && (
                   <span className="absolute -top-1 -right-1 text-[9px] bg-amber-400 text-amber-900 px-1 rounded font-bold">
                     Pro
                   </span>

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Crown } from 'lucide-react'
 import ProBadge from '@/components/ProBadge'
+import { useSubscription } from '@/hooks/useSubscription'
 
 interface ProFeatureProps {
   title: string
@@ -12,7 +13,7 @@ interface ProFeatureProps {
   className?: string
 }
 
-/** Affiche le contenu si Premium ; sinon un encart verrouillé avec badge Pro (lien abonnement). */
+/** Affiche le contenu si Premium ; sinon un encart verrouillé (après chargement du statut). */
 export default function ProFeature({
   title,
   description,
@@ -20,8 +21,23 @@ export default function ProFeature({
   children,
   className = '',
 }: ProFeatureProps) {
+  const { loading, showProBadge } = useSubscription()
+
   if (isPremium) {
     return <div className={className}>{children}</div>
+  }
+
+  if (loading) {
+    return (
+      <div
+        className={`card p-4 animate-pulse bg-gray-100/80 min-h-[5.5rem] ${className}`}
+        aria-hidden
+      />
+    )
+  }
+
+  if (!showProBadge) {
+    return null
   }
 
   return (

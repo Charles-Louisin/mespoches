@@ -6,6 +6,7 @@ import Providers from '@/components/Providers'
 import CapacitorBridge from '@/components/CapacitorBridge'
 import AppBootLoader from '@/components/AppBootLoader'
 import NativePermissionsOnLaunch from '@/components/NativePermissionsOnLaunch'
+import AutomationBridge from '@/components/AutomationBridge'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -57,6 +58,7 @@ export default function RootLayout({
         <Providers>{children}</Providers>
         <AppBootLoader />
         <NativePermissionsOnLaunch />
+        <AutomationBridge />
         <CapacitorBridge />
         <SyncIndicator />
         <Toaster position="top-center" richColors duration={3000} />

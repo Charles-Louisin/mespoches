@@ -24,7 +24,7 @@ import TransactionItem from '@/components/TransactionItem'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import EmptyState from '@/components/EmptyState'
 import Button from '@/components/Button'
-import AppLogo from '@/components/AppLogo'
+import PendingTransactionsBanner from '@/components/PendingTransactionsBanner'
 import { Wallet as WalletIcon } from 'lucide-react'
 import { useSubscription } from '@/hooks/useSubscription'
 import BudgetsSection from '@/components/BudgetsSection'
@@ -115,6 +115,8 @@ export default function HomePage() {
               monthExpense={data.monthStats?.totalExpense}
               monthIncome={data.monthStats?.totalIncome}
             />
+
+            <PendingTransactionsBanner />
 
             <section>
               <div className="flex items-center justify-between mb-3">

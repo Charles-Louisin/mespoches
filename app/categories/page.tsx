@@ -24,7 +24,7 @@ import { PLAN_LIMITS } from '@/lib/planLimits'
 
 export default function CategoriesPage() {
   const { confirm, confirmState, closeConfirm } = useConfirm()
-  const { isPremium, requirePremium } = useSubscription()
+  const { isPremium, showProBadge, requirePremium } = useSubscription()
   const fetchCategories = useCallback(() => categoryApi.getAll(), [])
   const { data: categories, loading, setData } = useCachedData(
     CACHE_KEYS.categories,
@@ -139,7 +139,7 @@ export default function CategoriesPage() {
       />
 
       <main className="max-w-md mx-auto px-4 py-6 space-y-6">
-        {!isPremium && (
+        {showProBadge && (
           <UpgradeBanner
             compact
             message={`Gratuit : max ${PLAN_LIMITS.FREE_MAX_CATEGORIES_PER_TYPE} catégories par type`}
