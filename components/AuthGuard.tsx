@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { isAuthenticated, hasSeenOnboarding } from '@/lib/auth';
+import {
+  hydrateAuthSession,
+  isAuthenticated,
+  hasSeenOnboarding,
+} from '@/lib/auth';
 import LoadingSpinner from './LoadingSpinner';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -10,7 +14,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    const checkAuth = () => {
+    let cancelled = false;
+
+    const checkAuth = async () => {
+      await hydrateAuthSession();
+      if (cancelled) return;
+
       if (!isAuthenticated()) {
         if (!hasSeenOnboarding()) {
           router.push('/onboarding');
@@ -22,7 +31,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       }
     };
 
-    checkAuth();
+    void checkAuth();
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   if (isChecking) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
   Wallet,
@@ -13,7 +13,7 @@ import {
   savingsGoalApi,
 } from '@/lib/api'
 import { sortTransactionsByDateDesc } from '@/lib/utils'
-import { getUser, isAuthenticated } from '@/lib/auth'
+import { getUser, hydrateAuthSession, isAuthenticated } from '@/lib/auth'
 import { CACHE_KEYS } from '@/lib/cache'
 import { useCachedData } from '@/hooks/useCachedData'
 import PageShell from '@/components/PageShell'
@@ -41,8 +41,7 @@ interface HomeData {
   monthStats: MonthStats | null
 }
 
-function getInitialAuth() {
-  if (typeof window === 'undefined') return { loggedIn: false, name: '' }
+function getClientAuth() {
   const loggedIn = isAuthenticated()
   const user = loggedIn ? getUser() : null
   return {
@@ -52,8 +51,23 @@ function getInitialAuth() {
 }
 
 export default function HomePage() {
-  const [auth] = useState(getInitialAuth)
-  const [userName] = useState(auth.name)
+  const [auth, setAuth] = useState({ loggedIn: false, name: '' })
+  const [authReady, setAuthReady] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      await hydrateAuthSession()
+      if (cancelled) return
+      setAuth(getClientAuth())
+      setAuthReady(true)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const userName = auth.name
   const isLoggedIn = auth.loggedIn
   const { isPremium, requirePremium, handleApiError } = useSubscription()
 
@@ -94,10 +108,10 @@ export default function HomePage() {
     isLoggedIn
   )
 
-  if (isLoggedIn && loading && !data) {
+  if (!authReady || (isLoggedIn && loading && !data)) {
     return (
       <PageShell>
-        <HomeHeader userName={userName} isLoggedIn />
+        <HomeHeader userName={userName} isLoggedIn={isLoggedIn} />
         <LoadingSpinner />
       </PageShell>
     )

@@ -103,12 +103,17 @@ export default function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="6. Utilisation acceptable">
-        <p>Vous vous engagez à :</p>
+      <LegalSection title="6. Utilisation de l'application">
+        <p>
+          L&apos;application mobile peut détecter automatiquement vos opérations Mobile Money
+          (SMS et notifications) pour proposer des transactions à valider. Le scan de reçus
+          par photo est disponible depuis la création de transaction (abonnés Premium).
+        </p>
+        <p className="mt-2">Vous vous engagez à :</p>
         <ul className="list-disc pl-5 space-y-1">
           <li>Utiliser l&apos;application conformément aux lois applicables.</li>
           <li>Ne pas tenter d&apos;accéder aux comptes d&apos;autres utilisateurs.</li>
-          <li>Ne pas perturber le fonctionnement du service (abus, automatisation malveillante).</li>
+          <li>Valider chaque proposition détectée avant enregistrement définitif.</li>
         </ul>
       </LegalSection>
 

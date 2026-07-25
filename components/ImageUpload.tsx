@@ -148,7 +148,7 @@ export default function ImageUpload({
               appearance={{
                 button:
                   'ut-ready:bg-primary-500 ut-uploading:cursor-not-allowed rounded-xl bg-primary-500 text-sm font-semibold text-white px-4 py-2.5 transition hover:bg-primary-600',
-                allowedContent: 'text-xs text-gray-500 mt-1',
+                allowedContent: '',
               }}
               content={{
                 button({ ready, isUploading: utBusy }) {
@@ -156,11 +156,10 @@ export default function ImageUpload({
                   if (ready) return value ? "Changer l'image" : 'Ajouter une image'
                   return 'Chargement...'
                 },
-                allowedContent: 'PNG, JPG — max 4 Mo',
+                allowedContent: '',
               }}
             />
           )}
-          <p className="text-xs text-gray-500">PNG, JPG — max 4 Mo</p>
         </div>
       </div>
     </div>

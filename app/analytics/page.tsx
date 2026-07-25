@@ -326,17 +326,6 @@ function ComparisonRow({
         ? 'text-green-600'
         : 'text-red-600'
 
-  let explanation = 'Identique au mois précédent'
-  if (delta > 0) {
-    explanation = higherIsGood
-      ? `${formatAmount(delta)} de plus qu'avant (en hausse)`
-      : `${formatAmount(delta)} de plus qu'avant (attention)`
-  } else if (delta < 0) {
-    explanation = higherIsGood
-      ? `${formatAmount(Math.abs(delta))} de moins qu'avant`
-      : `${formatAmount(Math.abs(delta))} de moins qu'avant (mieux)`
-  }
-
   return (
     <div className="rounded-xl border border-gray-100 p-4 space-y-2">
       <div className="flex items-center justify-between">
@@ -350,7 +339,6 @@ function ComparisonRow({
       <p className="text-sm font-semibold text-gray-900">
         Écart : {formatDelta(delta)} ({formatPct(percent)})
       </p>
-      <p className="text-xs text-gray-500">{explanation}</p>
     </div>
   )
 }

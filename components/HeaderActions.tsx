@@ -2,9 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
 import { Settings, Shield } from 'lucide-react'
-import { getUser } from '@/lib/auth'
+import { useSubscription } from '@/contexts/SubscriptionContext'
 
 interface HeaderActionsProps {
   iconSize?: number
@@ -16,12 +15,8 @@ export default function HeaderActions({
   className = '',
 }: HeaderActionsProps) {
   const pathname = usePathname()
-  const [isAdmin, setIsAdmin] = useState(false)
-
-  useEffect(() => {
-    const u = getUser()
-    setIsAdmin(!!u && u.role === 'admin')
-  }, [])
+  const { user } = useSubscription()
+  const isAdmin = user?.role === 'admin'
 
   const linkClass = (active: boolean) =>
     `p-2 touch-manipulation transition ${

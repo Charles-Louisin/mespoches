@@ -9,6 +9,8 @@ ext {
     androidxFragmentVersion = '1.8.4'
     coreSplashScreenVersion = '1.0.1'
     androidxWebkitVersion = '1.12.1'
+    // Compatible compileSdk 35 (Browser 1.9 exige compileSdk 36 / AGP 8.9+)
+    androidxBrowserVersion = '1.8.0'
     junitVersion = '4.13.2'
     androidxJunitVersion = '1.2.1'
     androidxEspressoCoreVersion = '3.6.1'

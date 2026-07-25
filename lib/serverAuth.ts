@@ -3,7 +3,15 @@ import jwt from 'jsonwebtoken';
 import connectDB from './mongodb';
 import User, { IUser } from './models/User';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+function requireJwtSecret(): string {
+  const secret = process.env.JWT_SECRET?.trim();
+  if (!secret) {
+    throw new Error(
+      'JWT_SECRET manquant. Définissez-le dans les variables d\'environnement.'
+    );
+  }
+  return secret;
+}
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: IUser;
@@ -12,24 +20,23 @@ export interface AuthenticatedRequest extends NextRequest {
 export async function getUserFromToken(request: NextRequest): Promise<IUser | null> {
   try {
     const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return null;
+    const cookieToken = request.cookies.get('auth_token')?.value;
+
+    let token: string | undefined;
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    } else if (cookieToken) {
+      token = cookieToken;
     }
 
-    const token = authHeader.split(' ')[1];
-    
     if (!token) {
       return null;
     }
 
-    // Vérifier le token
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+    const decoded = jwt.verify(token, requireJwtSecret()) as { id: string };
 
-    // Connecter à la base de données
     await connectDB();
 
-    // Récupérer l'utilisateur
     const user = await User.findById(decoded.id).select('-password');
 
     return user;
@@ -40,8 +47,9 @@ export async function getUserFromToken(request: NextRequest): Promise<IUser | nu
 }
 
 export function generateToken(userId: string): string {
-  return jwt.sign({ id: userId }, JWT_SECRET, {
-    expiresIn: '30d'
+  return jwt.sign({ id: userId }, requireJwtSecret(), {
+    expiresIn: (process.env.JWT_EXPIRES_IN ||
+      '7d') as jwt.SignOptions['expiresIn'],
   });
 }
 
@@ -49,7 +57,7 @@ export function unauthorized() {
   return Response.json(
     {
       success: false,
-      message: 'Non autorisé'
+      message: 'Non autorisé',
     },
     { status: 401 }
   );

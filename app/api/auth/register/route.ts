@@ -1,58 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import User from '@/lib/models/User';
-import { generateToken } from '@/lib/serverAuth';
+import {
+  proxyAuthRequest,
+  sanitizeAuthResponseForClient,
+} from '@/lib/server/verification-email';
+import { applyPendingEmailCookie } from '@/lib/server/session-cookies';
+import { clientIp, rateLimit } from '@/lib/server/rate-limit';
 
 export async function POST(request: NextRequest) {
-  try {
-    await connectDB();
-
-    const { email, password, name } = await request.json();
-
-    // Vérifier si l'utilisateur existe déjà
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Un compte existe déjà avec cet email'
-        },
-        { status: 400 }
-      );
-    }
-
-    // Créer l'utilisateur
-    const user = await User.create({
-      email,
-      password,
-      name
-    });
-
-    // Générer le token
-    const token = generateToken(user._id.toString());
-
-    return NextResponse.json(
-      {
-        success: true,
-        data: {
-          user: {
-            id: user._id,
-            email: user.email,
-            name: user.name
-          },
-          token
-        }
-      },
-      { status: 201 }
-    );
-  } catch (error: any) {
-    console.error('Erreur register:', error);
+  const ip = clientIp(request);
+  const limited = rateLimit(`register:${ip}`, 10, 15 * 60 * 1000);
+  if (!limited.ok) {
     return NextResponse.json(
       {
         success: false,
-        message: error.message || 'Erreur lors de l\'inscription'
+        message: 'Trop de tentatives. Réessayez plus tard.',
+        code: 'RATE_LIMITED',
       },
-      { status: 500 }
+      {
+        status: 429,
+        headers: { 'Retry-After': String(limited.retryAfterSec) },
+      }
     );
+  }
+
+  try {
+    const body = await request.json();
+    const { response, data } = await proxyAuthRequest('/auth/register', body);
+
+    const next = NextResponse.json(sanitizeAuthResponseForClient(data), {
+      status: response.status,
+    });
+    if (response.ok && typeof body.email === 'string') {
+      applyPendingEmailCookie(next, body.email);
+    }
+    return next;
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Erreur inscription';
+    return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

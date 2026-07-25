@@ -1,76 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import User from '@/lib/models/User';
-import { generateToken } from '@/lib/serverAuth';
+import { proxyAuthRequest } from '@/lib/server/verification-email';
+import {
+  applyAuthCookies,
+  extractAuthSession,
+} from '@/lib/server/session-cookies';
+import { clientIp, rateLimit } from '@/lib/server/rate-limit';
 
 export async function POST(request: NextRequest) {
-  try {
-    await connectDB();
-
-    const { email, password } = await request.json();
-
-    // Validation
-    if (!email || !password) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Veuillez fournir un email et un mot de passe'
-        },
-        { status: 400 }
-      );
-    }
-
-    // Récupérer l'utilisateur avec le mot de passe
-    const user = await User.findOne({ email }).select('+password');
-
-    if (!user) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Email ou mot de passe incorrect'
-        },
-        { status: 401 }
-      );
-    }
-
-    // Vérifier le mot de passe
-    const isMatch = await user.comparePassword(password);
-
-    if (!isMatch) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Email ou mot de passe incorrect'
-        },
-        { status: 401 }
-      );
-    }
-
-    // Générer le token
-    const token = generateToken(user._id.toString());
-
-    return NextResponse.json(
-      {
-        success: true,
-        data: {
-          user: {
-            id: user._id,
-            email: user.email,
-            name: user.name
-          },
-          token
-        }
-      },
-      { status: 200 }
-    );
-  } catch (error: any) {
-    console.error('Erreur login:', error);
+  const ip = clientIp(request);
+  const limited = rateLimit(`login:${ip}`, 20, 15 * 60 * 1000);
+  if (!limited.ok) {
     return NextResponse.json(
       {
         success: false,
-        message: error.message || 'Erreur lors de la connexion'
+        message: 'Trop de tentatives. Réessayez plus tard.',
+        code: 'RATE_LIMITED',
       },
-      { status: 500 }
+      {
+        status: 429,
+        headers: { 'Retry-After': String(limited.retryAfterSec) },
+      }
     );
+  }
+
+  try {
+    const body = await request.json();
+    const { response, data } = await proxyAuthRequest('/auth/login', body);
+    const next = NextResponse.json(data, { status: response.status });
+
+    const session = extractAuthSession(
+      data as Parameters<typeof extractAuthSession>[0]
+    );
+    if (session) {
+      applyAuthCookies(next, session.token, session.emailVerified);
+    }
+
+    return next;
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : 'Erreur connexion';
+    return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

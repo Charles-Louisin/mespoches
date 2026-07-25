@@ -50,10 +50,8 @@ export default function TransactionExportButtons({
       setLoading(format)
       const blob = await exportApi.downloadTransaction(transactionId, format)
       const ext = format === 'xlsx' ? 'xlsx' : format
-      downloadBlob(blob, `transaction-${transactionId.slice(-8)}.${ext}`)
-      toast.success(
-        format === 'pdf' ? 'PDF téléchargé' : format === 'xlsx' ? 'Excel téléchargé' : 'CSV téléchargé'
-      )
+      await downloadBlob(blob, `transaction-${transactionId.slice(-8)}.${ext}`)
+      toast.success('Fichier prêt')
     } catch (err) {
       if (isPremiumRequiredError(err)) onRequirePremium?.(err.message)
       else toast.error(err instanceof Error ? err.message : 'Erreur export')

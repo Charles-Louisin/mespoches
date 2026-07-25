@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AuthGuard } from '@/components/AuthGuard'
-import { adminApi, AdminUserSummary, AdminUserDetail, AdminOverviewStats, DailyActiveUsersStat } from '@/lib/api'
-import { getUser } from '@/lib/auth'
+import { adminApi, authApi, AdminUserSummary, AdminUserDetail, AdminOverviewStats, DailyActiveUsersStat } from '@/lib/api'
+import { hydrateAuthSession } from '@/lib/auth'
 import Header from '@/components/Header'
 import PageShell from '@/components/PageShell'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -21,15 +21,16 @@ export default function AdminDashboardPage() {
   const [loadingUser, setLoadingUser] = useState(false)
 
   useEffect(() => {
-    const currentUser = getUser()
-    if (!currentUser || currentUser.role !== 'admin') {
-      router.replace('/')
-      return
-    }
-
     const load = async () => {
       try {
         setLoading(true)
+        await hydrateAuthSession()
+        const me = await authApi.me()
+        if (me.role !== 'admin') {
+          router.replace('/')
+          return
+        }
+
         const [ov, us, dau] = await Promise.all([
           adminApi.getOverviewStats(),
           adminApi.getUsers(),
@@ -38,14 +39,14 @@ export default function AdminDashboardPage() {
         setOverview(ov)
         setUsers(us)
         setDailyActiveUsers(dau)
-      } catch (error) {
-        console.error('Erreur chargement dashboard admin:', error)
+      } catch {
+        router.replace('/')
       } finally {
         setLoading(false)
       }
     }
 
-    load()
+    void load()
   }, [router])
 
   const loadUserDetail = async (id: string) => {

@@ -29,12 +29,7 @@ export default function PendingTransactionsBanner() {
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-amber-900">
-          {count === 1
-            ? '1 transaction à valider'
-            : `${count} transactions à valider`}
-        </p>
-        <p className="text-sm text-amber-800/80">
-          Détectées automatiquement (SMS, reçus…) — vérifiez et confirmez
+          {count === 1 ? '1 transaction à valider' : `${count} transactions à valider`}
         </p>
       </div>
       <ChevronRight className="text-amber-700 shrink-0" size={20} />

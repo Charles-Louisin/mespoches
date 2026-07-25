@@ -2,12 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, History, Wallet, BarChart3, Plus, Target, Tag } from 'lucide-react'
+import { Home, History, Wallet, BarChart3, Plus, Target, Tag, Camera } from 'lucide-react'
 import { useSubscription } from '@/hooks/useSubscription'
+import { useReceiptScan } from '@/contexts/ReceiptScanContext'
 
 export default function BottomNav() {
   const pathname = usePathname()
-  const { showProBadge } = useSubscription()
+  const { showProBadge, isPremium, requirePremium } = useSubscription()
+  const { startScan, scanning } = useReceiptScan()
+  const isNewTransactionPage = pathname === '/transactions/new'
 
   const leftItems = [
     { href: '/', icon: Home, label: 'Accueil' },
@@ -63,6 +66,14 @@ export default function BottomNav() {
     )
   }
 
+  const handleFabClick = async () => {
+    if (!isNewTransactionPage || scanning) return
+    await startScan(isPremium, requirePremium)
+  }
+
+  const fabClass =
+    'absolute left-1/2 -translate-x-1/2 -top-5 w-14 h-14 rounded-full bg-primary-800 shadow-lg flex items-center justify-center text-white hover:bg-primary-900 transition touch-manipulation border-4 border-surface disabled:opacity-60'
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
       <div className="max-w-md mx-auto px-4 pb-4 pointer-events-auto">
@@ -83,13 +94,21 @@ export default function BottomNav() {
             </div>
           </div>
 
-          <Link
-            href="/transactions/new"
-            className="absolute left-1/2 -translate-x-1/2 -top-5 w-14 h-14 rounded-full bg-primary-800 shadow-lg flex items-center justify-center text-white hover:bg-primary-900 transition touch-manipulation border-4 border-surface"
-            aria-label="Nouvelle transaction"
-          >
-            <Plus size={28} strokeWidth={2.5} />
-          </Link>
+          {isNewTransactionPage ? (
+            <button
+              type="button"
+              onClick={handleFabClick}
+              disabled={scanning}
+              className={fabClass}
+              aria-label="Scanner un reçu"
+            >
+              <Camera size={26} strokeWidth={2.5} />
+            </button>
+          ) : (
+            <Link href="/transactions/new" className={fabClass} aria-label="Nouvelle transaction">
+              <Plus size={28} strokeWidth={2.5} />
+            </Link>
+          )}
         </div>
       </div>
     </nav>

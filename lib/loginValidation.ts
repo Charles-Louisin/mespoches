@@ -49,8 +49,8 @@ export function validateLoginField(
       if (!password) {
         return { error: 'Le mot de passe est requis', valid: false }
       }
-      if (!isLogin && password.length < 6) {
-        return { error: 'Minimum 6 caractères', valid: false }
+      if (!isLogin && password.length < 10) {
+        return { error: 'Minimum 10 caractères', valid: false }
       }
       return { valid: true }
     }

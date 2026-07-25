@@ -36,11 +36,7 @@ function NewTransactionForm() {
   const { formatAmount } = useCurrency()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const typeParam = searchParams.get('type')
-
-  const [type, setType] = useState<'income' | 'expense' | 'transfer'>(
-    (typeParam as 'income' | 'expense') || 'expense'
-  )
+  const [type, setType] = useState<'income' | 'expense' | 'transfer'>('expense')
   const [amount, setAmount] = useState('')
   const [walletId, setWalletId] = useState('')
   const [destinationWalletId, setDestinationWalletId] = useState('')
@@ -54,11 +50,17 @@ function NewTransactionForm() {
   const [toSavings, setToSavings] = useState(false)
   const [savingsGoalId, setSavingsGoalId] = useState('')
   const [plannedInfoOpen, setPlannedInfoOpen] = useState(false)
-  const [hidePlannedHelp, setHidePlannedHelp] = useState(
-    () => !!getUser()?.hidePlannedExpensesHelp
-  )
+  const [hidePlannedHelp, setHidePlannedHelp] = useState(false)
 
   const todayUtc = getTodayUtcDateInputValue()
+
+  useEffect(() => {
+    const typeParam = searchParams.get('type')
+    if (typeParam === 'income' || typeParam === 'expense') {
+      setType(typeParam)
+    }
+    setHidePlannedHelp(!!getUser()?.hidePlannedExpensesHelp)
+  }, [searchParams])
   const maxDateForIncomeTransfer = type !== 'expense' ? todayUtc : undefined
 
   useEffect(() => {
@@ -153,9 +155,7 @@ function NewTransactionForm() {
             description: data.description,
             scheduled_date: date,
           })
-          toast.success(
-            'Dépense future enregistrée ! Elle sera débitée le jour prévu (UTC) si votre solde le permet.'
-          )
+          toast.success('Dépense future enregistrée')
         } else {
           await transactionApi.createExpense({
             ...data,
@@ -420,13 +420,6 @@ function NewTransactionForm() {
                 </button>
               )}
             </div>
-
-            {type === 'expense' && isFutureUtcDay(date) && (
-              <p className="text-xs text-primary-700 bg-primary-50 rounded-lg px-3 py-2">
-                Date future : cette dépense sera planifiée et débitée automatiquement le jour
-                choisi (UTC), si le solde est suffisant.
-              </p>
-            )}
           </div>
 
           <Button type="submit" fullWidth size="lg" disabled={loading}>

@@ -34,6 +34,8 @@ const config: CapacitorConfig = {
         server: {
           url: serverUrl,
           androidScheme: 'https',
+          // Limite les navigations WebView hors origine (OAuth reste dans Chrome Custom Tab)
+          allowNavigation: [serverUrl],
         },
       }
     : {}),

@@ -10,7 +10,7 @@ import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
 import ConfirmModal from '@/components/ConfirmModal'
 import ExportAllModal from '@/components/ExportAllModal'
-import { LogOut, User, Info, Crown, Download, Scale, Shield, FileText, Sparkles } from 'lucide-react'
+import { LogOut, User, Info, Crown, Download, Scale, Shield, FileText } from 'lucide-react'
 import { ExportFormat } from '@/lib/api'
 import { downloadBlob } from '@/lib/download'
 import { useSubscription } from '@/hooks/useSubscription'
@@ -52,14 +52,8 @@ export default function SettingsPage() {
       setExporting(format)
       const blob = await exportApi.downloadTransactions(format)
       const ext = format === 'xlsx' ? 'xlsx' : format
-      downloadBlob(blob, `mes-poches-${Date.now()}.${ext}`)
-      toast.success(
-        format === 'pdf'
-          ? 'PDF téléchargé'
-          : format === 'xlsx'
-            ? 'Excel téléchargé'
-            : 'CSV téléchargé'
-      )
+      await downloadBlob(blob, `mes-poches-${Date.now()}.${ext}`)
+      toast.success('Fichier prêt')
       setExportModalOpen(false)
     } catch (e) {
       if (isPremiumRequiredError(e)) {
@@ -99,9 +93,6 @@ export default function SettingsPage() {
     {
       icon: Crown,
       label: isPremium ? 'Mon abonnement Premium' : 'Passer à Premium',
-      description: isPremium
-        ? 'Toutes les fonctionnalités débloquées'
-        : 'Budgets, export, analytics et plus',
       href: '/subscription',
       color: 'text-amber-600',
       bg: 'bg-amber-50',
@@ -109,7 +100,6 @@ export default function SettingsPage() {
     {
       icon: Download,
       label: 'Exporter tout',
-      description: 'CSV, PDF ou Excel — toutes les transactions',
       href: '#export',
       color: 'text-emerald-600',
       bg: 'bg-emerald-50',
@@ -117,17 +107,8 @@ export default function SettingsPage() {
       onClick: openExportModal,
     },
     {
-      icon: Sparkles,
-      label: 'Automatisation',
-      description: 'SMS Mobile Money, scan IA, transactions à valider',
-      href: '/automation',
-      color: 'text-violet-600',
-      bg: 'bg-violet-50',
-    },
-    {
       icon: User,
       label: 'Mon profil',
-      description: 'Informations du compte',
       href: '/profile',
       color: 'text-blue-500',
       bg: 'bg-blue-50'
@@ -135,7 +116,6 @@ export default function SettingsPage() {
     {
       icon: Info,
       label: 'À propos',
-      description: 'Version et informations',
       href: '/about',
       color: 'text-gray-500',
       bg: 'bg-gray-50'
@@ -148,10 +128,7 @@ export default function SettingsPage() {
 
       <main className="max-w-md mx-auto px-4 py-6 space-y-6">
         <div className="card p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-gray-500">Devise de l&apos;application</h3>
-          <p className="text-xs text-gray-500">
-            Choisissez votre devise. Par défaut : XAF.
-          </p>
+          <h3 className="text-sm font-semibold text-gray-500">Devise</h3>
           <Select
             value={currency}
             onChange={(e) => handleCurrencyChange(e.target.value)}
@@ -179,7 +156,6 @@ export default function SettingsPage() {
                     {item.label}
                     {'pro' in item && item.pro && showProBadge && <ProBadge />}
                   </p>
-                  <p className="text-sm text-gray-500">{item.description}</p>
                 </div>
                 <svg
                   className="w-5 h-5 text-gray-400"
@@ -222,9 +198,6 @@ export default function SettingsPage() {
             <Scale size={18} className="text-primary-500" />
             <h3 className="text-sm font-semibold text-gray-900">Informations légales</h3>
           </div>
-          <p className="text-xs text-gray-500">
-            Politique de confidentialité, CGU et mentions légales.
-          </p>
           <div className="space-y-1">
             <Link
               href="/legal"

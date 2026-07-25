@@ -93,6 +93,57 @@ async function makeLauncher(folder, size) {
   console.log(`  launcher → ${folder} (${size}px)`);
 }
 
+/** Icône barre de statut : silhouette blanche sur fond transparent (exigence Android). */
+const notificationIconSizes = {
+  'drawable-mdpi': 24,
+  'drawable-hdpi': 36,
+  'drawable-xhdpi': 48,
+  'drawable-xxhdpi': 72,
+  'drawable-xxxhdpi': 96,
+};
+
+async function makeNotificationIcon(folder, size) {
+  const outDir = path.join(resDir, folder);
+  fs.mkdirSync(outDir, { recursive: true });
+
+  const { data, info } = await sharp(logoPath)
+    .resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  for (let i = 0; i < data.length; i += 4) {
+    const a = data[i + 3];
+    if (a < 40) {
+      data[i] = 0;
+      data[i + 1] = 0;
+      data[i + 2] = 0;
+      data[i + 3] = 0;
+      continue;
+    }
+    const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    // Lettres claires du logo → blanc ; fond coloré → transparent
+    if (lum >= 160) {
+      data[i] = 255;
+      data[i + 1] = 255;
+      data[i + 2] = 255;
+      data[i + 3] = 255;
+    } else {
+      data[i] = 0;
+      data[i + 1] = 0;
+      data[i + 2] = 0;
+      data[i + 3] = 0;
+    }
+  }
+
+  await sharp(Buffer.from(data), {
+    raw: { width: info.width, height: info.height, channels: 4 },
+  })
+    .png()
+    .toFile(path.join(outDir, 'ic_stat_mes_poches.png'));
+  console.log(`  notif icon → ${folder}/ic_stat_mes_poches.png (${size}px)`);
+}
+
 async function main() {
   if (!fs.existsSync(logoPath)) {
     console.error('logo.png introuvable');
@@ -104,6 +155,9 @@ async function main() {
   }
   for (const [folder, size] of Object.entries(launcherSizes)) {
     await makeLauncher(folder, size);
+  }
+  for (const [folder, size] of Object.entries(notificationIconSizes)) {
+    await makeNotificationIcon(folder, size);
   }
   console.log('\n✅ Assets Android mis à jour.');
 }

@@ -1,0 +1,21 @@
+# Exemples de SMS Mobile Money (données fictives pour tests de parsing)
+
+"Paiement de Achat Max it?3 reussi par 690000001 EXEMPLE USER. ID transaction:MP260714.1658.D46780, Montant:2100 FCFA. Solde: 11057.81 FCFA."
+
+"Transfert de 690000002 EXEMPLE A vers 690000001 EXEMPLE B reussi. Details: ID transaction: PP260714.2117.B36023, Montant Transaction: 4054FCFA, Frais: 0 FCFA, Commission: 0 FCFA, Montant Net: 4054 FCFA, Nouveau Solde: 15111.81 FCFA."
+
+"Retrait d'argent reussi par le 690000003 avec le Code : 000000. Informations detaillees : Montant: 10000 FCFA, Frais: 124 FCFA, No de transaction CO260714.0958.B98633, montant net debite 10124 FCFA, Nouveau solde: 11057.81 FCFA."
+
+"Cher client, votre paiement de 1.18 USD chez NAME-CHEAP.COM* Z9S4ZH a été effectué avec succès. Nouveau solde 327.00 XAF. ID: 507434. Orange Money vous remercie. N'oubliez pas de recharger votre carte pour vos prochains paiements"
+
+"Votre carte prépayée virtuelle a été rechargée de 1000 XAF. Nouveau solde : 29394.01 XAF. Merci d'utiliser Orange Money."
+
+"Paiement de WelcomePack en succes par 690000001 EXEMPLE USER. ID de transaction: MP260713.0920.B37256, Montant: 100, Nouveau solde: 30399.01."
+
+"Transfert de 690000001 EXEMPLE B vers 690000004 EXEMPLE C reussi. Details: ID transaction: PP260713.1232.D86363, Montant Transaction: 1100FCFA, Frais: 0 FCFA, Commission: 0 FCFA, Montant Net: 1100 FCFA, Nouveau Solde: 2200 FCFA."
+
+"Une transaction de 500 XAF effectuee par MTNC BUNDLES_FORFAITS   (MTN_Bundles) sur votre compte d'argent mobile s'est terminee avec succes a 2026-07-11 21:25:39. Le montant faisait l'objet d'une remise de 0 et de bons de reduction d'une valeur de 0. Message du destinataire du debit : . Votre nouveau solde : 42 XAF. Les frais s'elevaient a 0 XAF, les frais de fidelite a 0 et la recompense de fidelite a 0. Identifiant de transaction financiere : 17896121364. ID de transaction externe : 3759457086161032536.Prix Cassés chez MoMo pour tout le monde ! 0 F sur tes transferts et -25% sur tes retraits Hors Taxe. Disponible sur la MoMo App et au *126#."
+
+"Votre paiement de 200 XAF a MTNC AIRTIME a ete effectue le 2026-06-25 19:04:18. Votre nouveau solde: 3602 XAF. Frais: 0 XAF. Message: -. Transaction Id: 17677469451. Prix Cassés chez MoMo pour tout le monde ! 0 F sur tes transferts et -25% sur tes retraits Hors Taxe. Disponible sur la MoMo App et au *126#."
+
+"Vous avez recu 10000 XAF de EXEMPLE DESTINATAIRE (237600000000) sur votre compte mobile money à 2026-06-24 12:44:33. Message de l'expéditeur: 1. Votre nouveau solde: 10004 XAF. FRAIS: FCFA 0. Financial Transaction Id: 17658394903."

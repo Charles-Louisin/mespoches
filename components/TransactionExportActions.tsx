@@ -20,12 +20,9 @@ export default function TransactionExportActions({
   return (
     <section className="card p-5 space-y-3">
       <div className="flex items-center gap-2">
-        <h2 className="text-sm font-bold text-gray-900">Exporter cette transaction</h2>
+        <h2 className="text-sm font-bold text-gray-900">Exporter</h2>
         {showProBadge && <ProBadge />}
       </div>
-      <p className="text-xs text-gray-500">
-        CSV, PDF ou fichier Excel (.xlsx).
-      </p>
       <TransactionExportButtons
         transactionId={transactionId}
         isPremium={isPremium}

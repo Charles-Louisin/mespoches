@@ -11,6 +11,7 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import { SUBSCRIPTION_PLANS, type BillingPeriod } from '@/lib/planLimits'
 import { subscriptionApi } from '@/lib/api'
 import { formatCurrency } from '@/lib/utils'
+import { isAllowedPaymentUrl } from '@/lib/payment-url'
 import { CreditCard, Smartphone, AlertCircle, FlaskConical } from 'lucide-react'
 
 type PaymentMethodChoice = 'all' | 'orange' | 'mtn'
@@ -55,6 +56,9 @@ function PaymentContent() {
     setPaying(true)
     try {
       const { paymentUrl } = await subscriptionApi.createCheckout(period, method)
+      if (!isAllowedPaymentUrl(paymentUrl)) {
+        throw new Error('URL de paiement non autorisée')
+      }
       window.location.href = paymentUrl
     } catch (err) {
       const message =

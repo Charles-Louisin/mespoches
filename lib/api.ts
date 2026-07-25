@@ -1,10 +1,9 @@
 import { getToken } from './auth';
+import { getClientApiUrl } from './api-config';
 import { PREMIUM_REQUIRED_CODE } from './planLimits';
 import { PremiumRequiredError } from './subscription';
 
-// Frontend → backend API séparé (jamais les routes Next.js locales)
-// Local : NEXT_PUBLIC_API_URL=http://localhost:5000/api
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = getClientApiUrl();
 
 interface ApiResponse<T> {
   success: boolean;
@@ -31,6 +30,9 @@ async function fetchApi<T>(
 
   const contentType = response.headers.get('content-type') ?? '';
   if (!contentType.includes('application/json')) {
+    if (response.status === 413) {
+      throw new Error('Image trop volumineuse. Rapprochez le reçu ou réessayez.');
+    }
     const fallback =
       response.status === 404
         ? 'Route API introuvable'
@@ -370,6 +372,8 @@ export interface PendingTransaction {
   _id: string;
   status: 'pending' | 'validated' | 'rejected';
   source: 'sms' | 'notification' | 'ai_scan' | 'manual';
+  source_type?: 'image' | 'parser' | 'ai' | 'sms' | 'manual';
+  document_type?: string;
   type: 'income' | 'expense';
   amount: number;
   operator: 'orange' | 'mtn' | 'unknown';
@@ -383,6 +387,7 @@ export interface PendingTransaction {
   pattern?: 'transfer_out' | 'transfer_in' | 'payment' | 'withdrawal' | 'unknown';
   transaction_id?: string;
   ai_enriched?: boolean;
+  low_confidence_warning?: string;
   validated_transaction_id?: string | null;
   created_at: string;
 }
@@ -438,11 +443,14 @@ export const pendingTransactionApi = {
       method: 'POST',
       body: JSON.stringify({ title, body }),
     }),
-  aiScan: (image: string, mimeType = 'image/jpeg') =>
-    fetchApi<PendingTransaction[]>('/pending-transactions/ai-scan', {
+  aiScan: (image: string, mimeType = 'image/jpeg') => {
+    const payload =
+      image.startsWith('data:') ? image : `data:${mimeType};base64,${image}`;
+    return fetchApi<PendingTransaction[]>('/pending-transactions/ai-scan', {
       method: 'POST',
-      body: JSON.stringify({ image, mimeType }),
-    }),
+      body: JSON.stringify({ image: payload, mimeType }),
+    });
+  },
   getHabitsSummary: () =>
     fetchApi<{
       habits: Array<{

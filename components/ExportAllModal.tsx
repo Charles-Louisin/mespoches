@@ -8,31 +8,12 @@ import ProBadge from '@/components/ProBadge'
 const OPTIONS: {
   format: ExportFormat
   label: string
-  description: string
   icon: typeof FileSpreadsheet
   iconClass: string
 }[] = [
-  {
-    format: 'csv',
-    label: 'CSV',
-    description: 'Compatible Excel, tableur',
-    icon: FileSpreadsheet,
-    iconClass: 'text-emerald-600',
-  },
-  {
-    format: 'pdf',
-    label: 'PDF',
-    description: 'Liste imprimable',
-    icon: FileText,
-    iconClass: 'text-primary-600',
-  },
-  {
-    format: 'xlsx',
-    label: 'Excel',
-    description: 'Fichier .xlsx natif',
-    icon: Sheet,
-    iconClass: 'text-green-700',
-  },
+  { format: 'csv', label: 'CSV', icon: FileSpreadsheet, iconClass: 'text-emerald-600' },
+  { format: 'pdf', label: 'PDF', icon: FileText, iconClass: 'text-primary-600' },
+  { format: 'xlsx', label: 'Excel', icon: Sheet, iconClass: 'text-green-700' },
 ]
 
 interface ExportAllModalProps {
@@ -85,13 +66,10 @@ export default function ExportAllModal({
                   Exporter tout
                   {showProBadge && <ProBadge />}
                 </h3>
-                <p className="text-sm text-gray-500">
-                  Choisissez le format pour toutes vos transactions.
-                </p>
               </div>
 
               <div className="px-6 pb-6 space-y-2">
-                {OPTIONS.map(({ format, label, description, icon: Icon, iconClass }) => (
+                {OPTIONS.map(({ format, label, icon: Icon, iconClass }) => (
                   <button
                     key={format}
                     type="button"
@@ -102,10 +80,7 @@ export default function ExportAllModal({
                     <div className="w-11 h-11 rounded-full bg-gray-50 flex items-center justify-center shrink-0">
                       <Icon size={22} className={iconClass} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900">{label}</p>
-                      <p className="text-xs text-gray-500">{description}</p>
-                    </div>
+                    <p className="font-semibold text-gray-900 flex-1">{label}</p>
                     <span className="text-sm font-medium text-primary-600 shrink-0">
                       {exporting === format ? '…' : '→'}
                     </span>

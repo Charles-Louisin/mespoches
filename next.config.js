@@ -85,16 +85,12 @@ const withPWA = require('next-pwa')({
         }
       }
     },
+    // Pas de cache des réponses API authentifiées (données financières)
     {
-      urlPattern: /^https?:\/\/.+\/api\/.*/i, // Support pour n'importe quelle URL API (localhost ou production)
-      handler: 'NetworkFirst',
+      urlPattern: /^https?:\/\/.+\/api\/.*/i,
+      handler: 'NetworkOnly',
       options: {
-        cacheName: 'api-cache',
-        networkTimeoutSeconds: 10,
-        expiration: {
-          maxEntries: 50,
-          maxAgeSeconds: 5 * 60 // 5 minutes
-        }
+        cacheName: 'api-network-only',
       }
     },
     {
@@ -112,6 +108,8 @@ const withPWA = require('next-pwa')({
   ]
 })
 
+const backendUrl = (process.env.DEV_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '')
+
 const nextConfig = {
   reactStrictMode: true,
   images: {
@@ -119,6 +117,62 @@ const nextConfig = {
       { protocol: 'https', hostname: 'utfs.io', pathname: '/**' },
       { protocol: 'https', hostname: 'ufs.sh', pathname: '/**' },
     ],
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(self), microphone=(), geolocation=()',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              process.env.NODE_ENV === 'production'
+                ? "script-src 'self' 'unsafe-inline'"
+                : "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com data:",
+              "img-src 'self' data: blob: https://utfs.io https://*.ufs.sh https://*.uploadthing.com",
+              "connect-src 'self' https: http://localhost:* http://127.0.0.1:*",
+              "frame-ancestors 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "object-src 'none'",
+              "upgrade-insecure-requests",
+            ].join('; '),
+          },
+          ...(process.env.NODE_ENV === 'production'
+            ? [
+                {
+                  key: 'Strict-Transport-Security',
+                  value: 'max-age=63072000; includeSubDomains; preload',
+                },
+              ]
+            : []),
+        ],
+      },
+    ]
+  },
+  async rewrites() {
+    // Proxy dev uniquement — aucun rewrite en production (Vercel / build prod)
+    if (process.env.NODE_ENV !== 'development') {
+      return []
+    }
+    return {
+      afterFiles: [
+        {
+          source: '/api/:path*',
+          destination: `${backendUrl}/api/:path*`,
+        },
+      ],
+    }
   },
 }
 

@@ -11,30 +11,12 @@ import {
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { authApi, MeUser } from '@/lib/api'
-import { getToken, getUser, setUser } from '@/lib/auth'
+import { getToken, getUser, hydrateAuthSession, setUser } from '@/lib/auth'
 import {
   isPremiumUser,
   isPremiumRequiredError,
   getUpgradePath,
 } from '@/lib/subscription'
-
-function meUserFromStorage(): MeUser | null {
-  const stored = getUser()
-  if (!stored) return null
-  return {
-    id: stored.id,
-    email: stored.email,
-    name: stored.name,
-    role: stored.role,
-    plan: stored.plan,
-    premiumUntil: stored.premiumUntil,
-    isPremium: stored.isPremium,
-    currency: stored.currency,
-    hidePlannedExpensesHelp: stored.hidePlannedExpensesHelp,
-    created_at: '',
-    lastLoginAt: stored.lastLoginAt,
-  }
-}
 
 interface SubscriptionContextValue {
   user: MeUser | null
@@ -51,14 +33,11 @@ const SubscriptionContext = createContext<SubscriptionContextValue | null>(null)
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const [user, setUserState] = useState<MeUser | null>(() =>
-    typeof window !== 'undefined' ? meUserFromStorage() : null
-  )
-  const [loading, setLoading] = useState(() =>
-    typeof window !== 'undefined' ? !!getToken() : false
-  )
+  const [user, setUserState] = useState<MeUser | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const refresh = useCallback(async () => {
+    await hydrateAuthSession()
     if (!getToken()) {
       setUserState(null)
       setLoading(false)
@@ -68,20 +47,28 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       const me = await authApi.me()
       setUserState(me)
       const stored = getUser()
-      if (stored) {
-        setUser({
-          ...stored,
-          plan: me.plan,
-          premiumUntil: me.premiumUntil,
-          isPremium: me.isPremium,
-          currency: me.currency,
-        })
-      }
+      setUser({
+        ...(stored ?? {
+          id: me.id,
+          email: me.email,
+        }),
+        id: me.id,
+        email: me.email,
+        name: me.name,
+        role: me.role,
+        plan: me.plan,
+        premiumUntil: me.premiumUntil,
+        isPremium: me.isPremium,
+        currency: me.currency,
+        hidePlannedExpensesHelp: me.hidePlannedExpensesHelp,
+        lastLoginAt: me.lastLoginAt ?? undefined,
+        emailVerified: true,
+      })
       return me
     } catch {
-      const fallback = meUserFromStorage()
-      if (fallback) setUserState(fallback)
-      return fallback
+      // Ne pas faire confiance au rôle / premium du localStorage
+      setUserState(null)
+      return null
     } finally {
       setLoading(false)
     }

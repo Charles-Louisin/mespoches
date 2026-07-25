@@ -107,11 +107,29 @@ export default function PrivacyPolicyPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="6. Stockage local (hors ligne)">
+      <LegalSection title="6. Utilisation de l'application — détection automatique">
         <p>
-          L&apos;application peut enregistrer certaines données localement sur votre appareil
-          (cache, file de synchronisation) pour fonctionner sans connexion et synchroniser
-          ultérieurement avec le serveur lorsque vous êtes connecté.
+          Sur l&apos;application mobile Android, MES POCHES peut détecter automatiquement vos
+          transactions Mobile Money (Orange Money, MTN MoMo) à partir des{' '}
+          <strong>SMS</strong> et des <strong>notifications</strong> reçus sur votre téléphone.
+          Les montants sont extraits puis envoyés de façon sécurisée à nos serveurs pour créer
+          une proposition en attente de validation.
+        </p>
+        <ul className="list-disc pl-5 space-y-1 mt-2">
+          <li>Aucune saisie manuelle ni copier-coller n&apos;est requis.</li>
+          <li>
+            Vous devez autoriser l&apos;accès aux SMS et aux notifications système lors du
+            premier lancement.
+          </li>
+          <li>Chaque transaction détectée vous est notifiée avant enregistrement.</li>
+          <li>
+            Le scan de reçus par photo (Premium) est disponible depuis « Nouvelle transaction ».
+          </li>
+        </ul>
+        <p className="mt-2">
+          L&apos;application peut aussi enregistrer des données localement (cache, synchronisation
+          hors ligne). Vous pouvez révoquer les autorisations SMS/notifications dans les
+          paramètres Android.
         </p>
       </LegalSection>
 

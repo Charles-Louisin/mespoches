@@ -24,9 +24,9 @@ const slides = [
   {
     title: 'Chaque mouvement, bien enregistré',
     description:
-      'Revenus, dépenses et transferts : saisissez en quelques secondes. Vos soldes se mettent à jour automatiquement.',
+      'Saisissez vos revenus et dépenses, ou laissez l\'app détecter automatiquement vos opérations Mobile Money (SMS et notifications).',
     preview: TransactionsPreview,
-    highlights: ['Revenus & dépenses', 'Historique complet', 'Export'],
+    highlights: ['Détection auto', 'Revenus & dépenses', 'Scan de reçus'],
   },
   {
     title: 'Décidez en connaissance de cause',

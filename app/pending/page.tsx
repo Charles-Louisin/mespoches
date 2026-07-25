@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import PageShell from '@/components/PageShell';
@@ -18,34 +17,28 @@ import {
   Category,
 } from '@/lib/api';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { Check, X, Pencil, Sparkles } from 'lucide-react';
+import { Check, Trash2, Pencil, AlertTriangle } from 'lucide-react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
-function sourceLabel(source: PendingTransaction['source']) {
-  switch (source) {
-    case 'sms':
-      return 'SMS Mobile Money';
-    case 'notification':
-      return 'Notification';
-    case 'ai_scan':
-      return 'Scan IA';
-    default:
-      return 'Manuel';
+function sourceLabel(item: PendingTransaction) {
+  if (item.source === 'ai_scan' || item.source_type === 'image') return 'Image';
+  if (item.source === 'notification') {
+    return item.source_type === 'ai' ? 'Notification (IA)' : 'Notification';
   }
+  if (item.source === 'sms') return 'SMS';
+  return 'Manuel';
 }
 
-function patternLabel(pattern?: PendingTransaction['pattern']) {
-  switch (pattern) {
-    case 'transfer_out':
-      return 'Transfert envoyé';
-    case 'transfer_in':
-      return 'Transfert reçu';
-    case 'payment':
-      return 'Paiement marchand';
-    case 'withdrawal':
-      return 'Retrait espèces';
-    default:
-      return 'Mobile Money';
+function categoryName(item: PendingTransaction): string {
+  if (typeof item.category_id === 'object' && item.category_id) {
+    return item.category_id.name;
   }
+  return '—';
+}
+
+function confidencePct(c: number) {
+  return `${Math.round(Math.min(1, Math.max(0, c)) * 100)} %`;
 }
 
 export default function PendingTransactionsPage() {
@@ -107,15 +100,16 @@ export default function PendingTransactionsPage() {
   const validate = async (id: string) => {
     setBusy(id);
     try {
-      const payload = editingId === id
-        ? {
-            amount: parseFloat(form.amount),
-            description: form.description,
-            wallet_id: form.wallet_id,
-            category_id: form.category_id || null,
-            type: form.type,
-          }
-        : undefined;
+      const payload =
+        editingId === id
+          ? {
+              amount: parseFloat(form.amount),
+              description: form.description,
+              wallet_id: form.wallet_id,
+              category_id: form.category_id || null,
+              type: form.type,
+            }
+          : undefined;
       await pendingTransactionApi.validate(id, payload);
       toast.success('Transaction enregistrée');
       setEditingId(null);
@@ -131,10 +125,10 @@ export default function PendingTransactionsPage() {
     setBusy(id);
     try {
       await pendingTransactionApi.reject(id);
-      toast.success('Proposition ignorée');
+      toast.success('Supprimée');
       if (editingId === id) setEditingId(null);
       await load();
-    } catch (e) {
+    } catch {
       toast.error('Erreur');
     } finally {
       setBusy(null);
@@ -144,7 +138,7 @@ export default function PendingTransactionsPage() {
   if (loading) {
     return (
       <PageShell>
-        <Header title="À valider" showBack />
+        <Header title="Transactions à valider" showBack />
         <LoadingSpinner />
       </PageShell>
     );
@@ -155,18 +149,6 @@ export default function PendingTransactionsPage() {
       <Header title="Transactions à valider" showBack />
 
       <main className="max-w-md mx-auto px-4 py-6 space-y-4">
-        <p className="text-sm text-gray-600">
-          Propositions créées automatiquement depuis vos SMS Mobile Money ou scans IA.
-          Vérifiez, modifiez si besoin, puis validez.
-        </p>
-
-        <Link
-          href="/automation"
-          className="text-sm font-medium text-primary-600 flex items-center gap-1"
-        >
-          <Sparkles size={16} /> Paramètres d&apos;automatisation →
-        </Link>
-
         {items.length === 0 ? (
           <div className="card p-8 text-center text-gray-500 text-sm">
             Aucune transaction en attente.
@@ -175,31 +157,38 @@ export default function PendingTransactionsPage() {
           items.map((item) => (
             <article key={item._id} className="card p-4 space-y-3">
               <div className="flex items-start justify-between gap-2">
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium text-primary-600 uppercase tracking-wide">
-                    {sourceLabel(item.source)}
-                    {item.pattern && ` · ${patternLabel(item.pattern)}`}
-                    {item.operator !== 'unknown' &&
-                      ` · ${item.operator === 'orange' ? 'Orange' : 'MTN'}`}
+                    {sourceLabel(item)}
+                    {item.document_type ? ` · ${item.document_type}` : ''}
                   </p>
-                  {item.ai_enriched && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded-full mt-1">
-                      <Sparkles size={10} /> Suggestion IA Premium
-                    </span>
-                  )}
-                  {item.confidence >= 0.85 && !item.ai_enriched && (
-                    <span className="inline-block text-[10px] text-emerald-600 mt-1">
-                      Habitude reconnue
-                    </span>
-                  )}
                   <p className="font-semibold text-gray-900 mt-1">
                     {item.type === 'income' ? '+' : '−'}
                     {formatAmount(item.amount)}
                   </p>
                   <p className="text-sm text-gray-600">{item.description}</p>
-                  {item.counterparty && (
-                    <p className="text-xs text-gray-500 mt-1">→ {item.counterparty}</p>
-                  )}
+                  <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-gray-500">
+                    <div>
+                      <dt className="inline text-gray-400">Type · </dt>
+                      <dd className="inline">
+                        {item.type === 'income' ? 'Revenu' : 'Dépense'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="inline text-gray-400">Date · </dt>
+                      <dd className="inline">
+                        {format(new Date(item.date), 'd MMM yyyy', { locale: fr })}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="inline text-gray-400">Catégorie · </dt>
+                      <dd className="inline">{categoryName(item)}</dd>
+                    </div>
+                    <div>
+                      <dt className="inline text-gray-400">Confiance · </dt>
+                      <dd className="inline">{confidencePct(item.confidence)}</dd>
+                    </div>
+                  </dl>
                 </div>
                 <button
                   type="button"
@@ -210,6 +199,16 @@ export default function PendingTransactionsPage() {
                   <Pencil size={18} />
                 </button>
               </div>
+
+              {(item.low_confidence_warning || item.confidence < 0.75) && (
+                <div className="flex gap-2 items-start rounded-xl bg-amber-50 text-amber-800 text-xs px-3 py-2">
+                  <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+                  <span>
+                    {item.low_confidence_warning ||
+                      "Certaines informations n'ont pas pu être reconnues avec certitude."}
+                  </span>
+                </div>
+              )}
 
               {editingId === item._id && (
                 <div className="space-y-3 pt-2 border-t border-gray-100">
@@ -260,10 +259,6 @@ export default function PendingTransactionsPage() {
                 </div>
               )}
 
-              {item.raw_text && editingId !== item._id && (
-                <p className="text-xs text-gray-400 line-clamp-2">{item.raw_text}</p>
-              )}
-
               <div className="flex gap-2 pt-1">
                 <Button
                   type="button"
@@ -271,16 +266,27 @@ export default function PendingTransactionsPage() {
                   onClick={() => validate(item._id)}
                   disabled={busy === item._id}
                   className="flex items-center justify-center gap-2"
+                  aria-label="Confirmer"
                 >
-                  <Check size={18} /> Valider
+                  <Check size={18} /> Confirmer
                 </Button>
+                <button
+                  type="button"
+                  onClick={() => startEdit(item)}
+                  disabled={busy === item._id}
+                  className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 touch-manipulation"
+                  aria-label="Modifier"
+                >
+                  <Pencil size={18} />
+                </button>
                 <button
                   type="button"
                   onClick={() => reject(item._id)}
                   disabled={busy === item._id}
-                  className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 touch-manipulation"
+                  className="px-4 py-2 rounded-xl border border-red-100 text-red-600 hover:bg-red-50 touch-manipulation"
+                  aria-label="Supprimer"
                 >
-                  <X size={18} />
+                  <Trash2 size={18} />
                 </button>
               </div>
             </article>
@@ -288,7 +294,7 @@ export default function PendingTransactionsPage() {
         )}
 
         <Button variant="secondary" fullWidth onClick={() => router.push('/')}>
-          Retour à l&apos;accueil
+          Retour
         </Button>
       </main>
     </PageShell>
