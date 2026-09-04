@@ -9,8 +9,21 @@ const NONCE_COOKIE = 'google_oauth_client_nonce';
 const STATE_COOKIE = 'google_oauth_state';
 
 function appOrigin(request: NextRequest): string {
-  const override = process.env.GOOGLE_REDIRECT_ORIGIN?.replace(/\/$/, '');
-  if (override?.startsWith('http')) return override;
+  const override = (
+    process.env.GOOGLE_REDIRECT_ORIGIN ||
+    process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_ORIGIN ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    ''
+  ).replace(/\/$/, '');
+  if (override.startsWith('http')) return override;
+
+  const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
+  const forwardedProto =
+    request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() || 'https';
+  if (forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}`.replace(/\/$/, '');
+  }
+
   return request.nextUrl.origin;
 }
 

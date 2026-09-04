@@ -27,6 +27,8 @@ import {
   type RegisterAvailability,
 } from '@/lib/loginValidation'
 import { toast } from 'sonner'
+import { getGoogleOAuthOrigin } from '@/lib/google-oauth-origin'
+import { SmsMonitor } from '@/lib/capacitor/app-notifications'
 
 type TouchedState = Partial<Record<LoginField, boolean>>
 
@@ -192,7 +194,8 @@ function LoginPageContent() {
   const startGoogle = async () => {
     setGoogleLoading(true)
     const isNative = Capacitor.isNativePlatform()
-    let url = `${window.location.origin}/api/auth/google`
+    const origin = getGoogleOAuthOrigin() || window.location.origin
+    let url = `${origin}/api/auth/google`
 
     if (isNative) {
       const bytes = new Uint8Array(32)
@@ -203,14 +206,16 @@ function LoginPageContent() {
       sessionStorage.setItem('mp_oauth_client_nonce', clientNonce)
       url += `?mobile=1&client_nonce=${encodeURIComponent(clientNonce)}`
       try {
-        await Browser.open({
-          url,
-          presentationStyle: 'popover',
-        })
+        // Chrome système (évite WebView / Custom Tab → « Accès bloqué »)
+        await SmsMonitor.openExternalUrl({ url })
       } catch {
-        sessionStorage.removeItem('mp_oauth_client_nonce')
-        setGoogleLoading(false)
-        toast.error('Impossible d’ouvrir le navigateur Google.')
+        try {
+          await Browser.open({ url, presentationStyle: 'popover' })
+        } catch {
+          sessionStorage.removeItem('mp_oauth_client_nonce')
+          setGoogleLoading(false)
+          toast.error('Impossible d’ouvrir Chrome pour Google.')
+        }
       }
       return
     }

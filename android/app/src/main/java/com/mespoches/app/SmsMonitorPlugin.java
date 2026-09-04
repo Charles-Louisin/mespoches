@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.provider.Settings;
 import android.util.Log;
 import com.getcapacitor.Plugin;
@@ -40,6 +41,7 @@ public class SmsMonitorPlugin extends Plugin {
         ".railway.app",
         ".onrender.com",
         ".ngrok-free.app",
+        ".ngrok-free.dev",
         ".ngrok.io",
         ".vercel.app"
     ));
@@ -92,6 +94,53 @@ public class SmsMonitorPlugin extends Plugin {
             call.resolve();
         } catch (Exception e) {
             call.reject("Impossible d'ouvrir les paramètres de notifications");
+        }
+    }
+
+    /**
+     * Ouvre une URL HTTPS dans Chrome (navigateur système), pas dans la WebView.
+     * Requis pour Google OAuth (disallowed_useragent / « Accès bloqué »).
+     */
+    @PluginMethod
+    public void openExternalUrl(PluginCall call) {
+        String url = call.getString("url", "");
+        if (url == null || url.trim().isEmpty()) {
+            call.reject("URL manquante");
+            return;
+        }
+        Uri uri;
+        try {
+            uri = Uri.parse(url.trim());
+        } catch (Exception e) {
+            call.reject("URL invalide");
+            return;
+        }
+        String scheme = uri.getScheme() != null ? uri.getScheme().toLowerCase(Locale.ROOT) : "";
+        if (!scheme.equals("https") && !scheme.equals("http")) {
+            call.reject("Seules les URL http(s) sont autorisées");
+            return;
+        }
+
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        intent.addCategory(Intent.CATEGORY_BROWSABLE);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        try {
+            // Chrome en priorité (Custom Tabs / WebView = souvent bloqués par Google)
+            intent.setPackage("com.android.chrome");
+            getContext().startActivity(intent);
+            call.resolve();
+            return;
+        } catch (Exception ignored) {
+            /* Chrome absent */
+        }
+
+        try {
+            intent.setPackage(null);
+            getContext().startActivity(intent);
+            call.resolve();
+        } catch (Exception e) {
+            call.reject("Impossible d'ouvrir le navigateur système");
         }
     }
 

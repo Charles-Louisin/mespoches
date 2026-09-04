@@ -18,7 +18,8 @@ const config: CapacitorConfig = {
   webDir: 'public',
   android: {
     allowMixedContent: false,
-    backgroundColor: '#2563EB',
+    // Fond WebView = surface claire (le bleu splash reste uniquement au SplashScreen)
+    backgroundColor: '#F8FAFC',
   },
   plugins: {
     SplashScreen: {

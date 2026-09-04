@@ -13,6 +13,7 @@ interface ReceiptScanOverlayProps {
   message: string
   createdCount: number
   onClose: () => void
+  onCancel: () => void
   onRetry: () => void
 }
 
@@ -23,6 +24,7 @@ export default function ReceiptScanOverlay({
   message,
   createdCount,
   onClose,
+  onCancel,
   onRetry,
 }: ReceiptScanOverlayProps) {
   return (
@@ -46,7 +48,7 @@ export default function ReceiptScanOverlay({
                 <img
                   src={imagePreview}
                   alt="Reçu en cours d'analyse"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">
@@ -102,7 +104,12 @@ export default function ReceiptScanOverlay({
               <p className="text-sm text-gray-600">{message}</p>
 
               {phase === 'scanning' && (
-                <p className="text-xs text-gray-400">Extraction des montants et libellés…</p>
+                <>
+                  <p className="text-xs text-gray-400">Extraction des montants et libellés…</p>
+                  <Button variant="outline" fullWidth onClick={onCancel}>
+                    Annuler l’analyse
+                  </Button>
+                </>
               )}
 
               {phase === 'success' && (

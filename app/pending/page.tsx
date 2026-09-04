@@ -11,17 +11,20 @@ import Select from '@/components/Select';
 import {
   pendingTransactionApi,
   PendingTransaction,
+  sanitizeLineItems,
   walletApi,
   categoryApi,
   Wallet,
   Category,
 } from '@/lib/api';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { Check, Trash2, Pencil, AlertTriangle } from 'lucide-react';
+import { Check, Trash2, Pencil, AlertTriangle, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import LineItemsCollapse from '@/components/LineItemsCollapse';
 
 function sourceLabel(item: PendingTransaction) {
+  if (item.source === 'voice' || item.source_type === 'voice') return 'Audio';
   if (item.source === 'ai_scan' || item.source_type === 'image') return 'Image';
   if (item.source === 'notification') {
     return item.source_type === 'ai' ? 'Notification (IA)' : 'Notification';
@@ -55,6 +58,7 @@ export default function PendingTransactionsPage() {
     wallet_id: '',
     category_id: '',
     type: 'expense' as 'income' | 'expense',
+    ai_items: [] as PendingTransaction['ai_items'],
   });
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -94,7 +98,27 @@ export default function PendingTransactionsPage() {
           ? item.category_id._id
           : String(item.category_id || ''),
       type: item.type,
+      ai_items: (item.ai_items || []).map((line) => ({ ...line })),
     });
+  };
+
+  const cancelEdit = () => setEditingId(null);
+
+  const toggleEdit = (item: PendingTransaction) => {
+    if (editingId === item._id) {
+      cancelEdit();
+      return;
+    }
+    startEdit(item);
+  };
+
+  const updateLineDescription = (index: number, description: string) => {
+    setForm((f) => ({
+      ...f,
+      ai_items: (f.ai_items || []).map((line, i) =>
+        i === index ? { ...line, description } : line
+      ),
+    }));
   };
 
   const validate = async (id: string) => {
@@ -108,6 +132,9 @@ export default function PendingTransactionsPage() {
               wallet_id: form.wallet_id,
               category_id: form.category_id || null,
               type: form.type,
+              ...(form.ai_items && form.ai_items.length > 0
+                ? { ai_items: sanitizeLineItems(form.ai_items) }
+                : {}),
             }
           : undefined;
       await pendingTransactionApi.validate(id, payload);
@@ -167,6 +194,11 @@ export default function PendingTransactionsPage() {
                     {formatAmount(item.amount)}
                   </p>
                   <p className="text-sm text-gray-600">{item.description}</p>
+                  {item.ai_items && item.ai_items.length > 1 && editingId !== item._id && (
+                    <div className="mt-2">
+                      <LineItemsCollapse items={item.ai_items} />
+                    </div>
+                  )}
                   <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-gray-500">
                     <div>
                       <dt className="inline text-gray-400">Type · </dt>
@@ -192,11 +224,12 @@ export default function PendingTransactionsPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => startEdit(item)}
+                  onClick={() => toggleEdit(item)}
                   className="p-2 text-gray-400 hover:text-primary-600 touch-manipulation"
-                  aria-label="Modifier"
+                  aria-label={editingId === item._id ? 'Fermer la modification' : 'Modifier'}
+                  aria-expanded={editingId === item._id}
                 >
-                  <Pencil size={18} />
+                  {editingId === item._id ? <X size={18} /> : <Pencil size={18} />}
                 </button>
               </div>
 
@@ -212,6 +245,7 @@ export default function PendingTransactionsPage() {
 
               {editingId === item._id && (
                 <div className="space-y-3 pt-2 border-t border-gray-100">
+                 
                   <Select
                     label="Type"
                     value={form.type}
@@ -256,6 +290,17 @@ export default function PendingTransactionsPage() {
                       className="mt-1 w-full px-3 py-2 border rounded-xl"
                     />
                   </label>
+                  {form.ai_items && form.ai_items.length > 1 && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-2">Articles</p>
+                      <LineItemsCollapse
+                        items={form.ai_items}
+                        editable
+                        defaultOpen
+                        onDescriptionChange={updateLineDescription}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -272,12 +317,13 @@ export default function PendingTransactionsPage() {
                 </Button>
                 <button
                   type="button"
-                  onClick={() => startEdit(item)}
+                  onClick={() => toggleEdit(item)}
                   disabled={busy === item._id}
                   className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 touch-manipulation"
-                  aria-label="Modifier"
+                  aria-label={editingId === item._id ? 'Fermer la modification' : 'Modifier'}
+                  aria-expanded={editingId === item._id}
                 >
-                  <Pencil size={18} />
+                  {editingId === item._id ? <X size={18} /> : <Pencil size={18} />}
                 </button>
                 <button
                   type="button"

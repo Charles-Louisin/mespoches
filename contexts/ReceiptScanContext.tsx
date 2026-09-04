@@ -14,10 +14,12 @@ import { pendingTransactionApi } from '@/lib/api'
 import { compressImageForScan } from '@/lib/imageCompress'
 import { isNativeApp } from '@/lib/capacitor/native-permissions'
 import {
+  cancelTransactionProcessing,
   notifyTransactionProcessing,
   notifyTransactionReady,
 } from '@/lib/capacitor/app-notifications'
 import ReceiptScanOverlay from '@/components/ReceiptScanOverlay'
+import ReceiptSourceSheet from '@/components/ReceiptSourceSheet'
 
 type ScanPhase = 'idle' | 'scanning' | 'success' | 'error'
 
@@ -61,6 +63,24 @@ export function ReceiptScanProvider({ children }: { children: ReactNode }) {
   const [message, setMessage] = useState('')
   const [createdCount, setCreatedCount] = useState(0)
   const pendingImage = useRef<PendingImage | null>(null)
+  const scanAbort = useRef<AbortController | null>(null)
+  const [sourceSheetOpen, setSourceSheetOpen] = useState(false)
+  const sourceResolver = useRef<((source: CameraSource | null) => void) | null>(null)
+
+  /** Remplace CameraSource.Prompt : le dialogue natif hérite du thème splash et devient illisible. */
+  const askSource = useCallback((): Promise<CameraSource | null> => {
+    return new Promise((resolve) => {
+      sourceResolver.current = resolve
+      setSourceSheetOpen(true)
+    })
+  }, [])
+
+  const answerSource = useCallback((source: CameraSource | null) => {
+    setSourceSheetOpen(false)
+    const resolver = sourceResolver.current
+    sourceResolver.current = null
+    resolver?.(source)
+  }, [])
 
   const reset = useCallback(() => {
     setPhase('idle')
@@ -70,6 +90,13 @@ export function ReceiptScanProvider({ children }: { children: ReactNode }) {
     pendingImage.current = null
   }, [])
 
+  const cancelScan = useCallback(() => {
+    scanAbort.current?.abort()
+    scanAbort.current = null
+    void cancelTransactionProcessing()
+    reset()
+  }, [reset])
+
   const processImage = useCallback(
     async (dataUrl: string, mime: string) => {
       pendingImage.current = { dataUrl, mime }
@@ -77,23 +104,36 @@ export function ReceiptScanProvider({ children }: { children: ReactNode }) {
       setPhase('scanning')
       setMessage('Analyse de votre reçu en cours…')
       void notifyTransactionProcessing()
+      const controller = new AbortController()
+      scanAbort.current?.abort()
+      scanAbort.current = controller
 
       try {
         const { image, mimeType } = await compressImageForScan(dataUrl, mime)
-        const created = await pendingTransactionApi.aiScan(image, mimeType)
+        if (controller.signal.aborted) return false
+        const created = await pendingTransactionApi.aiScan(image, mimeType, controller.signal)
+        if (controller.signal.aborted) return false
         const count = created.length
         setCreatedCount(count)
         setPhase('success')
         const lowConf = created.some((t) => t.confidence < 0.75 || !!t.low_confidence_warning)
+        const lineCount = created[0]?.ai_items?.length ?? 0
+        const grouped = count === 1 && lineCount > 1
         setMessage(
           lowConf
             ? "Certaines informations n'ont pas pu être reconnues avec certitude."
-            : count === 1
-              ? '1 transaction détectée'
-              : `${count} transactions détectées`
+            : grouped
+              ? `1 ticket · ${lineCount} articles`
+              : count === 1
+                ? '1 transaction détectée'
+                : `${count} transactions détectées`
         )
         void notifyTransactionReady(
-          count === 1 ? '1 transaction détectée sur votre reçu' : `${count} transactions détectées`
+          grouped
+            ? `Ticket prêt · ${lineCount} articles à valider`
+            : count === 1
+              ? '1 transaction détectée sur votre reçu'
+              : `${count} transactions détectées`
         )
         pendingImage.current = null
         window.setTimeout(() => {
@@ -102,10 +142,18 @@ export function ReceiptScanProvider({ children }: { children: ReactNode }) {
         }, 1400)
         return true
       } catch (e) {
+        if (controller.signal.aborted || (e instanceof Error && e.name === 'AbortError')) {
+          return false
+        }
+        void cancelTransactionProcessing()
         const msg = formatScanError(e)
         setPhase('error')
         setMessage(msg)
         return false
+      } finally {
+        if (scanAbort.current === controller) {
+          scanAbort.current = null
+        }
       }
     },
     [reset, router]
@@ -158,10 +206,13 @@ export function ReceiptScanProvider({ children }: { children: ReactNode }) {
         let mime = 'image/jpeg'
 
         if (isNativeApp()) {
+          const source = await askSource()
+          if (!source) return false
+
           const photo = await CapCamera.getPhoto({
             quality: 60,
             resultType: CameraResultType.DataUrl,
-            source: CameraSource.Prompt,
+            source,
           })
           if (!photo.dataUrl) return false
           dataUrl = photo.dataUrl
@@ -183,7 +234,7 @@ export function ReceiptScanProvider({ children }: { children: ReactNode }) {
         return false
       }
     },
-    [phase, pickImage, processImage, reset]
+    [askSource, phase, pickImage, processImage, reset]
   )
 
   const scanning = phase === 'scanning'
@@ -191,6 +242,12 @@ export function ReceiptScanProvider({ children }: { children: ReactNode }) {
   return (
     <ReceiptScanContext.Provider value={{ startScan, scanning }}>
       {children}
+      <ReceiptSourceSheet
+        open={sourceSheetOpen}
+        onSelectCamera={() => answerSource(CameraSource.Camera)}
+        onSelectGallery={() => answerSource(CameraSource.Photos)}
+        onCancel={() => answerSource(null)}
+      />
       <ReceiptScanOverlay
         open={phase !== 'idle'}
         phase={phase}
@@ -198,6 +255,7 @@ export function ReceiptScanProvider({ children }: { children: ReactNode }) {
         message={message}
         createdCount={createdCount}
         onClose={reset}
+        onCancel={cancelScan}
         onRetry={retryScan}
       />
     </ReceiptScanContext.Provider>

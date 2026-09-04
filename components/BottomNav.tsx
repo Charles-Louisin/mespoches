@@ -2,15 +2,42 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, History, Wallet, BarChart3, Plus, Target, Tag, Camera } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import {
+  Home,
+  History,
+  Wallet,
+  BarChart3,
+  Target,
+  Tag,
+  Plus,
+  X,
+  Type,
+  Image as ImageIcon,
+  Mic,
+} from 'lucide-react'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useReceiptScan } from '@/contexts/ReceiptScanContext'
+import VoiceNoteOverlay from '@/components/VoiceNoteOverlay'
+
+function FabCompositeIcon({ open }: { open: boolean }) {
+  return open ? (
+    <X size={26} strokeWidth={2.5} aria-hidden />
+  ) : (
+    <Plus size={28} strokeWidth={2.5} aria-hidden />
+  )
+}
 
 export default function BottomNav() {
   const pathname = usePathname()
   const { showProBadge, isPremium, requirePremium } = useSubscription()
   const { startScan, scanning } = useReceiptScan()
-  const isNewTransactionPage = pathname === '/transactions/new'
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [voiceOpen, setVoiceOpen] = useState(false)
+
+  useEffect(() => {
+    setSheetOpen(false)
+  }, [pathname])
 
   const leftItems = [
     { href: '/', icon: Home, label: 'Accueil' },
@@ -66,51 +93,111 @@ export default function BottomNav() {
     )
   }
 
-  const handleFabClick = async () => {
-    if (!isNewTransactionPage || scanning) return
-    await startScan(isPremium, requirePremium)
-  }
-
   const fabClass =
     'absolute left-1/2 -translate-x-1/2 -top-5 w-14 h-14 rounded-full bg-primary-800 shadow-lg flex items-center justify-center text-white hover:bg-primary-900 transition touch-manipulation border-4 border-surface disabled:opacity-60'
 
+  const handleImage = async () => {
+    setSheetOpen(false)
+    await startScan(isPremium, requirePremium)
+  }
+
+  const handleAudio = () => {
+    setSheetOpen(false)
+    if (!isPremium) {
+      requirePremium('Note vocale réservée aux abonnés Premium')
+      return
+    }
+    setVoiceOpen(true)
+  }
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
-      <div className="max-w-md mx-auto px-4 pb-4 pointer-events-auto">
-        <div className="relative nav-gradient rounded-2xl shadow-nav px-1.5 pt-2.5 pb-1.5">
-          <div className="flex items-end">
-            <div className="flex flex-1 min-w-0 justify-evenly gap-0.5">
-              {leftItems.map((item) => (
-                <NavLink key={item.href} {...item} />
-              ))}
-            </div>
-
-            <div className="w-16 flex-shrink-0" />
-
-            <div className="flex flex-1 min-w-0 justify-evenly gap-0.5">
-              {rightItems.map((item) => (
-                <NavLink key={item.href} {...item} />
-              ))}
+    <>
+      {sheetOpen && (
+        <div className="fixed inset-0 z-[45] pointer-events-none">
+          <div className="absolute inset-0 bg-black/25" aria-hidden />
+          <div className="absolute bottom-[154px] left-0 right-0 px-4 pointer-events-none">
+            <div className="max-w-md mx-auto pointer-events-auto">
+              <div className="rounded-[1.75rem] bg-white shadow-xl border border-gray-100 px-4 pt-4 pb-5">
+                <p className="text-center text-sm font-semibold text-gray-800 mb-4">
+                  Ajouter une transaction par
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  <Link
+                    href="/transactions/new"
+                    onClick={() => setSheetOpen(false)}
+                    className="flex flex-col items-center gap-2 py-3 rounded-2xl bg-primary-50 text-primary-800 touch-manipulation active:scale-[0.98] transition"
+                  >
+                    <span className="w-11 h-11 rounded-full bg-white shadow-sm flex items-center justify-center">
+                      <Type size={20} strokeWidth={2.25} />
+                    </span>
+                    <span className="text-xs font-semibold">Texte</span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => void handleImage()}
+                    disabled={scanning}
+                    className="flex flex-col items-center gap-2 py-3 rounded-2xl bg-primary-50 text-primary-800 touch-manipulation active:scale-[0.98] transition disabled:opacity-60"
+                  >
+                    <span className="w-11 h-11 rounded-full bg-white shadow-sm flex items-center justify-center">
+                      <ImageIcon size={20} strokeWidth={2.25} />
+                    </span>
+                    <span className="text-xs font-semibold">Image</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAudio}
+                    className="flex flex-col items-center gap-2 py-3 rounded-2xl bg-primary-50 text-primary-800 touch-manipulation active:scale-[0.98] transition"
+                  >
+                    <span className="w-11 h-11 rounded-full bg-white shadow-sm flex items-center justify-center">
+                      <Mic size={20} strokeWidth={2.25} />
+                    </span>
+                    <span className="text-xs font-semibold">Audio</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
+      )}
 
-          {isNewTransactionPage ? (
+      <nav className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+        <div className="max-w-md mx-auto px-4 pb-4 pointer-events-auto">
+          <div className="relative nav-gradient rounded-2xl shadow-nav px-1.5 pt-2.5 pb-1.5">
+            <div className="flex items-end">
+              <div className="flex flex-1 min-w-0 justify-evenly gap-0.5">
+                {leftItems.map((item) => (
+                  <NavLink key={item.href} {...item} />
+                ))}
+              </div>
+
+              <div className="w-16 flex-shrink-0" />
+
+              <div className="flex flex-1 min-w-0 justify-evenly gap-0.5">
+                {rightItems.map((item) => (
+                  <NavLink key={item.href} {...item} />
+                ))}
+              </div>
+            </div>
+
             <button
               type="button"
-              onClick={handleFabClick}
-              disabled={scanning}
+              onClick={() => setSheetOpen((v) => !v)}
               className={fabClass}
-              aria-label="Scanner un reçu"
+              aria-label={sheetOpen ? 'Fermer' : 'Ajouter une transaction'}
+              aria-expanded={sheetOpen}
             >
-              <Camera size={26} strokeWidth={2.5} />
+              <FabCompositeIcon open={sheetOpen} />
             </button>
-          ) : (
-            <Link href="/transactions/new" className={fabClass} aria-label="Nouvelle transaction">
-              <Plus size={28} strokeWidth={2.5} />
-            </Link>
-          )}
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      <VoiceNoteOverlay
+        open={voiceOpen}
+        onClose={() => setVoiceOpen(false)}
+        isPremium={isPremium}
+        requirePremium={requirePremium}
+      />
+    </>
   )
 }

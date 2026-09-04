@@ -6,8 +6,10 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import {
   Transaction,
+  TransactionLineItem,
   Wallet,
   Category,
+  sanitizeLineItems,
   transactionApi,
   walletApi,
   categoryApi,
@@ -35,6 +37,7 @@ import TransactionExportActions from '@/components/TransactionExportActions'
 import { useSubscription } from '@/hooks/useSubscription'
 import ConfirmModal from '@/components/ConfirmModal'
 import { useConfirm } from '@/hooks/useConfirm'
+import LineItemsCollapse from '@/components/LineItemsCollapse'
 
 interface TransactionDetailCache {
   transaction: Transaction
@@ -60,6 +63,7 @@ export default function TransactionDetailPage() {
     wallet_id: '',
     category_id: '',
     date: '',
+    line_items: [] as TransactionLineItem[],
   })
 
   const fetchDetail = useCallback(async (): Promise<TransactionDetailCache> => {
@@ -95,8 +99,18 @@ export default function TransactionDetailPage() {
       wallet_id: walletId,
       category_id: categoryId,
       date: new Date(t.date).toISOString().split('T')[0],
+      line_items: (t.line_items || []).map((line) => ({ ...line })),
     })
   }, [])
+
+  const updateLineDescription = (index: number, description: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      line_items: prev.line_items.map((line, i) =>
+        i === index ? { ...line, description } : line
+      ),
+    }))
+  }
 
   useEffect(() => {
     if (transaction) syncFormFromTransaction(transaction)
@@ -135,6 +149,9 @@ export default function TransactionDetailPage() {
         wallet_id: formData.wallet_id,
         category_id: formData.category_id || null,
         date: new Date(formData.date).toISOString(),
+        ...(formData.line_items.length > 0
+          ? { line_items: sanitizeLineItems(formData.line_items) }
+          : {}),
       })
       invalidateFinancialCaches()
       setCache(CACHE_KEYS.transaction(id), {
@@ -359,6 +376,17 @@ export default function TransactionDetailPage() {
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 required
               />
+              {formData.line_items.length > 1 && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-2">Articles</p>
+                  <LineItemsCollapse
+                    items={formData.line_items}
+                    editable
+                    defaultOpen
+                    onDescriptionChange={updateLineDescription}
+                  />
+                </div>
+              )}
               <div className="flex gap-2">
                 <Button
                   fullWidth
@@ -407,6 +435,13 @@ export default function TransactionDetailPage() {
               </p>
             </div>
           )}
+          {!editing &&
+            transaction.line_items &&
+            transaction.line_items.length > 1 && (
+              <div className="mt-4">
+                <LineItemsCollapse items={transaction.line_items} />
+              </div>
+            )}
         </section>
 
         {!editing && (

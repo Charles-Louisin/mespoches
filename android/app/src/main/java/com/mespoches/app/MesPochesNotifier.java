@@ -25,7 +25,7 @@ public final class MesPochesNotifier {
         NotificationCompat.Builder builder = baseBuilder(ctx)
             .setContentTitle("MES POCHES")
             .setContentText("Analyse de la transaction en cours…")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setAutoCancel(false);
@@ -88,7 +88,7 @@ public final class MesPochesNotifier {
         NotificationChannel channel = new NotificationChannel(
             CHANNEL_ID,
             "Transactions détectées",
-            NotificationManager.IMPORTANCE_DEFAULT
+            NotificationManager.IMPORTANCE_HIGH
         );
         channel.setDescription("Alertes lors de la détection Mobile Money");
         nm.createNotificationChannel(channel);

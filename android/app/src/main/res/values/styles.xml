@@ -3,22 +3,45 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/app_background</item>
+        <item name="android:colorBackground">@color/app_background</item>
+        <item name="alertDialogTheme">@style/AppTheme.AlertDialog</item>
     </style>
 
+    <!--
+      IMPORTANT : ne pas mettre android:background = bleu splash ici.
+      Ça peignait aussi les AlertDialog (caméra / galerie) en bleu + texte noir.
+    -->
     <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="android:background">@color/splash_background</item>
-        <item name="android:windowBackground">@color/splash_background</item>
+        <item name="android:windowBackground">@color/app_background</item>
+        <item name="android:colorBackground">@color/app_background</item>
+        <item name="alertDialogTheme">@style/AppTheme.AlertDialog</item>
     </style>
 
+    <style name="AppTheme.AlertDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:background">@color/app_background</item>
+        <item name="android:textColorPrimary">#111827</item>
+        <item name="colorAccent">@color/colorPrimary</item>
+        <item name="buttonBarPositiveButtonStyle">@style/AppTheme.AlertButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/AppTheme.AlertButton</item>
+        <item name="buttonBarNeutralButtonStyle">@style/AppTheme.AlertButton</item>
+    </style>
+
+    <style name="AppTheme.AlertButton" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@color/colorPrimary</item>
+    </style>
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
 </resources>

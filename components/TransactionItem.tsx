@@ -84,6 +84,9 @@ export default function TransactionItem({
           </p>
           <p className="text-xs text-gray-500 mt-0.5 truncate">
             {formatRelativeDate(transaction.date)} &gt; {wallet?.name ?? '—'}
+            {transaction.line_items && transaction.line_items.length > 1
+              ? ` · ${transaction.line_items.length} articles`
+              : ''}
           </p>
         </div>
 

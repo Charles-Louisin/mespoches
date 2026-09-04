@@ -4,4 +4,6 @@
     <color name="colorPrimaryDark">#1D4ED8</color>
     <color name="colorAccent">#3B82F6</color>
     <color name="splash_background">#2563EB</color>
+    <!-- Fond app / dialogues (pas le bleu splash — sinon texte noir illisible) -->
+    <color name="app_background">#F8FAFC</color>
 </resources>

@@ -16,6 +16,7 @@ export interface SmsMonitorPlugin {
   clearAuthToken(): Promise<void>;
   requestSmsPermission(): Promise<void>;
   openNotificationAccessSettings(): Promise<void>;
+  openExternalUrl(options: { url: string }): Promise<void>;
 }
 
 export const SmsMonitor = registerPlugin<SmsMonitorPlugin>('SmsMonitor');
@@ -148,7 +149,17 @@ export async function notifyTransactionProcessing(): Promise<void> {
   });
 }
 
-/** Réservé au scan reçu (SMS/notif = MesPochesNotifier natif uniquement). */
+/** Annule la notif « analyse en cours » (échec scan / voix). */
+export async function cancelTransactionProcessing(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    await LocalNotifications.cancel({ notifications: [{ id: PENDING_PROCESSING_ID }] });
+  } catch {
+    /* non bloquant */
+  }
+}
+
+/** Réservé au scan reçu / voix (SMS/notif = MesPochesNotifier natif uniquement). */
 export async function notifyTransactionReady(message: string): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
 

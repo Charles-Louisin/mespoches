@@ -156,6 +156,7 @@ export const transactionApi = {
       wallet_id?: string
       category_id?: string | null
       date?: string
+      line_items?: TransactionLineItem[]
     }
   ) =>
     fetchApi<Transaction>(`/transactions/${id}`, {
@@ -368,11 +369,32 @@ export const plannedExpenseApi = {
 };
 
 // Transactions en attente de validation (SMS, notifications, IA)
+export interface TransactionLineItem {
+  description: string;
+  amount: number;
+  quantity?: number;
+  unit_amount?: number;
+  type?: 'income' | 'expense';
+}
+
+/** Retire les champs Mongo (_id…) refusés par la validation de l'API. */
+export function sanitizeLineItems(
+  items: TransactionLineItem[] | undefined
+): TransactionLineItem[] {
+  return (items || []).map((item) => ({
+    description: item.description,
+    amount: item.amount,
+    ...(item.quantity !== undefined ? { quantity: item.quantity } : {}),
+    ...(item.unit_amount !== undefined ? { unit_amount: item.unit_amount } : {}),
+    ...(item.type !== undefined ? { type: item.type } : {}),
+  }));
+}
+
 export interface PendingTransaction {
   _id: string;
   status: 'pending' | 'validated' | 'rejected';
-  source: 'sms' | 'notification' | 'ai_scan' | 'manual';
-  source_type?: 'image' | 'parser' | 'ai' | 'sms' | 'manual';
+  source: 'sms' | 'notification' | 'ai_scan' | 'manual' | 'voice';
+  source_type?: 'image' | 'parser' | 'ai' | 'sms' | 'manual' | 'voice';
   document_type?: string;
   type: 'income' | 'expense';
   amount: number;
@@ -388,6 +410,7 @@ export interface PendingTransaction {
   transaction_id?: string;
   ai_enriched?: boolean;
   low_confidence_warning?: string;
+  ai_items?: TransactionLineItem[];
   validated_transaction_id?: string | null;
   created_at: string;
 }
@@ -408,6 +431,7 @@ export const pendingTransactionApi = {
       category_id: string | null;
       description: string;
       date: string;
+      ai_items: TransactionLineItem[];
     }>
   ) =>
     fetchApi<PendingTransaction>(`/pending-transactions/${id}`, {
@@ -423,6 +447,7 @@ export const pendingTransactionApi = {
       category_id: string | null;
       description: string;
       date: string;
+      ai_items: TransactionLineItem[];
     }>
   ) =>
     fetchApi<{ pending: PendingTransaction; transactionId: string }>(
@@ -443,14 +468,20 @@ export const pendingTransactionApi = {
       method: 'POST',
       body: JSON.stringify({ title, body }),
     }),
-  aiScan: (image: string, mimeType = 'image/jpeg') => {
+  aiScan: (image: string, mimeType = 'image/jpeg', signal?: AbortSignal) => {
     const payload =
       image.startsWith('data:') ? image : `data:${mimeType};base64,${image}`;
     return fetchApi<PendingTransaction[]>('/pending-transactions/ai-scan', {
       method: 'POST',
       body: JSON.stringify({ image: payload, mimeType }),
+      signal,
     });
   },
+  voiceNote: (text: string) =>
+    fetchApi<PendingTransaction>('/pending-transactions/voice-note', {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    }),
   getHabitsSummary: () =>
     fetchApi<{
       habits: Array<{
@@ -478,15 +509,24 @@ export interface RecurringTransaction {
   day_of_month?: number | null;
   next_run_date: string;
   active: boolean;
+  status?: 'suggested' | 'active' | 'dismissed';
+  source?: 'user' | 'ai';
 }
 
 export const recurringApi = {
-  getAll: () => fetchApi<RecurringTransaction[]>('/recurring'),
+  getAll: (status?: 'suggested' | 'active') => {
+    const q = status ? `?status=${status}` : '';
+    return fetchApi<RecurringTransaction[]>(`/recurring${q}`);
+  },
   create: (data: Omit<RecurringTransaction, '_id' | 'active'> & { active?: boolean }) =>
     fetchApi<RecurringTransaction>('/recurring', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  accept: (id: string) =>
+    fetchApi<RecurringTransaction>(`/recurring/${id}/accept`, { method: 'POST' }),
+  dismiss: (id: string) =>
+    fetchApi<RecurringTransaction>(`/recurring/${id}/dismiss`, { method: 'POST' }),
   run: (id: string) =>
     fetchApi<{ transaction: Transaction; recurring: RecurringTransaction }>(
       `/recurring/${id}/run`,
@@ -551,6 +591,7 @@ export interface Transaction {
   destination_wallet_id?: Wallet | string;
   category_id?: Category | string;
   description: string;
+  line_items?: TransactionLineItem[];
   date: string;
   balance_before: number;
   balance_after: number;
