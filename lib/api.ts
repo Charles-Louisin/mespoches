@@ -665,7 +665,9 @@ export interface MeUser {
   role?: 'user' | 'admin';
   plan?: 'free' | 'premium';
   premiumUntil?: string | null;
+  premiumSource?: 'trial' | 'paid' | null;
   isPremium?: boolean;
+  isOnTrial?: boolean;
   currency?: string;
   hidePlannedExpensesHelp?: boolean;
   created_at: string;

@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, ChevronLeft, Shield } from 'lucide-react'
+import { ArrowRight, ChevronLeft, Shield, Gift } from 'lucide-react'
 import AppLogo from '@/components/AppLogo'
 import { motion, AnimatePresence } from 'framer-motion'
 import Button from '@/components/Button'
@@ -34,6 +34,13 @@ const slides = [
       'Graphiques, tendances et répartition par catégorie pour mieux piloter votre budget chaque mois.',
     preview: AnalyticsPreview,
     highlights: ['Stats mensuelles', 'Par catégorie', "Vue d'ensemble"],
+  },
+  {
+    title: '1 mois Premium offert',
+    description:
+      'À l\'inscription, explorez budgets, objectifs, analytics et exports pendant un mois — sans engagement. Ensuite, choisissez de garder Premium ou de rester en gratuit.',
+    preview: AnalyticsPreview,
+    highlights: ['Essai 1 mois', 'Sans carte', 'Vous décidez après'],
   },
 ] as const
 
@@ -151,8 +158,8 @@ export default function OnboardingPage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center justify-center gap-2 text-xs text-gray-500"
           >
-            <Shield className="w-4 h-4 text-primary-400" />
-            <span>Données sécurisées · Compte personnel</span>
+            <Gift className="w-4 h-4 text-primary-400" />
+            <span>1 mois Premium offert · Sans engagement</span>
           </motion.div>
         )}
 

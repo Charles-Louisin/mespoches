@@ -25,6 +25,7 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import EmptyState from '@/components/EmptyState'
 import Button from '@/components/Button'
 import PendingTransactionsBanner from '@/components/PendingTransactionsBanner'
+import TrialBanner from '@/components/TrialBanner'
 import { Wallet as WalletIcon } from 'lucide-react'
 import { useSubscription } from '@/hooks/useSubscription'
 import BudgetsSection from '@/components/BudgetsSection'
@@ -69,7 +70,7 @@ export default function HomePage() {
 
   const userName = auth.name
   const isLoggedIn = auth.loggedIn
-  const { isPremium, requirePremium, handleApiError } = useSubscription()
+  const { user, isPremium, isOnTrial, requirePremium, handleApiError } = useSubscription()
 
   const onApiError = (err: unknown, msg?: string) => {
     if (handleApiError(err)) return true
@@ -132,6 +133,8 @@ export default function HomePage() {
             />
 
             <PendingTransactionsBanner />
+
+            {isOnTrial && <TrialBanner user={user} compact />}
 
             <section>
               <div className="flex items-center justify-between mb-3">

@@ -14,6 +14,7 @@ import { authApi, MeUser } from '@/lib/api'
 import { getToken, getUser, hydrateAuthSession, setUser } from '@/lib/auth'
 import {
   isPremiumUser,
+  isOnTrial,
   isPremiumRequiredError,
   getUpgradePath,
 } from '@/lib/subscription'
@@ -22,6 +23,7 @@ interface SubscriptionContextValue {
   user: MeUser | null
   loading: boolean
   isPremium: boolean
+  isOnTrial: boolean
   /** false pendant le chargement → évite le flash « Pro » */
   showProBadge: boolean
   refresh: () => Promise<MeUser | null>
@@ -58,7 +60,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         role: me.role,
         plan: me.plan,
         premiumUntil: me.premiumUntil,
+        premiumSource: me.premiumSource,
         isPremium: me.isPremium,
+        isOnTrial: me.isOnTrial,
         currency: me.currency,
         hidePlannedExpensesHelp: me.hidePlannedExpensesHelp,
         lastLoginAt: me.lastLoginAt ?? undefined,
@@ -79,6 +83,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }, [refresh])
 
   const isPremium = isPremiumUser(user)
+  const onTrial = isOnTrial(user)
   const showProBadge = !loading && !isPremium
 
   const requirePremium = useCallback(
@@ -106,12 +111,13 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       user,
       loading,
       isPremium,
+      isOnTrial: onTrial,
       showProBadge,
       refresh,
       requirePremium,
       handleApiError,
     }),
-    [user, loading, isPremium, showProBadge, refresh, requirePremium, handleApiError]
+    [user, loading, isPremium, onTrial, showProBadge, refresh, requirePremium, handleApiError]
   )
 
   return (

@@ -53,19 +53,27 @@ export default function TermsPage() {
 
       <LegalSection title="4. Formules Gratuit et Premium">
         <p>
-          <strong>Formule gratuite</strong> (sans abonnement payant) : accès aux
-          fonctionnalités de base, notamment gestion des poches, saisie de revenus et
-          dépenses, catégories limitées (10 par type revenu/dépense), historique des
-          transactions limité aux 3 derniers mois, dépenses prévues, et autres écrans
-          accessibles sans badge Premium dans l&apos;application.
+          <strong>Essai Premium</strong> : chaque nouveau compte bénéficie d&apos;un
+          essai gratuit d&apos;un mois calendaire avec accès aux fonctionnalités Premium.
+          À l&apos;issue de cet essai, le compte repasse automatiquement en formule
+          gratuite sauf souscription payante. Aucun prélèvement automatique n&apos;est
+          effectué ; le paiement n&apos;intervient que si vous choisissez un abonnement.
         </p>
         <p>
-          <strong>Formule Premium</strong> (abonnement payant) : débloque notamment les
-          transferts entre poches, l&apos;historique complet, les catégories illimitées,
-          les images personnalisées pour poches/catégories, les analyses avancées, les
-          budgets mensuels par catégorie, les objectifs d&apos;épargne, les transactions
-          récurrentes et l&apos;export des transactions (CSV, PDF, Excel selon les options
-          proposées dans l&apos;app).
+          <strong>Formule gratuite</strong> (sans abonnement payant, ou après expiration
+          de l&apos;essai) : accès aux fonctionnalités de base, notamment gestion des
+          poches, saisie de revenus et dépenses, catégories limitées (10 par type
+          revenu/dépense), historique des transactions limité aux 3 derniers mois,
+          dépenses prévues, et autres écrans accessibles sans badge Premium dans
+          l&apos;application.
+        </p>
+        <p>
+          <strong>Formule Premium</strong> (abonnement payant, ou pendant l&apos;essai) :
+          débloque notamment les transferts entre poches, l&apos;historique complet, les
+          catégories illimitées, les images personnalisées pour poches/catégories, les
+          analyses avancées, les budgets mensuels par catégorie, les objectifs
+          d&apos;épargne, les transactions récurrentes et l&apos;export des transactions
+          (CSV, PDF, Excel selon les options proposées dans l&apos;app).
         </p>
         <p>
           Tarifs affichés dans l&apos;application au moment de la souscription :{' '}
@@ -86,7 +94,7 @@ export default function TermsPage() {
         </p>
         <p>
           L&apos;activation Premium intervient après confirmation du paiement par notre
-          système (vérification du statut auprès de CinetPay). En cas de litige de
+          système. En cas de litige de
           paiement, contactez-nous
           {contactEmail ? (
             <>

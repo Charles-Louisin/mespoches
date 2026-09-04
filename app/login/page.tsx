@@ -250,7 +250,7 @@ function LoginPageContent() {
         const response = await register(email.trim(), password, name.trim())
         if (response.success) {
           setPendingVerificationEmail(email.trim())
-          toast.success('Compte créé. Vérifiez votre email.')
+          toast.success('Compte créé. 1 mois Premium offert — vérifiez votre email.')
           router.push(`/verify-email?email=${encodeURIComponent(email.trim())}`)
         } else {
           toast.error(response.message || 'Inscription impossible')
@@ -447,6 +447,12 @@ function LoginPageContent() {
                       ? 'Se connecter'
                       : 'Créer mon compte'}
                 </Button>
+
+                {!isLogin && (
+                  <p className="text-center text-xs text-primary-600 font-medium -mt-1">
+                    1 mois Premium offert lors de la création du compte
+                  </p>
+                )}
 
                 <p className="text-center text-sm text-gray-600">
                   {isLogin ? 'Pas encore de compte ?' : 'Déjà un compte ?'}

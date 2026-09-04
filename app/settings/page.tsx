@@ -25,7 +25,7 @@ import { AppCurrency, WALLET_CURRENCIES } from '@/lib/currencies'
 export default function SettingsPage() {
   const router = useRouter()
   const { confirm, confirmState, closeConfirm } = useConfirm()
-  const { isPremium, showProBadge, requirePremium } = useSubscription()
+  const { isPremium, isOnTrial, showProBadge, requirePremium } = useSubscription()
   const { currency, setCurrency, loading: currencyLoading } = useCurrency()
   const [exportModalOpen, setExportModalOpen] = useState(false)
   const [exporting, setExporting] = useState<ExportFormat | null>(null)
@@ -92,10 +92,14 @@ export default function SettingsPage() {
   const menuItems = [
     {
       icon: Crown,
-      label: isPremium ? 'Mon abonnement Premium' : 'Passer à Premium',
+      label: isOnTrial
+        ? 'Mon essai Premium'
+        : isPremium
+          ? 'Mon abonnement Premium'
+          : 'Passer à Premium',
       href: '/subscription',
-      color: 'text-amber-600',
-      bg: 'bg-amber-50',
+      color: isOnTrial ? 'text-primary-600' : 'text-amber-600',
+      bg: isOnTrial ? 'bg-primary-50' : 'bg-amber-50',
     },
     {
       icon: Download,

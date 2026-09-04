@@ -5,10 +5,16 @@ import { toast } from 'sonner'
 import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
 import Link from 'next/link'
-import { User, Mail, Calendar, Crown } from 'lucide-react'
-import { isPremiumUser } from '@/lib/subscription'
+import { User, Mail, Calendar, Crown, Gift } from 'lucide-react'
+import {
+  formatPremiumUntil,
+  getTrialDaysLeft,
+  isOnTrial,
+  isPremiumUser,
+} from '@/lib/subscription'
 import Button from '@/components/Button'
 import ConfirmModal from '@/components/ConfirmModal'
+import TrialBanner from '@/components/TrialBanner'
 import { useConfirm } from '@/hooks/useConfirm'
 import { authApi, MeUser } from '@/lib/api'
 import { logout } from '@/lib/auth'
@@ -69,20 +75,28 @@ export default function ProfilePage() {
           <h2 className="text-xl font-semibold text-gray-900 mb-1">
             {loading ? 'Chargement...' : user?.name || 'Utilisateur'}
           </h2>
-          {user && isPremiumUser(user) ? (
+          {user && isOnTrial(user) ? (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary-700 bg-primary-50 px-2.5 py-1 rounded-full mt-2">
+              <Gift size={12} />
+              Essai Premium · {getTrialDaysLeft(user)} j restants
+            </span>
+          ) : user && isPremiumUser(user) ? (
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-1 rounded-full mt-2">
               <Crown size={12} />
               Premium
+              {user.premiumUntil ? ` · jusqu'au ${formatPremiumUntil(user.premiumUntil)}` : ''}
             </span>
           ) : (
             <Link
               href="/subscription"
               className="inline-block text-sm text-primary-600 font-medium mt-2"
             >
-              Passer à Premium →
+              Passer à Premium
             </Link>
           )}
         </div>
+
+        {user && isOnTrial(user) && <TrialBanner user={user} />}
 
         {/* Informations */}
         <div className="card overflow-hidden">
