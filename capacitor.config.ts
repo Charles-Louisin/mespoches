@@ -45,6 +45,8 @@ const config: CapacitorConfig = {
   android: {
     allowMixedContent: false,
     backgroundColor: '#F8FAFC',
+    // Reconnu par le middleware (évite la landing au 1er lancement de l'APK)
+    appendUserAgent: ' MesPochesNative/1',
   },
   plugins: {
     SplashScreen: {

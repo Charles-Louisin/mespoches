@@ -1,50 +1,62 @@
-import Link from 'next/link';
-import PageShell from '@/components/PageShell';
-import Header from '@/components/Header';
+import Link from 'next/link'
+import AppLogo from '@/components/AppLogo'
+import LegalBackLink from '@/components/LegalBackLink'
 
 interface LegalPageLayoutProps {
-  title: string;
-  children: React.ReactNode;
+  title: string
+  children: React.ReactNode
 }
 
 export default function LegalPageLayout({ title, children }: LegalPageLayoutProps) {
   return (
-    <PageShell>
-      <Header title={title} showBack />
-      <main className="max-w-md mx-auto px-4 py-6 pb-12">
-        <article className="prose-legal space-y-4 text-sm text-gray-700 leading-relaxed">
+    <div className="min-h-dvh bg-[#f4f6f9] text-ink">
+      <header className="border-b border-black/[0.06] bg-white">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-4">
+          <Link href="/download" className="flex items-center gap-2.5">
+            <AppLogo size="xs" />
+            <span className="font-display text-[15px]">MES POCHES</span>
+          </Link>
+          <Link href="/download" className="text-sm font-medium text-primary-700">
+            Télécharger
+          </Link>
+        </div>
+      </header>
+      <main className="mx-auto max-w-3xl px-5 py-10 pb-16">
+        <h1 className="font-display text-3xl text-ink">{title}</h1>
+        <article className="prose-legal mt-6 space-y-4 text-sm leading-relaxed text-gray-700">
           {children}
         </article>
-        <nav className="mt-8 pt-6 border-t border-gray-200 space-y-2 text-sm">
-          <Link href="/legal/privacy" className="block text-primary-600 font-medium">
+        <nav className="mt-10 space-y-2 border-t border-gray-200 pt-6 text-sm">
+          <Link href="/legal/privacy" className="block font-medium text-primary-600">
             Politique de confidentialité
           </Link>
-          <Link href="/legal/terms" className="block text-primary-600 font-medium">
+          <Link href="/legal/terms" className="block font-medium text-primary-600">
             Conditions d&apos;utilisation
           </Link>
-          <Link href="/legal/mentions" className="block text-primary-600 font-medium">
+          <Link href="/legal/mentions" className="block font-medium text-primary-600">
             Mentions légales
           </Link>
-          <Link href="/settings" className="block text-gray-500">
-            Retour aux paramètres
+          <Link href="/legal" className="block text-gray-500">
+            Toutes les infos légales
           </Link>
+          <LegalBackLink />
         </nav>
       </main>
-    </PageShell>
-  );
+    </div>
+  )
 }
 
 export function LegalSection({
   title,
   children,
 }: {
-  title: string;
-  children: React.ReactNode;
+  title: string
+  children: React.ReactNode
 }) {
   return (
     <section>
-      <h2 className="text-base font-bold text-gray-900 mb-2">{title}</h2>
+      <h2 className="mb-2 text-base font-bold text-gray-900">{title}</h2>
       <div className="space-y-2">{children}</div>
     </section>
-  );
+  )
 }

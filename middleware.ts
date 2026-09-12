@@ -6,8 +6,14 @@ import {
   EMAIL_VERIFIED_COOKIE,
   PENDING_EMAIL_COOKIE,
 } from '@/lib/server/session-cookies';
+import {
+  NATIVE_APP_COOKIE,
+  isLandingPublicPath,
+  isNativeUserAgent,
+  shouldShowPublicLanding,
+} from '@/lib/web-gate';
 
-const PUBLIC_PREFIXES = ['/legal', '/login', '/onboarding', '/verify-email', '/auth'];
+const PUBLIC_PREFIXES = ['/legal', '/login', '/onboarding', '/verify-email', '/auth', '/download'];
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(
@@ -18,6 +24,20 @@ function isPublicPath(pathname: string): boolean {
 export async function middleware(request: NextRequest) {
   const rawToken = request.cookies.get(AUTH_TOKEN_COOKIE)?.value;
   const { pathname } = request.nextUrl;
+  const hostname = request.nextUrl.hostname;
+  const isNative =
+    request.cookies.get(NATIVE_APP_COOKIE)?.value === '1' ||
+    isNativeUserAgent(request.headers.get('user-agent'));
+  const publicLanding = shouldShowPublicLanding({
+    hostname,
+    isDev: process.env.NODE_ENV === 'development',
+    isNative,
+  });
+
+  if (publicLanding && !isLandingPublicPath(pathname)) {
+    return NextResponse.redirect(new URL('/download', request.url));
+  }
+
   const isPublicRoute = isPublicPath(pathname);
 
   const payload = rawToken ? await verifyAuthToken(rawToken) : null;
@@ -83,6 +103,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|sw.js|workbox|manifest.json|icons|logo\\.png|logo\\.svg|logo1\\.jpeg|apple-touch-icon.png|favicon.png).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|sw.js|workbox|manifest.json|icons|logo\\.png|logo\\.svg|logo1\\.jpeg|apple-touch-icon.png|favicon.png|mes-poches\\.apk).*)',
   ],
 };

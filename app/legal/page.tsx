@@ -1,11 +1,10 @@
-import Link from 'next/link';
-import PageShell from '@/components/PageShell';
-import Header from '@/components/Header';
-import { FileText, Shield, Scale } from 'lucide-react';
+import Link from 'next/link'
+import AppLogo from '@/components/AppLogo'
+import { FileText, Shield, Scale } from 'lucide-react'
 
 export const metadata = {
   title: 'Informations légales — MES POCHES',
-};
+}
 
 const links = [
   {
@@ -26,14 +25,25 @@ const links = [
     title: 'Mentions légales',
     description: 'Éditeur, hébergement, prestataires',
   },
-];
+]
 
 export default function LegalIndexPage() {
   return (
-    <PageShell>
-      <Header title="Informations légales" showBack />
-      <main className="max-w-md mx-auto px-4 py-6 space-y-3">
-        <p className="text-sm text-gray-600 px-1 mb-4">
+    <div className="min-h-dvh bg-[#f4f6f9] text-ink">
+      <header className="border-b border-black/[0.06] bg-white">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-4">
+          <Link href="/download" className="flex items-center gap-2.5">
+            <AppLogo size="xs" />
+            <span className="font-display text-[15px]">MES POCHES</span>
+          </Link>
+          <Link href="/download" className="text-sm font-medium text-primary-700">
+            Télécharger
+          </Link>
+        </div>
+      </header>
+      <main className="mx-auto max-w-3xl px-5 py-10 space-y-3">
+        <h1 className="font-display text-3xl text-ink">Informations légales</h1>
+        <p className="mb-6 text-sm text-gray-600">
           Documents requis pour l&apos;utilisation de MES POCHES et sa publication sur les
           stores.
         </p>
@@ -41,9 +51,9 @@ export default function LegalIndexPage() {
           <Link
             key={href}
             href={href}
-            className="card p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors"
+            className="card flex items-center gap-4 p-4 transition-colors hover:bg-gray-50"
           >
-            <div className="w-11 h-11 rounded-full bg-primary-50 flex items-center justify-center shrink-0">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-50">
               <Icon size={22} className="text-primary-500" />
             </div>
             <div>
@@ -53,6 +63,6 @@ export default function LegalIndexPage() {
           </Link>
         ))}
       </main>
-    </PageShell>
-  );
+    </div>
+  )
 }

@@ -70,7 +70,13 @@ export default function Button({
           <span className="loading-bar-indeterminate block h-full w-1/2 rounded-full" />
         </span>
       )}
-      <span className={loading ? 'opacity-80' : undefined}>{children}</span>
+      <span
+        className={`inline-flex items-center justify-center gap-2 ${
+          loading ? 'opacity-80' : ''
+        }`}
+      >
+        {children}
+      </span>
     </button>
   )
 }
