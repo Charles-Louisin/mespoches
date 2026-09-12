@@ -1,15 +1,41 @@
 import type { CapacitorConfig } from '@capacitor/cli';
+import fs from 'fs';
+import path from 'path';
 
 /**
- * L’app Android charge votre site Next.js déployé en HTTPS.
- * Définissez CAPACITOR_SERVER_URL avant `npm run cap:sync` (voir docs/PLAYSTORE_ANDROID.md).
+ * Capacitor ne charge pas .env.local (contrairement à Next.js).
+ * On lit le fichier ici pour que `npx cap sync` voie CAPACITOR_SERVER_URL.
  */
+function loadEnvLocal(): void {
+  const envPath = path.join(__dirname, '.env.local');
+  if (!fs.existsSync(envPath)) return;
+  for (const line of fs.readFileSync(envPath, 'utf8').split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let val = trimmed.slice(eq + 1).trim();
+    if (
+      (val.startsWith('"') && val.endsWith('"')) ||
+      (val.startsWith("'") && val.endsWith("'"))
+    ) {
+      val = val.slice(1, -1);
+    }
+    if (!process.env[key]) process.env[key] = val;
+  }
+}
+
+loadEnvLocal();
+
 const serverUrl = process.env.CAPACITOR_SERVER_URL?.replace(/\/$/, '');
 
 if (!serverUrl) {
   console.warn(
-    '[Capacitor] CAPACITOR_SERVER_URL non défini — définissez l’URL HTTPS du frontend (ex. https://votre-app.vercel.app)'
+    '[Capacitor] CAPACITOR_SERVER_URL non défini — ajoutez-le dans .env.local (ex. https://votre-app.vercel.app)'
   );
+} else {
+  console.log(`[Capacitor] server.url=${serverUrl}`);
 }
 
 const config: CapacitorConfig = {
@@ -18,7 +44,6 @@ const config: CapacitorConfig = {
   webDir: 'public',
   android: {
     allowMixedContent: false,
-    // Fond WebView = surface claire (le bleu splash reste uniquement au SplashScreen)
     backgroundColor: '#F8FAFC',
   },
   plugins: {
@@ -35,7 +60,6 @@ const config: CapacitorConfig = {
         server: {
           url: serverUrl,
           androidScheme: 'https',
-          // Limite les navigations WebView hors origine (OAuth reste dans Chrome Custom Tab)
           allowNavigation: [serverUrl],
         },
       }

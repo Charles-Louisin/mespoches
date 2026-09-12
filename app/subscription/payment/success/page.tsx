@@ -87,15 +87,15 @@ function SuccessContent() {
         {state === 'loading' && (
           <>
             <LoadingSpinner />
-            <p className="text-sm text-gray-500">Vérification du paiement en cours…</p>
+            <p className="text-sm text-ink-mute">Vérification du paiement en cours…</p>
           </>
         )}
 
         {state === 'success' && (
           <>
             <CheckCircle size={56} className="mx-auto text-green-500" />
-            <h2 className="text-xl font-bold text-gray-900">Paiement confirmé</h2>
-            <p className="text-sm text-gray-600">
+            <h2 className="text-xl font-semibold text-ink">Paiement confirmé</h2>
+            <p className="text-sm text-ink-soft">
               Votre abonnement Premium est actif
               {premiumUntil ? ` jusqu'au ${formatDate(premiumUntil)}` : ''}.
             </p>
@@ -108,12 +108,12 @@ function SuccessContent() {
         {state === 'pending' && (
           <>
             <Clock size={56} className="mx-auto text-amber-500" />
-            <h2 className="text-xl font-bold text-gray-900">Paiement en cours</h2>
-            <p className="text-sm text-gray-600">
+            <h2 className="text-xl font-semibold text-ink">Paiement en cours</h2>
+            <p className="text-sm text-ink-soft">
               Si vous avez validé sur votre téléphone, attendez quelques secondes puis
               actualisez.
             </p>
-            <Button className="w-full" onClick={handleRetry} disabled={retrying}>
+            <Button className="w-full" onClick={handleRetry} loading={retrying}>
               {retrying ? 'Vérification…' : 'Vérifier à nouveau'}
             </Button>
             <Link href="/" className="block text-sm text-primary-600">
@@ -125,14 +125,14 @@ function SuccessContent() {
         {state === 'error' && (
           <>
             <XCircle size={56} className="mx-auto text-red-500" />
-            <h2 className="text-xl font-bold text-gray-900">Vérification impossible</h2>
-            <p className="text-sm text-gray-600">
+            <h2 className="text-xl font-semibold text-ink">Vérification impossible</h2>
+            <p className="text-sm text-ink-soft">
               {!transactionId
                 ? 'Référence de transaction manquante.'
                 : 'Le paiement n\'a pas pu être confirmé. Contactez le support si vous avez été débité.'}
             </p>
             {transactionId && (
-              <Button className="w-full" onClick={handleRetry} disabled={retrying}>
+              <Button className="w-full" onClick={handleRetry} loading={retrying}>
                 {retrying ? 'Vérification…' : 'Réessayer'}
               </Button>
             )}

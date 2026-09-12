@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AlertTriangle, X } from 'lucide-react'
 import Button from './Button'
@@ -25,6 +26,12 @@ export default function ConfirmModal({
   cancelText = 'Annuler',
   variant = 'danger'
 }: ConfirmModalProps) {
+  const [confirming, setConfirming] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) setConfirming(false)
+  }, [isOpen])
+
   const colors = {
     danger: {
       bg: 'bg-red-100',
@@ -49,6 +56,8 @@ export default function ConfirmModal({
   const colorScheme = colors[variant]
 
   const handleConfirm = () => {
+    if (confirming) return
+    setConfirming(true)
     onConfirm()
   }
 
@@ -61,7 +70,7 @@ export default function ConfirmModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={confirming ? undefined : onClose}
             className="fixed inset-0 bg-black bg-opacity-50 z-[60]"
           />
 
@@ -72,47 +81,55 @@ export default function ConfirmModal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-sm w-full pointer-events-auto overflow-hidden"
+              className="bg-white rounded-2xl shadow-card border border-black/[0.04] max-w-sm w-full pointer-events-auto overflow-hidden"
             >
               {/* Header */}
               <div className="relative p-6 pb-4">
                 <button
                   onClick={onClose}
-                  className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 transition touch-manipulation"
+                  disabled={confirming}
+                  className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 transition touch-manipulation disabled:opacity-50"
                 >
                   <X size={24} />
                 </button>
 
                 {/* Icon */}
-                <div className={`w-14 h-14 rounded-full ${colorScheme.bg} flex items-center justify-center mb-4`}>
-                  <AlertTriangle size={28} className={colorScheme.icon} />
+                <div className={`w-12 h-12 rounded-xl ${colorScheme.bg} flex items-center justify-center mb-4`}>
+                  <AlertTriangle size={24} className={colorScheme.icon} />
                 </div>
 
                 {/* Title */}
-                <h3 className="text-xl font-bold text-gray-900 mb-2 pr-8">
+                <h3 className="text-lg font-semibold text-ink mb-2 pr-8">
                   {title}
                 </h3>
 
                 {/* Message */}
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-ink-soft leading-relaxed text-[15px]">
                   {message}
                 </p>
               </div>
 
               {/* Actions */}
               <div className="p-6 pt-2 flex flex-col gap-3">
-                <button
+                <Button
+                  type="button"
+                  fullWidth
+                  loading={confirming}
                   onClick={handleConfirm}
-                  className={`w-full ${colorScheme.button} text-white rounded-lg px-6 py-3 font-semibold transition touch-manipulation`}
+                  className={`${colorScheme.button} !shadow-none`}
                 >
                   {confirmText}
-                </button>
-                <button
+                </Button>
+                <Button
+                  type="button"
+                  fullWidth
+                  variant="secondary"
                   onClick={onClose}
-                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-6 py-3 font-semibold transition touch-manipulation"
+                  disabled={confirming}
+                  className="!bg-gray-100 hover:!bg-gray-200 !text-gray-700"
                 >
                   {cancelText}
-                </button>
+                </Button>
               </div>
             </motion.div>
           </div>

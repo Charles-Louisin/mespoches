@@ -59,7 +59,7 @@ export default function SavingsGoalsSection({
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title || !target) return
+    if (!title || !target || saving) return
     try {
       setSaving(true)
       await savingsGoalApi.create({
@@ -91,7 +91,7 @@ export default function SavingsGoalsSection({
   }
 
   const handleUpdate = async (id: string) => {
-    if (!editTitle || !editTarget) return
+    if (!editTitle || !editTarget || saving) return
     try {
       setSaving(true)
       await savingsGoalApi.update(id, {
@@ -111,13 +111,17 @@ export default function SavingsGoalsSection({
   }
 
   const handleDelete = async (id: string) => {
+    if (saving) return
     try {
+      setSaving(true)
       await savingsGoalApi.delete(id)
       toast.success('Objectif supprimé')
       invalidateFinancialCaches()
       load()
     } catch (err) {
       onApiError(err, 'Erreur')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -164,15 +168,16 @@ export default function SavingsGoalsSection({
                     <Button
                       type="button"
                       className="flex-1"
-                      disabled={saving}
+                      loading={saving}
                       onClick={() => handleUpdate(g._id)}
                     >
-                      Enregistrer
+                      {saving ? 'Enregistrement…' : 'Enregistrer'}
                     </Button>
                     <Button
                       type="button"
                       variant="secondary"
                       className="flex-1"
+                      disabled={saving}
                       onClick={() => setEditingId(null)}
                     >
                       Annuler
@@ -195,7 +200,8 @@ export default function SavingsGoalsSection({
                         <button
                           type="button"
                           onClick={() => startEdit(g)}
-                          className="p-1 text-gray-400 hover:text-primary-600"
+                          disabled={saving}
+                          className="p-1 text-gray-400 hover:text-primary-600 disabled:opacity-50"
                           aria-label="Modifier"
                         >
                           <Pencil size={16} />
@@ -203,7 +209,8 @@ export default function SavingsGoalsSection({
                         <button
                           type="button"
                           onClick={() => handleDelete(g._id)}
-                          className="p-1 text-gray-400 hover:text-red-600"
+                          disabled={saving}
+                          className="p-1 text-gray-400 hover:text-red-600 disabled:opacity-50"
                           aria-label="Supprimer"
                         >
                           <Trash2 size={16} />
@@ -267,8 +274,8 @@ export default function SavingsGoalsSection({
               value={deadline}
               onChange={(e) => setDeadline(e.target.value)}
             />
-            <Button type="submit" disabled={saving} className="w-full">
-              Créer l'objectif
+            <Button type="submit" loading={saving} className="w-full">
+              {saving ? 'Création…' : "Créer l'objectif"}
             </Button>
           </form>
         )}

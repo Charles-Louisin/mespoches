@@ -69,7 +69,7 @@ export default function EditPlannedExpenseModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!item) return
+    if (!item || loading) return
 
     try {
       setLoading(true)
@@ -179,10 +179,16 @@ export default function EditPlannedExpenseModal({
                   required
                 />
                 <div className="flex gap-2 pt-1">
-                  <Button type="button" variant="secondary" fullWidth onClick={onClose}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    fullWidth
+                    onClick={onClose}
+                    disabled={loading}
+                  >
                     Annuler
                   </Button>
-                  <Button type="submit" fullWidth disabled={loading}>
+                  <Button type="submit" fullWidth loading={loading}>
                     {loading ? 'Enregistrement...' : 'Enregistrer'}
                   </Button>
                 </div>

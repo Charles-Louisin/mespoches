@@ -18,12 +18,15 @@ async function fetchApi<T>(
   options?: RequestInit
 ): Promise<T> {
   const token = getToken();
-  
+  if (!token) {
+    throw new Error('Session expirée. Reconnectez-vous.');
+  }
+
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
+      Authorization: `Bearer ${token}`,
       ...options?.headers,
     },
   });
@@ -58,10 +61,13 @@ export async function fetchApiBlob(
   options?: RequestInit
 ): Promise<Blob> {
   const token = getToken();
+  if (!token) {
+    throw new Error('Session expirée. Reconnectez-vous.');
+  }
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
-      ...(token && { Authorization: `Bearer ${token}` }),
+      Authorization: `Bearer ${token}`,
       ...options?.headers,
     },
   });
@@ -91,7 +97,11 @@ export const walletApi = {
     fetchApi<{ total: number; totalSavings?: number; wallets: Wallet[] }>(
       '/wallets/total-balance'
     ),
-  create: (data: { name: string; image_url?: string | null }) =>
+  create: (data: {
+    name: string
+    image_url?: string | null
+    initial_balance?: number
+  }) =>
     fetchApi<Wallet>('/wallets', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -581,6 +591,8 @@ export interface Wallet {
   current_balance: number;
   image_url?: string | null;
   created_at: string;
+  month_income?: number;
+  month_expense?: number;
 }
 
 export interface Transaction {
@@ -618,6 +630,7 @@ export interface TransactionInput {
   description?: string;
   date?: string;
   savings_goal_id?: string;
+  line_items?: TransactionLineItem[];
 }
 
 export interface TransferInput {

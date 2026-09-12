@@ -12,6 +12,7 @@ import { SUBSCRIPTION_PLANS, type BillingPeriod } from '@/lib/planLimits'
 import { subscriptionApi } from '@/lib/api'
 import { formatCurrency } from '@/lib/utils'
 import { isAllowedPaymentUrl } from '@/lib/payment-url'
+import { isSubscriptionPaymentEnabled } from '@/lib/subscription'
 import { CreditCard, Smartphone, AlertCircle, FlaskConical } from 'lucide-react'
 
 type PaymentMethodChoice = 'all' | 'orange' | 'mtn'
@@ -32,6 +33,13 @@ function PaymentContent() {
   const [paying, setPaying] = useState(false)
 
   useEffect(() => {
+    if (!isSubscriptionPaymentEnabled()) {
+      toast.info('À venir')
+      router.replace('/subscription')
+    }
+  }, [router])
+
+  useEffect(() => {
     subscriptionApi
       .getPlans()
       .then((data) => {
@@ -48,8 +56,14 @@ function PaymentContent() {
   }, [paymentFailed])
 
   const handlePay = async () => {
-    if (!paymentAvailable) {
-      toast.error('Le paiement en ligne n\'est pas encore activé sur ce serveur.')
+    if (!isSubscriptionPaymentEnabled()) {
+      toast.info('À venir')
+      return
+    }
+    if (!paymentAvailable || paying) {
+      if (!paymentAvailable) {
+        toast.error('Le paiement en ligne n\'est pas encore activé sur ce serveur.')
+      }
       return
     }
 
@@ -68,6 +82,15 @@ function PaymentContent() {
     }
   }
 
+  if (!isSubscriptionPaymentEnabled()) {
+    return (
+      <PageShell>
+        <Header title="Paiement" showBack />
+        <LoadingSpinner />
+      </PageShell>
+    )
+  }
+
   if (paymentAvailable === null) {
     return (
       <PageShell>
@@ -83,16 +106,16 @@ function PaymentContent() {
 
       <main className="max-w-md mx-auto px-4 py-6 space-y-6">
         <div className="card p-5 space-y-3">
-          <h2 className="font-bold text-gray-900">Récapitulatif</h2>
+          <h2 className="font-semibold text-ink">Récapitulatif</h2>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Forfait</span>
+            <span className="text-ink-mute">Forfait</span>
             <span className="font-medium">{plan.label}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500">Total</span>
+            <span className="text-ink-mute">Total</span>
             <span className="text-xl font-bold text-primary-600">
               {formatCurrency(plan.priceXaf)}
-              <span className="text-sm font-normal text-gray-500">
+              <span className="text-sm font-normal text-ink-mute">
                 {plan.periodLabel}
               </span>
             </span>
@@ -112,7 +135,7 @@ function PaymentContent() {
         )}
 
         <div className="card p-5 space-y-3">
-          <p className="text-sm font-medium text-gray-700">Moyen de paiement</p>
+          <p className="text-sm font-medium text-ink-soft">Moyen de paiement</p>
           <div className="space-y-2">
             {(
               [
@@ -143,18 +166,18 @@ function PaymentContent() {
                 className={`w-full flex items-center gap-3 p-3 border rounded-lg text-left touch-manipulation transition ${
                   method === id
                     ? 'border-primary-500 bg-primary-50'
-                    : 'border-gray-200'
+                    : 'border-surface-line'
                 }`}
               >
                 <Icon size={20} className="text-primary-500 shrink-0" />
                 <div>
-                  <span className="text-gray-900 font-medium">{label}</span>
-                  <p className="text-xs text-gray-500">{hint}</p>
+                  <span className="text-ink font-medium">{label}</span>
+                  <p className="text-xs text-ink-mute">{hint}</p>
                 </div>
               </button>
             ))}
           </div>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-ink-mute">
             Paiement sécurisé par CinetPay (XAF). Carte virtuelle disponible avec
             l&apos;option « Tous ».
           </p>
@@ -183,7 +206,8 @@ function PaymentContent() {
         <Button
           className="w-full"
           onClick={handlePay}
-          disabled={!paymentAvailable || paying}
+          loading={paying}
+          disabled={!paymentAvailable}
         >
           {paying ? 'Redirection…' : `Payer ${formatCurrency(plan.priceXaf)}`}
         </Button>
@@ -191,7 +215,7 @@ function PaymentContent() {
         <button
           type="button"
           onClick={() => router.push('/subscription')}
-          className="w-full text-sm text-gray-500 py-2"
+          className="w-full text-sm text-ink-mute py-2"
           disabled={paying}
         >
           Retour aux offres
@@ -211,7 +235,7 @@ export default function PaymentPage() {
       fallback={
         <PageShell>
           <Header title="Paiement" showBack />
-          <div className="p-8 text-center text-gray-500">Chargement…</div>
+          <div className="p-8 text-center text-ink-mute">Chargement…</div>
         </PageShell>
       }
     >

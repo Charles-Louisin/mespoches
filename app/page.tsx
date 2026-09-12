@@ -31,6 +31,7 @@ import { useSubscription } from '@/hooks/useSubscription'
 import BudgetsSection from '@/components/BudgetsSection'
 import SavingsGoalsSection from '@/components/SavingsGoalsSection'
 import AppLogo from '@/components/AppLogo'
+import Reveal from '@/components/Reveal'
 
 interface HomeData {
   wallets: Wallet[]
@@ -134,7 +135,7 @@ export default function HomePage() {
 
             <PendingTransactionsBanner />
 
-            {isOnTrial && <TrialBanner user={user} compact />}
+            {isOnTrial && <TrialBanner user={user} compact dismissible />}
 
             <section>
               <div className="flex items-center justify-between mb-3">
@@ -157,8 +158,10 @@ export default function HomePage() {
                 />
               ) : (
                 <div className="space-y-2.5">
-                  {data.wallets.slice(0, 4).map((wallet) => (
-                    <WalletCard key={wallet._id} wallet={wallet} />
+                  {data.wallets.slice(0, 4).map((wallet, i) => (
+                    <Reveal key={wallet._id} delay={i * 0.04}>
+                      <WalletCard wallet={wallet} />
+                    </Reveal>
                   ))}
                 </div>
               )}
@@ -185,7 +188,7 @@ export default function HomePage() {
 
             <section>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base font-bold text-gray-900">Transactions récentes</h3>
+                <h3 className="section-title">Transactions récentes</h3>
                 <Link href="/transactions" className="link-muted">
                   Voir tout
                 </Link>
@@ -211,10 +214,10 @@ export default function HomePage() {
           </>
         ) : !isLoggedIn ? (
           <div className="card p-8 text-center space-y-4">
-            <AppLogo size="lg" className="mx-auto shadow-md shadow-[#2563EB]/20" />
-            <h2 className="text-xl font-bold text-gray-900">Bienvenue sur MES POCHES</h2>
-            <p className="text-gray-500 text-sm">
-              Connectez-vous pour gérer vos finances personnelles
+            <AppLogo size="lg" className="mx-auto" />
+            <h2 className="font-display text-2xl text-ink">MES POCHES</h2>
+            <p className="text-ink-soft text-sm">
+              Connectez-vous pour suivre vos poches et vos dépenses du quotidien.
             </p>
             <Link href="/login">
               <Button fullWidth>Se connecter</Button>

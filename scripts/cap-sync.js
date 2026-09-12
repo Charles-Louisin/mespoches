@@ -32,7 +32,8 @@ if (process.env.CAPACITOR_SERVER_URL) {
   console.warn('[cap-sync] CAPACITOR_SERVER_URL absent — voir .env.local');
 }
 
-const result = spawnSync('npx', ['cap', 'sync'], {
+const args = process.argv.slice(2);
+const result = spawnSync('npx', ['cap', 'sync', ...args], {
   cwd: root,
   stdio: 'inherit',
   shell: true,

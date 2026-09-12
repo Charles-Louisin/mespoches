@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Capacitor } from '@capacitor/core'
 import AppLogo from '@/components/AppLogo'
-import LoadingSpinner from '@/components/LoadingSpinner'
+import LoadingBar from '@/components/LoadingBar'
 
 const NONCE_KEY = 'mp_oauth_client_nonce'
 
@@ -78,8 +78,7 @@ export default function GoogleMobileReturnClient() {
   return (
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-4 px-4">
       <AppLogo size="md" />
-      <LoadingSpinner />
-      <p className="text-sm text-gray-500">{message}</p>
+      <LoadingBar label={message} />
     </div>
   )
 }

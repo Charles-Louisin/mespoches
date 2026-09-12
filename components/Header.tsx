@@ -33,13 +33,13 @@ export default function Header({
             {showBack && (
               <button
                 onClick={() => router.back()}
-                className="p-1 -ml-1 touch-manipulation text-gray-700"
+                className="p-1 -ml-1 touch-manipulation text-ink-soft"
                 type="button"
               >
                 <ArrowLeft size={24} />
               </button>
             )}
-            <h1 className="text-lg font-bold text-gray-900 truncate">{title}</h1>
+            <h1 className="text-lg font-semibold text-ink truncate">{title}</h1>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {action}

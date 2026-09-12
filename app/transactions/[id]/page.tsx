@@ -133,7 +133,7 @@ export default function TransactionDetailPage() {
   }
 
   const handleSave = async () => {
-    if (!transaction || transaction.type === 'transfer') return
+    if (!transaction || transaction.type === 'transfer' || saving) return
 
     const amount = parseFloat(formData.amount)
     if (!formData.description.trim() || !amount || amount <= 0 || !formData.wallet_id) {
@@ -175,7 +175,7 @@ export default function TransactionDetailPage() {
   }
 
   const handleDelete = async () => {
-    if (!transaction) return
+    if (!transaction || deleting) return
     const confirmed = await confirm({
       title: 'Supprimer la transaction ?',
       message: 'Cette action est irréversible.',
@@ -391,7 +391,7 @@ export default function TransactionDetailPage() {
                 <Button
                   fullWidth
                   onClick={handleSave}
-                  disabled={saving}
+                  loading={saving}
                   className="flex items-center justify-center gap-2"
                 >
                   <Save size={18} />
@@ -401,6 +401,7 @@ export default function TransactionDetailPage() {
                   variant="outline"
                   fullWidth
                   onClick={handleCancelEdit}
+                  disabled={saving}
                   className="flex items-center justify-center gap-2"
                 >
                   <X size={18} />

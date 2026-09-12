@@ -10,7 +10,7 @@ export default function LegalNoticePage() {
 
   return (
     <LegalPageLayout title="Mentions légales">
-      <p className="text-xs text-gray-500">Dernière mise à jour : mai 2026</p>
+      <p className="text-xs text-ink-mute">Dernière mise à jour : mai 2026</p>
 
       <LegalSection title="Éditeur de l'application">
         <p>

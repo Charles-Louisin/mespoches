@@ -1,15 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Capacitor } from '@capacitor/core'
 import { authApi } from '@/lib/api'
 import { getToken, hydrateAuthSession, setUser } from '@/lib/auth'
 import AppLogo from '@/components/AppLogo'
-import LoadingSpinner from '@/components/LoadingSpinner'
+import LoadingBar from '@/components/LoadingBar'
 
 /** Finalise la session après OAuth Google (cookies déjà posés). */
 export default function AuthCompletePage() {
-  const router = useRouter()
   const [message, setMessage] = useState('Connexion en cours…')
 
   useEffect(() => {
@@ -17,12 +16,21 @@ export default function AuthCompletePage() {
 
     void (async () => {
       try {
+        if (Capacitor.isNativePlatform()) {
+          try {
+            const { Browser } = await import('@capacitor/browser')
+            await Browser.close()
+          } catch {
+            /* déjà fermé */
+          }
+        }
+
         await hydrateAuthSession()
         if (cancelled) return
 
         if (!getToken()) {
           setMessage('Session introuvable')
-          router.replace('/login?error=google_session')
+          window.location.replace('/login?error=google_session')
           return
         }
 
@@ -43,10 +51,17 @@ export default function AuthCompletePage() {
           emailVerified: true,
         })
 
-        router.replace('/')
+        void import('@/lib/api').then(async ({ walletApi }) => {
+          const { startSetupGuide, setSetupStep } = await import('@/lib/setupGuide')
+          const wallets = await walletApi.getAll().catch(() => [])
+          if (wallets.length === 0) startSetupGuide()
+          else setSetupStep('done')
+        })
+
+        window.location.replace('/')
       } catch {
         if (!cancelled) {
-          router.replace('/login?error=google_session')
+          window.location.replace('/login?error=google_session')
         }
       }
     })()
@@ -54,13 +69,12 @@ export default function AuthCompletePage() {
     return () => {
       cancelled = true
     }
-  }, [router])
+  }, [])
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-4 px-4">
+    <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-5 px-4">
       <AppLogo size="md" />
-      <LoadingSpinner />
-      <p className="text-sm text-gray-500">{message}</p>
+      <LoadingBar label={message} />
     </div>
   )
 }

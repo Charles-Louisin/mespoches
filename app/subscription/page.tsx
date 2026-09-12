@@ -15,6 +15,7 @@ import { formatCurrency } from '@/lib/utils'
 import {
   formatPremiumUntil,
   getTrialDaysLeft,
+  isSubscriptionPaymentEnabled,
 } from '@/lib/subscription'
 import { Check, Crown, Gift, Shield } from 'lucide-react'
 
@@ -63,6 +64,10 @@ export default function SubscriptionPage() {
   }, [])
 
   const choosePlan = (period: BillingPeriod) => {
+    if (!isSubscriptionPaymentEnabled()) {
+      toast.info('À venir')
+      return
+    }
     toast.info('Redirection vers la page de paiement…')
     router.push(`/subscription/payment?period=${period}`)
   }
@@ -87,10 +92,10 @@ export default function SubscriptionPage() {
         {isOnTrial ? (
           <TrialBanner user={user} />
         ) : paidPremium ? (
-          <div className="rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 via-white to-amber-50/50 p-5 text-center">
-            <Crown className="mx-auto text-primary-500 mb-2" size={32} />
-            <p className="font-semibold text-primary-800">Vous êtes Premium</p>
-            <p className="text-sm text-primary-600 mt-1">
+          <div className="rounded-2xl border border-primary-100 bg-white p-5 text-center">
+            <Crown className="mx-auto text-amber-600 mb-2" size={28} />
+            <p className="font-semibold text-ink">Vous êtes Premium</p>
+            <p className="text-sm text-ink-soft mt-1">
               {user?.premiumUntil
                 ? `Abonnement actif jusqu'au ${formatPremiumUntil(user.premiumUntil)}.`
                 : 'Toutes les fonctionnalités Pro sont débloquées.'}
@@ -186,7 +191,7 @@ export default function SubscriptionPage() {
                     {plan.periodLabel}
                   </span>
                 </p>
-                {!paidPremium && (
+                {!paidPremium && isSubscriptionPaymentEnabled() && (
                   <Button
                     className="w-full mt-4"
                     onClick={() => choosePlan(key)}
@@ -196,18 +201,29 @@ export default function SubscriptionPage() {
                       : `Choisir ${plan.label.toLowerCase()}`}
                   </Button>
                 )}
+                {!paidPremium && !isSubscriptionPaymentEnabled() && (
+                  <Button
+                    className="w-full mt-4"
+                    variant="secondary"
+                    onClick={() => toast.info('À venir')}
+                  >
+                    À venir
+                  </Button>
+                )}
               </div>
             )
           })}
         </div>
 
-        {paymentAvailable ? (
+        {paymentAvailable && isSubscriptionPaymentEnabled() ? (
           <p className="text-xs text-center text-gray-500">
             Paiement sécurisé · Mobile Money & carte · XAF · Pas de renouvellement auto
           </p>
         ) : (
           <p className="text-xs text-center text-gray-400">
-            Paiement en ligne — configuration serveur requise (CinetPay)
+            {isSubscriptionPaymentEnabled()
+              ? 'Paiement en ligne — configuration serveur requise (CinetPay)'
+              : 'Paiement en ligne — bientôt disponible'}
           </p>
         )}
       </main>

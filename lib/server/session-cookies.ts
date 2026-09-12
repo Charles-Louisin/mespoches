@@ -4,7 +4,7 @@ export const AUTH_TOKEN_COOKIE = 'auth_token';
 export const EMAIL_VERIFIED_COOKIE = 'email_verified';
 export const PENDING_EMAIL_COOKIE = 'pending_email';
 
-const TOKEN_MAX_AGE = 60 * 60 * 24 * 7; // 7 jours
+const TOKEN_MAX_AGE = 60 * 60 * 12; // 12 h — aligné sur JWT_EXPIRES_IN par défaut
 const PENDING_MAX_AGE = 60 * 60 * 24; // 1 jour
 
 function cookieSecure(): boolean {

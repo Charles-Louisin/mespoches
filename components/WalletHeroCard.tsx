@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { Pencil, Trash2, Save, X } from 'lucide-react'
 import ImageUpload from '@/components/ImageUpload'
+import Button from '@/components/Button'
 import { useCurrency } from '@/contexts/CurrencyContext'
 
 interface WalletHeroCardProps {
@@ -19,6 +20,8 @@ interface WalletHeroCardProps {
   onSave: () => void
   onCancel: () => void
   premiumRequired?: boolean
+  saving?: boolean
+  deleting?: boolean
 }
 
 export default function WalletHeroCard({
@@ -32,14 +35,16 @@ export default function WalletHeroCard({
   onSave,
   onCancel,
   premiumRequired = false,
+  saving = false,
+  deleting = false,
 }: WalletHeroCardProps) {
   const { formatAmount } = useCurrency()
   const hasImage = !!imageUrl && !editing
 
   return (
     <div
-      className={`relative rounded-3xl overflow-hidden shadow-lg min-h-[200px] ${
-        hasImage ? 'shadow-primary-900/20' : 'balance-gradient shadow-primary-500/25'
+      className={`relative rounded-[1.35rem] overflow-hidden shadow-soft min-h-[200px] ${
+        hasImage ? '' : 'balance-gradient'
       }`}
     >
       {hasImage && (
@@ -65,7 +70,8 @@ export default function WalletHeroCard({
               <button
                 type="button"
                 onClick={onEdit}
-                className="bg-white/20 hover:bg-white/30 rounded-xl px-4 py-2 transition touch-manipulation"
+                disabled={deleting}
+                className="bg-white/20 hover:bg-white/30 rounded-xl px-4 py-2 transition touch-manipulation disabled:opacity-50"
                 aria-label="Modifier"
               >
                 <Pencil size={18} />
@@ -73,9 +79,19 @@ export default function WalletHeroCard({
               <button
                 type="button"
                 onClick={onDelete}
-                className="bg-red-500/90 hover:bg-red-600 rounded-xl px-4 py-2 transition touch-manipulation"
+                disabled={deleting}
+                aria-busy={deleting || undefined}
+                className="relative bg-red-500/90 hover:bg-red-600 rounded-xl px-4 py-2 transition touch-manipulation disabled:opacity-50"
                 aria-label="Supprimer"
               >
+                {deleting && (
+                  <span
+                    className="pointer-events-none absolute inset-x-2 top-1.5 h-0.5 overflow-hidden rounded-full bg-white/25"
+                    aria-hidden
+                  >
+                    <span className="loading-bar-indeterminate block h-full w-1/2 rounded-full bg-white" />
+                  </span>
+                )}
                 <Trash2 size={18} />
               </button>
             </div>
@@ -97,27 +113,33 @@ export default function WalletHeroCard({
                 type="text"
                 value={formData.name}
                 onChange={(e) => onFormChange({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl text-gray-900 font-semibold"
+                disabled={saving}
+                className="w-full px-4 py-3 rounded-xl text-gray-900 font-semibold disabled:opacity-70"
                 placeholder="Ex: Cash"
               />
             </div>
             <div className="flex gap-2 pt-2">
-              <button
+              <Button
                 type="button"
+                fullWidth
+                loading={saving}
                 onClick={onSave}
-                className="flex-1 bg-white text-primary-700 rounded-xl px-4 py-3 font-semibold flex items-center justify-center gap-2 touch-manipulation"
+                className="!bg-white !text-primary-700 hover:!bg-white/95 !shadow-none"
               >
-                <Save size={18} />
-                Enregistrer
-              </button>
-              <button
+                <Save size={18} className="mr-2" />
+                {saving ? 'Enregistrement…' : 'Enregistrer'}
+              </Button>
+              <Button
                 type="button"
+                fullWidth
+                variant="outline"
                 onClick={onCancel}
-                className="flex-1 bg-white/20 hover:bg-white/30 rounded-xl px-4 py-3 font-semibold flex items-center justify-center gap-2 touch-manipulation"
+                disabled={saving}
+                className="!border-white/30 !text-white hover:!bg-white/20 !shadow-none"
               >
-                <X size={18} />
+                <X size={18} className="mr-2" />
                 Annuler
-              </button>
+              </Button>
             </div>
           </div>
         )}

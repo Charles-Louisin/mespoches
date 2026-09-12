@@ -1,27 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  buildOAuthState,
+  resolveOAuthOrigin,
+} from '@/lib/server/oauth-origin';
 
 const NONCE_COOKIE = 'google_oauth_client_nonce';
 const STATE_COOKIE = 'google_oauth_state';
-
-function appOrigin(request: NextRequest): string {
-  const override = (
-    process.env.GOOGLE_REDIRECT_ORIGIN ||
-    process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_ORIGIN ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    ''
-  ).replace(/\/$/, '');
-  if (override.startsWith('http')) return override;
-
-  // Derrière ngrok / reverse-proxy : préférer le Host public
-  const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
-  const forwardedProto =
-    request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() || 'https';
-  if (forwardedHost) {
-    return `${forwardedProto}://${forwardedHost}`.replace(/\/$/, '');
-  }
-
-  return request.nextUrl.origin;
-}
 
 function isValidClientNonce(value: string | null): value is string {
   return !!value && /^[A-Za-z0-9_-]{32,128}$/.test(value);
@@ -36,7 +20,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const redirectUri = `${appOrigin(request)}/api/auth/google/callback`;
+  const origin = resolveOAuthOrigin(request);
+  const redirectUri = `${origin}/api/auth/google/callback`;
   const mobile = request.nextUrl.searchParams.get('mobile') === '1';
   const clientNonce = request.nextUrl.searchParams.get('client_nonce');
 
@@ -46,7 +31,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const state = crypto.randomUUID();
+  const state = buildOAuthState(mobile);
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   url.searchParams.set('client_id', clientId);
   url.searchParams.set('redirect_uri', redirectUri);
@@ -57,9 +42,9 @@ export async function GET(request: NextRequest) {
   url.searchParams.set('include_granted_scopes', 'true');
   url.searchParams.set('state', state);
 
-  const secure = request.nextUrl.protocol === 'https:';
+  const secure = origin.startsWith('https://');
   const response = NextResponse.redirect(url.toString());
-  response.cookies.set(STATE_COOKIE, `${state}:${mobile ? '1' : '0'}`, {
+  response.cookies.set(STATE_COOKIE, state, {
     httpOnly: true,
     secure,
     sameSite: 'lax',
@@ -68,7 +53,6 @@ export async function GET(request: NextRequest) {
   });
 
   if (mobile && clientNonce) {
-    // Cookie HttpOnly côté Custom Tab — lié au handoff serveur
     response.cookies.set(NONCE_COOKIE, clientNonce, {
       httpOnly: true,
       secure,

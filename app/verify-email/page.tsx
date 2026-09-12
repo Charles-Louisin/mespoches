@@ -58,11 +58,14 @@ export default function VerifyEmailPage() {
       toast.error('Entrez le code à 6 chiffres')
       return
     }
+    if (loading) return
 
     setLoading(true)
     try {
       const response = await verifyEmail(email, code)
       if (response.success) {
+        const { startSetupGuide } = await import('@/lib/setupGuide')
+        startSetupGuide()
         toast.success('Email vérifié ! Connexion en cours...')
         router.push('/')
       } else {
@@ -78,7 +81,7 @@ export default function VerifyEmailPage() {
   }
 
   const handleResend = useCallback(async () => {
-    if (!email || cooldown > 0) return
+    if (!email || cooldown > 0 || resending) return
 
     setResending(true)
     try {
@@ -123,7 +126,7 @@ export default function VerifyEmailPage() {
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
           <div className="flex flex-col items-center mb-8">
-            <div className="w-20 h-20 balance-gradient rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-primary-500/30">
+            <div className="w-20 h-20 balance-gradient rounded-2xl flex items-center justify-center mb-4 shadow-soft">
               <Wallet className="w-10 h-10 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900">Vérification</h1>
@@ -157,7 +160,7 @@ export default function VerifyEmailPage() {
                 />
               </div>
 
-              <Button type="submit" disabled={loading} fullWidth size="lg">
+              <Button type="submit" loading={loading} fullWidth size="lg">
                 {loading ? 'Vérification...' : 'Vérifier et se connecter'}
               </Button>
             </form>

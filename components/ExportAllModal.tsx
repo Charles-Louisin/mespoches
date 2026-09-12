@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, FileSpreadsheet, FileText, Sheet, Download } from 'lucide-react'
 import { ExportFormat } from '@/lib/api'
 import ProBadge from '@/components/ProBadge'
+import Button from '@/components/Button'
 
 const OPTIONS: {
   format: ExportFormat
@@ -70,30 +71,35 @@ export default function ExportAllModal({
 
               <div className="px-6 pb-6 space-y-2">
                 {OPTIONS.map(({ format, label, icon: Icon, iconClass }) => (
-                  <button
+                  <Button
                     key={format}
                     type="button"
+                    variant="outline"
+                    fullWidth
                     onClick={() => onExport(format)}
-                    disabled={!!exporting}
-                    className="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-200 hover:border-primary-300 hover:bg-primary-50/40 transition touch-manipulation disabled:opacity-50 text-left"
+                    loading={exporting === format}
+                    disabled={!!exporting && exporting !== format}
+                    className="!justify-start gap-4 !py-4 !px-4 !border-gray-200 hover:!border-primary-300 hover:!bg-primary-50/40 !text-left !font-normal"
                   >
-                    <div className="w-11 h-11 rounded-full bg-gray-50 flex items-center justify-center shrink-0">
+                    <span className="w-11 h-11 rounded-full bg-gray-50 flex items-center justify-center shrink-0">
                       <Icon size={22} className={iconClass} />
-                    </div>
-                    <p className="font-semibold text-gray-900 flex-1">{label}</p>
+                    </span>
+                    <span className="font-semibold text-gray-900 flex-1">{label}</span>
                     <span className="text-sm font-medium text-primary-600 shrink-0">
                       {exporting === format ? '…' : '→'}
                     </span>
-                  </button>
+                  </Button>
                 ))}
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  fullWidth
                   onClick={onClose}
                   disabled={!!exporting}
-                  className="w-full mt-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl px-6 py-3 font-semibold transition touch-manipulation disabled:opacity-50"
+                  className="mt-2 !bg-gray-100 hover:!bg-gray-200 !text-gray-700"
                 >
                   Annuler
-                </button>
+                </Button>
               </div>
             </motion.div>
           </div>

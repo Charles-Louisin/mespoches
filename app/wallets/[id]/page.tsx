@@ -48,6 +48,8 @@ export default function WalletDetailPage() {
   const plannedExpenses = data?.planned_expenses ?? []
   const [cancellingId, setCancellingId] = useState<string | null>(null)
   const [editingPlanned, setEditingPlanned] = useState<PlannedExpense | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const syncForm = useCallback((w: Wallet) => {
     setFormData({
@@ -66,12 +68,14 @@ export default function WalletDetailPage() {
   }
 
   const handleUpdate = async () => {
+    if (saving) return
     try {
       if (!formData.name.trim()) {
         toast.error('Le nom est requis')
         return
       }
 
+      setSaving(true)
       await walletApi.update(id, formData)
       invalidateFinancialCaches()
       const fresh = await walletApi.getHistory(id)
@@ -87,6 +91,8 @@ export default function WalletDetailPage() {
       }
       const message = error instanceof Error ? error.message : 'Erreur lors de la modification'
       toast.error(message)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -118,6 +124,7 @@ export default function WalletDetailPage() {
   }
 
   const handleDelete = async () => {
+    if (deleting) return
     if (transactions.length > 0) {
       toast.error('Impossible de supprimer une poche avec des transactions')
       return
@@ -134,6 +141,7 @@ export default function WalletDetailPage() {
     if (!confirmed) return
 
     try {
+      setDeleting(true)
       await walletApi.delete(id)
       invalidateFinancialCaches()
       toast.success('Poche supprimée avec succès !')
@@ -141,6 +149,8 @@ export default function WalletDetailPage() {
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Erreur lors de la suppression'
       toast.error(message)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -158,7 +168,7 @@ export default function WalletDetailPage() {
       <PageShell>
         <Header title="Poche" showBack />
         <main className="max-w-md mx-auto px-4 py-6">
-          <p className="text-center text-gray-500">Poche introuvable</p>
+          <p className="text-center text-ink-mute">Poche introuvable</p>
         </main>
       </PageShell>
     )
@@ -185,11 +195,13 @@ export default function WalletDetailPage() {
           onSave={handleUpdate}
           onCancel={handleCancelEdit}
           premiumRequired={!isPremium}
+          saving={saving}
+          deleting={deleting}
         />
 
         {plannedExpenses.length > 0 && (
           <div>
-            <h3 className="text-base font-bold text-gray-900 mb-3">
+            <h3 className="text-base font-bold text-ink mb-3">
               Transactions futures
             </h3>
             <div className="space-y-2.5">
@@ -207,19 +219,19 @@ export default function WalletDetailPage() {
         )}
 
         <div>
-          <h3 className="text-base font-bold text-gray-900 mb-3">
+          <h3 className="text-base font-bold text-ink mb-3">
             Historique des transactions
           </h3>
 
           {transactions.length === 0 ? (
             <div className="card p-8 text-center">
-              <p className="text-gray-500">Aucune transaction</p>
+              <p className="text-ink-mute">Aucune transaction</p>
             </div>
           ) : (
             <div className="space-y-6">
               {Object.entries(groupedTransactions).map(([date, items]) => (
                 <div key={date}>
-                  <h4 className="text-sm font-semibold text-gray-500 mb-2 px-1">{date}</h4>
+                  <h4 className="text-sm font-semibold text-ink-mute mb-2 px-1">{date}</h4>
                   <div className="space-y-2.5">
                     {items.map((transaction) => (
                       <TransactionItem

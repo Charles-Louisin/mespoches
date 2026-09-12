@@ -65,10 +65,19 @@ export default function PlannedExpenseItem({
               type="button"
               onClick={() => onCancel(item._id)}
               disabled={cancelling}
-              className="text-xs text-gray-500 hover:text-red-600 flex items-center gap-0.5 touch-manipulation disabled:opacity-50"
+              aria-busy={cancelling || undefined}
+              className="relative text-xs text-gray-500 hover:text-red-600 flex items-center gap-0.5 touch-manipulation disabled:opacity-50"
             >
+              {cancelling && (
+                <span
+                  className="pointer-events-none absolute inset-x-0 -top-1 h-0.5 overflow-hidden rounded-full bg-primary-600/15"
+                  aria-hidden
+                >
+                  <span className="loading-bar-indeterminate block h-full w-1/2 rounded-full bg-primary-600" />
+                </span>
+              )}
               <X size={14} />
-              Annuler
+              {cancelling ? 'Annulation…' : 'Annuler'}
             </button>
           )}
         </div>

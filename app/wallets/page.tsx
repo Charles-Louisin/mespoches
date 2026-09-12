@@ -12,6 +12,7 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import EmptyState from '@/components/EmptyState'
 import Button from '@/components/Button'
 import { Wallet as WalletIcon, Plus } from 'lucide-react'
+
 export default function WalletsPage() {
   const fetchWallets = useCallback(() => walletApi.getAll(), [])
 
@@ -36,7 +37,7 @@ export default function WalletsPage() {
       <Header
         title="Mes poches"
         action={
-          <Link href="/wallets/new">
+          <Link href="/wallets/new" data-coach="wallets-add">
             <button type="button" className="p-2 touch-manipulation">
               <Plus size={24} className="text-primary-500" />
             </button>
@@ -51,7 +52,7 @@ export default function WalletsPage() {
             title="Aucune poche"
             description="Créez votre première poche pour commencer"
             action={
-              <Link href="/wallets/new">
+              <Link href="/wallets/new" data-coach="wallets-add">
                 <Button>Créer une poche</Button>
               </Link>
             }

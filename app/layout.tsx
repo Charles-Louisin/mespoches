@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Figtree, Fraunces } from 'next/font/google'
 import { Toaster } from 'sonner'
 import SyncIndicator from '@/components/SyncIndicator'
 import Providers from '@/components/Providers'
@@ -9,7 +9,17 @@ import NativePermissionsOnLaunch from '@/components/NativePermissionsOnLaunch'
 import AutomationBridge from '@/components/AutomationBridge'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const figtree = Figtree({
+  subsets: ['latin'],
+  variable: '--font-figtree',
+  display: 'swap',
+})
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-fraunces',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'MES POCHES - Gestion Financière',
@@ -53,8 +63,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="fr">
-      <body className={inter.className}>
+    <html lang="fr" className={`${figtree.variable} ${fraunces.variable}`}>
+      <body className={`${figtree.className} font-sans`}>
         <Providers>{children}</Providers>
         <AppBootLoader />
         <NativePermissionsOnLaunch />

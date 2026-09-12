@@ -66,7 +66,7 @@ function PreviewEntityAvatar({
 /** BalanceCard — app/page.tsx */
 function PreviewBalanceCard() {
   return (
-    <div className="balance-gradient rounded-3xl p-3.5 text-white shadow-lg shadow-primary-500/25">
+    <div className="balance-gradient rounded-3xl p-3.5 text-white shadow-soft">
       <p className="text-[10px] text-white/85 mb-0.5">Solde Total :</p>
       <div className="flex items-center justify-between gap-2 mb-3">
         <h2 className="text-lg font-bold tracking-tight">1 245 800 XAF</h2>
@@ -214,7 +214,7 @@ function PreviewBottomNav({ activeHref }: { activeHref: string }) {
 
   return (
     <div className="shrink-0 px-1.5 pb-1.5 pt-0.5 bg-surface">
-      <div className="relative nav-gradient rounded-xl shadow-nav px-1 pt-1 pb-0.5">
+      <div className="relative nav-surface rounded-xl shadow-nav px-1 pt-1 pb-0.5">
         <div className="flex items-end">
           <div className="flex flex-1">
             {leftItems.map((item) => (

@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.provider.Settings;
 import android.util.Log;
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKeys;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
@@ -30,6 +32,7 @@ public class SmsMonitorPlugin extends Plugin {
 
     private static final String TAG = "MesPochesSms";
     public static final String PREFS = "mespoches_sms";
+    public static final String PREFS_ENCRYPTED = "mespoches_sms_enc";
     public static final String KEY_TOKEN = "auth_token";
     public static final String KEY_API = "api_base_url";
 
@@ -37,33 +40,77 @@ public class SmsMonitorPlugin extends Plugin {
     private static final String DEFAULT_API =
         "https://mespochesbackend-production.up.railway.app/api";
 
+    /** Suffixes autorisés (dev tunnels uniquement). */
     private static final Set<String> ALLOWED_HOST_SUFFIXES = new HashSet<>(Arrays.asList(
-        ".railway.app",
-        ".onrender.com",
+        ".up.railway.app",
         ".ngrok-free.app",
         ".ngrok-free.dev",
-        ".ngrok.io",
-        ".vercel.app"
+        ".ngrok.io"
     ));
 
     private static final Set<String> ALLOWED_EXACT_HOSTS = new HashSet<>(Arrays.asList(
         "localhost",
-        "127.0.0.1"
+        "127.0.0.1",
+        "mespochesbackend-production.up.railway.app"
     ));
+
+    private static SharedPreferences securePrefs(Context context) {
+        try {
+            // API security-crypto 1.0.0 (MasterKey n'existe qu'à partir de 1.1.0-alpha)
+            String masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC);
+            SharedPreferences enc = EncryptedSharedPreferences.create(
+                PREFS_ENCRYPTED,
+                masterKeyAlias,
+                context,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            );
+            migrateLegacyPrefs(context, enc);
+            return enc;
+        } catch (Exception e) {
+            Log.e(TAG, "EncryptedSharedPreferences unavailable, falling back", e);
+            return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        }
+    }
+
+    /** Migre une fois le token legacy non chiffré puis l'efface. */
+    private static void migrateLegacyPrefs(Context context, SharedPreferences enc) {
+        SharedPreferences legacy = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        String legacyToken = legacy.getString(KEY_TOKEN, null);
+        if (legacyToken == null || legacyToken.isEmpty()) return;
+        if (enc.contains(KEY_TOKEN)) {
+            legacy.edit().clear().apply();
+            return;
+        }
+        String legacyApi = legacy.getString(KEY_API, "");
+        enc.edit()
+            .putString(KEY_TOKEN, legacyToken)
+            .putString(KEY_API, legacyApi != null ? legacyApi : "")
+            .apply();
+        legacy.edit().clear().apply();
+        Log.i(TAG, "Migrated auth token to encrypted storage");
+    }
 
     @PluginMethod
     public void storeAuthToken(PluginCall call) {
         String token = call.getString("token", "");
         String apiUrl = sanitizeApiUrl(call.getString("apiUrl", ""));
-        SharedPreferences prefs = getContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-        prefs.edit().putString(KEY_TOKEN, token).putString(KEY_API, apiUrl).apply();
+        if (token == null || token.isEmpty()) {
+            call.reject("Token manquant");
+            return;
+        }
+        securePrefs(getContext())
+            .edit()
+            .putString(KEY_TOKEN, token)
+            .putString(KEY_API, apiUrl)
+            .apply();
         call.resolve();
     }
 
     @PluginMethod
     public void clearAuthToken(PluginCall call) {
-        SharedPreferences prefs = getContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-        prefs.edit().remove(KEY_TOKEN).remove(KEY_API).apply();
+        securePrefs(getContext()).edit().remove(KEY_TOKEN).remove(KEY_API).apply();
+        getContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().clear().apply();
         call.resolve();
     }
 
@@ -126,7 +173,6 @@ public class SmsMonitorPlugin extends Plugin {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         try {
-            // Chrome en priorité (Custom Tabs / WebView = souvent bloqués par Google)
             intent.setPackage("com.android.chrome");
             getContext().startActivity(intent);
             call.resolve();
@@ -145,12 +191,11 @@ public class SmsMonitorPlugin extends Plugin {
     }
 
     public static String getStoredToken(Context context) {
-        return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_TOKEN, "");
+        return securePrefs(context).getString(KEY_TOKEN, "");
     }
 
     public static String getApiBase(Context context) {
-        String stored = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getString(KEY_API, "");
+        String stored = securePrefs(context).getString(KEY_API, "");
         return sanitizeApiUrl(stored);
     }
 
@@ -170,15 +215,14 @@ public class SmsMonitorPlugin extends Plugin {
                 Log.w(TAG, "Rejected apiUrl host");
                 return DEFAULT_API;
             }
-            String normalized = apiUrl.trim().replaceAll("/+$", "");
-            return normalized;
+            return apiUrl.trim().replaceAll("/+$", "");
         } catch (Exception e) {
             return DEFAULT_API;
         }
     }
 
     private static boolean isLocalHost(String host) {
-        return ALLOWED_EXACT_HOSTS.contains(host);
+        return ALLOWED_EXACT_HOSTS.contains(host) && (host.equals("localhost") || host.equals("127.0.0.1"));
     }
 
     private static boolean isAllowedHost(String host) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -13,6 +13,7 @@ import {
   plannedExpenseApi,
   categoryApi,
   savingsGoalApi,
+  sanitizeLineItems,
 } from '@/lib/api'
 import {
   isFutureUtcDay,
@@ -29,7 +30,17 @@ import Select from '@/components/Select'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useCurrency } from '@/contexts/CurrencyContext'
-import { Info } from 'lucide-react'
+import { Info, Plus, Trash2 } from 'lucide-react'
+
+type LineDraft = { id: string; description: string; amount: string }
+
+function newLine(): LineDraft {
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    description: '',
+    amount: '',
+  }
+}
 
 function NewTransactionForm() {
   const { isPremium, showProBadge, requirePremium, handleApiError } = useSubscription()
@@ -37,7 +48,7 @@ function NewTransactionForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [type, setType] = useState<'income' | 'expense' | 'transfer'>('expense')
-  const [amount, setAmount] = useState('')
+  const [lines, setLines] = useState<LineDraft[]>([newLine()])
   const [walletId, setWalletId] = useState('')
   const [destinationWalletId, setDestinationWalletId] = useState('')
   const [categoryId, setCategoryId] = useState('')
@@ -53,6 +64,7 @@ function NewTransactionForm() {
   const [hidePlannedHelp, setHidePlannedHelp] = useState(false)
 
   const todayUtc = getTodayUtcDateInputValue()
+  const multiLineEnabled = type !== 'transfer' && !toSavings
 
   useEffect(() => {
     const typeParam = searchParams.get('type')
@@ -64,7 +76,7 @@ function NewTransactionForm() {
   const maxDateForIncomeTransfer = type !== 'expense' ? todayUtc : undefined
 
   useEffect(() => {
-    loadData()
+    void loadData()
   }, [type])
 
   useEffect(() => {
@@ -100,21 +112,49 @@ function NewTransactionForm() {
     }
   }
 
+  const parsedLines = useMemo(() => {
+    return lines
+      .map((line) => ({
+        description: line.description.trim(),
+        amount: parseFloat(line.amount.replace(',', '.')),
+      }))
+      .filter((line) => !Number.isNaN(line.amount) && line.amount > 0)
+  }, [lines])
+
+  const totalAmount = parsedLines.reduce((sum, line) => sum + line.amount, 0)
+
+  const updateLine = (id: string, patch: Partial<LineDraft>) => {
+    setLines((prev) => prev.map((line) => (line.id === id ? { ...line, ...patch } : line)))
+  }
+
+  const removeLine = (id: string) => {
+    setLines((prev) => (prev.length <= 1 ? prev : prev.filter((line) => line.id !== id)))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (loading) return
 
-    if (!amount) {
-      toast.error('Veuillez remplir tous les champs requis')
+    if (multiLineEnabled && parsedLines.length === 0) {
+      toast.error('Ajoutez au moins un montant')
       return
+    }
+
+    if (!multiLineEnabled) {
+      const single = parseFloat(lines[0]?.amount?.replace(',', '.') || '')
+      if (!single || Number.isNaN(single)) {
+        toast.error('Veuillez remplir tous les champs requis')
+        return
+      }
     }
 
     if (toSavings) {
       if (!isPremium) {
-        requirePremium('L\'épargne est réservée aux abonnés Premium')
+        requirePremium("L'épargne est réservée aux abonnés Premium")
         return
       }
       if (!savingsGoalId) {
-        toast.error('Choisissez un objectif d\'épargne')
+        toast.error("Choisissez un objectif d'épargne")
         return
       }
     }
@@ -132,13 +172,34 @@ function NewTransactionForm() {
     try {
       setLoading(true)
 
+      const amount = multiLineEnabled
+        ? totalAmount
+        : parseFloat(lines[0].amount.replace(',', '.'))
+
+      const line_items =
+        multiLineEnabled && parsedLines.length > 0
+          ? sanitizeLineItems(
+              parsedLines.map((line) => ({
+                description: line.description || description || '',
+                amount: line.amount,
+                type,
+              }))
+            )
+          : undefined
+
       const data = {
-        amount: parseFloat(amount),
+        amount,
         wallet_id: walletId || undefined,
         category_id: categoryId || undefined,
-        description: description || undefined,
+        description:
+          description ||
+          (line_items && line_items.length > 1
+            ? `${line_items.length} articles`
+            : line_items?.[0]?.description) ||
+          undefined,
         date: new Date(date).toISOString(),
         savings_goal_id: toSavings ? savingsGoalId : undefined,
+        ...(line_items && line_items.length > 0 ? { line_items } : {}),
       }
 
       if (type === 'income') {
@@ -148,6 +209,10 @@ function NewTransactionForm() {
         )
       } else if (type === 'expense') {
         if (isFutureUtcDay(date)) {
+          if (parsedLines.length > 1) {
+            toast.error('Une dépense planifiée ne peut contenir qu’une seule ligne')
+            return
+          }
           await plannedExpenseApi.create({
             amount: data.amount,
             wallet_id: walletId,
@@ -172,16 +237,18 @@ function NewTransactionForm() {
             description: data.description,
             date: data.date,
           })
-          toast.success('Transfert vers l\'épargne effectué !')
+          toast.success("Transfert vers l'épargne effectué !")
         } else {
           if (!destinationWalletId) {
             toast.error('Veuillez sélectionner un portefeuille de destination')
             return
           }
           await transactionApi.createTransfer({
-            ...data,
+            amount: data.amount,
             wallet_id: walletId,
             destination_wallet_id: destinationWalletId,
+            description: data.description,
+            date: data.date,
           })
           toast.success('Transfert effectué avec succès !')
         }
@@ -230,19 +297,21 @@ function NewTransactionForm() {
       return
     }
     setType(key)
+    setLines([newLine()])
   }
 
   const toggleToSavings = () => {
     if (!isPremium) {
-      requirePremium('L\'épargne est réservée aux abonnés Premium')
+      requirePremium("L'épargne est réservée aux abonnés Premium")
       return
     }
     if (savingsGoals.length === 0) {
-      toast.error('Créez d\'abord un objectif d\'épargne')
+      toast.error("Créez d'abord un objectif d'épargne")
       return
     }
     setToSavings(!toSavings)
     if (toSavings) setSavingsGoalId('')
+    setLines([newLine()])
   }
 
   const addWalletLink = (
@@ -259,15 +328,12 @@ function NewTransactionForm() {
 
   const showSourceWallet = type !== 'income' || !toSavings
   const selectedWallet = wallets.find((w) => w._id === walletId) ?? null
-  const parsedAmount = parseFloat(amount)
   const amountExceedsBalance =
     showSourceWallet &&
     !!selectedWallet &&
-    !!amount &&
-    !Number.isNaN(parsedAmount) &&
-    parsedAmount > 0 &&
+    totalAmount > 0 &&
     (type === 'expense' || type === 'transfer') &&
-    parsedAmount > selectedWallet.current_balance
+    totalAmount > selectedWallet.current_balance
 
   return (
     <PageShell>
@@ -281,10 +347,10 @@ function NewTransactionForm() {
                 key={key}
                 type="button"
                 onClick={() => selectType(key)}
-                className={`py-3 rounded-xl font-semibold text-sm touch-manipulation transition relative ${
+                className={`py-3 rounded-xl font-semibold text-sm touch-manipulation transition relative active:scale-[0.98] ${
                   type === key
-                    ? 'bg-primary-500 text-white shadow-sm shadow-primary-500/30'
-                    : 'card text-gray-700 border border-gray-100'
+                    ? 'bg-primary-600 text-white shadow-soft'
+                    : 'card text-ink-soft'
                 }`}
               >
                 {label}
@@ -297,32 +363,108 @@ function NewTransactionForm() {
             ))}
           </div>
 
-          <div className="card p-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
-              Montant
-            </label>
+          <div className="card p-4 space-y-3">
             {showSourceWallet && selectedWallet && (
-              <p className="text-xs text-center text-gray-500 mb-2">
+              <p className="text-xs text-center text-gray-500">
                 Solde actuel :{' '}
                 <span className="font-semibold text-gray-700">
                   {formatAmount(selectedWallet.current_balance)}
                 </span>
               </p>
             )}
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0"
-              required
-              className={`w-full text-3xl font-bold text-center bg-transparent border-0 focus:outline-none focus:ring-0 ${
-                amountExceedsBalance ? 'text-red-500' : 'text-primary-600'
-              }`}
-            />
+
+            {multiLineEnabled ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-gray-700">
+                    {type === 'expense' ? 'Dépenses' : 'Revenus'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setLines((prev) => [...prev, newLine()])}
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 touch-manipulation"
+                  >
+                    <Plus size={16} />
+                    Ajouter
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {lines.map((line, index) => (
+                    <div
+                      key={line.id}
+                      className="rounded-xl border border-gray-100 bg-gray-50/80 p-3 space-y-2 animate-rise"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-semibold text-gray-500">
+                          Ligne {index + 1}
+                        </span>
+                        {lines.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeLine(line.id)}
+                            className="p-1.5 text-gray-400 hover:text-red-500 touch-manipulation"
+                            aria-label="Supprimer la ligne"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={line.amount}
+                        onChange={(e) => updateLine(line.id, { amount: e.target.value })}
+                        placeholder="Montant"
+                        className={`w-full text-2xl font-bold text-center bg-transparent border-0 focus:outline-none ${
+                          amountExceedsBalance ? 'text-red-500' : 'text-primary-600'
+                        }`}
+                      />
+                      <input
+                        type="text"
+                        value={line.description}
+                        onChange={(e) => updateLine(line.id, { description: e.target.value })}
+                        placeholder="Description (ex: Pain)"
+                        className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
+                  <span className="text-sm text-gray-500">Total</span>
+                  <span
+                    className={`text-lg font-bold ${
+                      amountExceedsBalance ? 'text-red-500' : 'text-ink'
+                    }`}
+                  >
+                    {formatAmount(totalAmount || 0)}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
+                  Montant
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={lines[0]?.amount || ''}
+                  onChange={(e) => updateLine(lines[0].id, { amount: e.target.value })}
+                  placeholder="0"
+                  required
+                  className={`w-full text-3xl font-bold text-center bg-transparent border-0 focus:outline-none focus:ring-0 ${
+                    amountExceedsBalance ? 'text-red-500' : 'text-primary-600'
+                  }`}
+                />
+              </>
+            )}
+
             {amountExceedsBalance && (
-              <p className="text-xs text-red-500 text-center mt-2">
+              <p className="text-xs text-red-500 text-center">
                 Montant supérieur au solde de la poche
               </p>
             )}
@@ -391,13 +533,25 @@ function NewTransactionForm() {
               />
             )}
 
-            <Input
-              label="Description"
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Ex: Courses du mois"
-            />
+            {(!multiLineEnabled || lines.length === 1) && (
+              <Input
+                label="Description globale (optionnel)"
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Ex: Courses du mois"
+              />
+            )}
+
+            {multiLineEnabled && lines.length > 1 && (
+              <Input
+                label="Libellé de la transaction (optionnel)"
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Ex: Courses du marché"
+              />
+            )}
 
             <div>
               <Input
@@ -422,12 +576,14 @@ function NewTransactionForm() {
             </div>
           </div>
 
-          <Button type="submit" fullWidth size="lg" disabled={loading}>
+          <Button type="submit" fullWidth size="lg" loading={loading}>
             {loading
               ? 'Enregistrement...'
               : type === 'expense' && isFutureUtcDay(date)
                 ? 'Planifier la dépense'
-                : 'Enregistrer'}
+                : multiLineEnabled && parsedLines.length > 1
+                  ? `Enregistrer (${parsedLines.length} lignes)`
+                  : 'Enregistrer'}
           </Button>
         </form>
       </main>

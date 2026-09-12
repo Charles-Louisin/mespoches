@@ -23,6 +23,7 @@ export default function ProfilePage() {
   const { confirm, confirmState, closeConfirm } = useConfirm()
   const [user, setUser] = useState<MeUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -42,6 +43,7 @@ export default function ProfilePage() {
   }, [])
 
   const handleDeleteAccount = async () => {
+    if (deleting) return
     const confirmed = await confirm({
       title: 'Supprimer mon compte ?',
       message:
@@ -54,11 +56,13 @@ export default function ProfilePage() {
     if (!confirmed) return
 
     try {
+      setDeleting(true)
       await authApi.deleteMe()
       toast.success('Compte supprimé')
       logout()
     } catch (error: any) {
       toast.error(error.message || 'Erreur lors de la suppression du compte')
+      setDeleting(false)
     }
   }
 
@@ -128,8 +132,13 @@ export default function ProfilePage() {
           <p className="text-sm text-gray-500 mb-4">
             Supprimer votre compte effacera définitivement vos données. Aucun retour en arrière n’est possible.
           </p>
-          <Button variant="primary" fullWidth onClick={handleDeleteAccount}>
-            Supprimer mon compte
+          <Button
+            variant="primary"
+            fullWidth
+            loading={deleting}
+            onClick={handleDeleteAccount}
+          >
+            {deleting ? 'Suppression…' : 'Supprimer mon compte'}
           </Button>
         </div>
       </main>

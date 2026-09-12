@@ -11,8 +11,8 @@ import {
 
 /**
  * Sync token Android + rappel quotidien.
- * Les notifs « en cours / prête » pour SMS & notifications système
- * sont gérées uniquement en natif (MesPochesNotifier) pour éviter les doublons.
+ * Pour SMS & notifications système : seule la notif « Transaction prête »
+ * est affichée (MesPochesNotifier), sans « analyse en cours ».
  */
 export default function AutomationBridge() {
   const permsRequested = useRef(false);

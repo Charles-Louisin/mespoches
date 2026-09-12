@@ -10,6 +10,7 @@ import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
 import ConfirmModal from '@/components/ConfirmModal'
 import ExportAllModal from '@/components/ExportAllModal'
+import Button from '@/components/Button'
 import { LogOut, User, Info, Crown, Download, Scale, Shield, FileText } from 'lucide-react'
 import { ExportFormat } from '@/lib/api'
 import { downloadBlob } from '@/lib/download'
@@ -43,6 +44,7 @@ export default function SettingsPage() {
   }
 
   const handleExportAll = async (format: ExportFormat) => {
+    if (exporting) return
     if (!isPremium) {
       setExportModalOpen(false)
       requirePremium(`Export ${format.toUpperCase()} réservé aux abonnés Premium`)
@@ -213,13 +215,14 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <button
+        <Button
           onClick={handleLogout}
-          className="w-full bg-red-500 text-white rounded-lg p-4 font-semibold flex items-center justify-center gap-2 hover:bg-red-600 transition-colors touch-manipulation"
+          fullWidth
+          className="!bg-red-500 hover:!bg-red-600 !shadow-none gap-2"
         >
           <LogOut size={20} />
           Se déconnecter
-        </button>
+        </Button>
       </main>
 
       <ExportAllModal

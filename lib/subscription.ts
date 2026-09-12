@@ -56,3 +56,14 @@ export function isPremiumRequiredError(err: unknown): err is PremiumRequiredErro
 export function getUpgradePath(): string {
   return '/subscription';
 }
+
+/**
+ * Paiement abonnement : autorisé uniquement en local / développement.
+ * En production → toast « À venir », pas de checkout.
+ */
+export function isSubscriptionPaymentEnabled(): boolean {
+  if (process.env.NODE_ENV === 'development') return true
+  if (typeof window === 'undefined') return false
+  const host = window.location.hostname
+  return host === 'localhost' || host === '127.0.0.1'
+}

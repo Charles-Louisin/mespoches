@@ -110,6 +110,37 @@ const withPWA = require('next-pwa')({
 
 const backendUrl = (process.env.DEV_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '')
 
+function cspConnectSrc() {
+  const origins = new Set([
+    "'self'",
+    'http://localhost:*',
+    'http://127.0.0.1:*',
+    'https://utfs.io',
+    'https://*.ufs.sh',
+    'https://*.uploadthing.com',
+    'https://accounts.google.com',
+    'https://oauth2.googleapis.com',
+  ])
+
+  const addUrl = (raw) => {
+    if (!raw) return
+    try {
+      const u = new URL(raw.startsWith('http') ? raw : `https://${raw}`)
+      origins.add(`${u.protocol}//${u.host}`)
+    } catch {
+      /* ignore */
+    }
+  }
+
+  addUrl(process.env.NEXT_PUBLIC_API_URL)
+  addUrl(process.env.NEXT_PUBLIC_APP_URL)
+  addUrl(process.env.DEV_BACKEND_URL)
+  // API prod connue (Android / Railway)
+  origins.add('https://mespochesbackend-production.up.railway.app')
+
+  return Array.from(origins).join(' ')
+}
+
 const nextConfig = {
   reactStrictMode: true,
   images: {
@@ -126,9 +157,11 @@ const nextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(self), microphone=(self), geolocation=()',
+            value:
+              'camera=(self), microphone=(self), geolocation=(), payment=(), usb=(), interest-cohort=()',
           },
           {
             key: 'Content-Security-Policy',
@@ -140,12 +173,14 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: blob: https://utfs.io https://*.ufs.sh https://*.uploadthing.com",
-              "connect-src 'self' https: http://localhost:* http://127.0.0.1:*",
+              `connect-src ${cspConnectSrc()}`,
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
               "object-src 'none'",
-              "upgrade-insecure-requests",
+              ...(process.env.NODE_ENV === 'production'
+                ? ['upgrade-insecure-requests']
+                : []),
             ].join('; '),
           },
           ...(process.env.NODE_ENV === 'production'

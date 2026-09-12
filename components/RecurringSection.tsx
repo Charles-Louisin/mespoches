@@ -8,6 +8,7 @@ import { recurringApi, RecurringTransaction } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 import { useCurrency } from '@/contexts/CurrencyContext'
 import { Check, Play, X } from 'lucide-react'
+import Button from '@/components/Button'
 
 interface RecurringSectionProps {
   isPremium: boolean
@@ -19,6 +20,7 @@ export default function RecurringSection({ isPremium, onApiError }: RecurringSec
   const [items, setItems] = useState<RecurringTransaction[]>([])
   const [suggestions, setSuggestions] = useState<RecurringTransaction[]>([])
   const [loading, setLoading] = useState(false)
+  const [busyId, setBusyId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isPremium) return
@@ -42,32 +44,44 @@ export default function RecurringSection({ isPremium, onApiError }: RecurringSec
   }
 
   const runNow = async (id: string) => {
+    if (busyId) return
     try {
+      setBusyId(id)
       await recurringApi.run(id)
       toast.success('Transaction créée')
       load()
     } catch (e) {
       onApiError(e, 'Erreur')
+    } finally {
+      setBusyId(null)
     }
   }
 
   const accept = async (id: string) => {
+    if (busyId) return
     try {
+      setBusyId(id)
       await recurringApi.accept(id)
       toast.success('Récurrence activée')
       load()
     } catch (e) {
       onApiError(e, 'Erreur')
+    } finally {
+      setBusyId(null)
     }
   }
 
   const dismiss = async (id: string) => {
+    if (busyId) return
     try {
+      setBusyId(id)
       await recurringApi.dismiss(id)
       toast.success('Suggestion ignorée')
       load()
     } catch (e) {
       onApiError(e, 'Erreur')
+    } finally {
+      setBusyId(null)
     }
   }
 
@@ -101,17 +115,19 @@ export default function RecurringSection({ isPremium, onApiError }: RecurringSec
                         </p>
                       </div>
                       <div className="flex gap-2">
-                        <button
+                        <Button
                           type="button"
+                          className="flex-1"
+                          loading={busyId === r._id}
                           onClick={() => accept(r._id)}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary-800 text-white text-sm font-medium touch-manipulation"
                         >
-                          <Check size={16} /> Activer
-                        </button>
+                          <Check size={16} className="mr-1.5" /> Activer
+                        </Button>
                         <button
                           type="button"
                           onClick={() => dismiss(r._id)}
-                          className="px-3 py-2 rounded-xl border border-gray-200 text-gray-500 touch-manipulation"
+                          disabled={!!busyId}
+                          className="px-3 py-2 rounded-xl border border-gray-200 text-gray-500 touch-manipulation disabled:opacity-50"
                           aria-label="Ignorer"
                         >
                           <X size={16} />
@@ -143,9 +159,19 @@ export default function RecurringSection({ isPremium, onApiError }: RecurringSec
                     <button
                       type="button"
                       onClick={() => runNow(r._id)}
-                      className="p-2 rounded-full bg-primary-50 text-primary-600 touch-manipulation"
+                      disabled={!!busyId}
+                      aria-busy={busyId === r._id || undefined}
+                      className="relative p-2 rounded-full bg-primary-50 text-primary-600 touch-manipulation disabled:opacity-50"
                       aria-label="Exécuter maintenant"
                     >
+                      {busyId === r._id && (
+                        <span
+                          className="pointer-events-none absolute inset-x-1 top-0.5 h-0.5 overflow-hidden rounded-full bg-primary-600/15"
+                          aria-hidden
+                        >
+                          <span className="loading-bar-indeterminate block h-full w-1/2 rounded-full bg-primary-600" />
+                        </span>
+                      )}
                       <Play size={20} />
                     </button>
                   </li>

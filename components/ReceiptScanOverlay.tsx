@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle2, AlertCircle, Sparkles } from 'lucide-react'
+import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import Button from '@/components/Button'
 
 type ScanPhase = 'idle' | 'scanning' | 'success' | 'error'
@@ -90,22 +90,22 @@ export default function ReceiptScanOverlay({
             </div>
 
             <div className="p-5 space-y-3 text-center">
-              <div className="flex items-center justify-center gap-2 text-primary-700 font-semibold">
+              <div className="flex items-center justify-center gap-2 text-primary-800 font-semibold">
                 {phase === 'scanning' && (
                   <>
-                    <Sparkles size={18} className="animate-pulse" />
-                    <span>Analyse IA</span>
+                    <Loader2 size={18} className="animate-spin" />
+                    <span>Lecture du ticket</span>
                   </>
                 )}
-                {phase === 'success' && <span>Succès</span>}
+                {phase === 'success' && <span>Ticket lu</span>}
                 {phase === 'error' && <span>Échec</span>}
               </div>
 
-              <p className="text-sm text-gray-600">{message}</p>
+              <p className="text-sm text-ink-soft">{message}</p>
 
               {phase === 'scanning' && (
                 <>
-                  <p className="text-xs text-gray-400">Extraction des montants et libellés…</p>
+                  <p className="text-xs text-ink-mute">Montants et libellés en cours d’extraction…</p>
                   <Button variant="outline" fullWidth onClick={onCancel}>
                     Annuler l’analyse
                   </Button>

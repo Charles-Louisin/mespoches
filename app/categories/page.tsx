@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { Suspense, useCallback, useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Category, categoryApi } from '@/lib/api'
 import { CACHE_KEYS, invalidateFinancialCaches, setCache } from '@/lib/cache'
@@ -21,8 +22,17 @@ import { useSubscription } from '@/hooks/useSubscription'
 import { isPremiumRequiredError } from '@/lib/subscription'
 import UpgradeBanner from '@/components/UpgradeBanner'
 import { PLAN_LIMITS } from '@/lib/planLimits'
+import { getSetupStep, setSetupStep, subscribeSetupStep } from '@/lib/setupGuide'
 
-export default function CategoriesPage() {
+function CategoriesPageContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const step = getSetupStep()
+  const setupMode =
+    searchParams.get('setup') === '1' ||
+    step === 'nav-categories' ||
+    step === 'categories-add' ||
+    step === 'category-form'
   const { confirm, confirmState, closeConfirm } = useConfirm()
   const { isPremium, showProBadge, requirePremium } = useSubscription()
   const fetchCategories = useCallback(() => categoryApi.getAll(), [])
@@ -30,13 +40,27 @@ export default function CategoriesPage() {
     CACHE_KEYS.categories,
     fetchCategories
   )
-  const [showForm, setShowForm] = useState(false)
+  const [showForm, setShowForm] = useState(
+    step === 'category-form' || searchParams.get('setup') === '1'
+  )
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     type: 'expense' as 'income' | 'expense',
     image_url: null as string | null,
   })
+
+  useEffect(() => {
+    if (setupMode) setShowForm(true)
+  }, [setupMode])
+
+  useEffect(() => {
+    return subscribeSetupStep((s) => {
+      if (s === 'category-form') setShowForm(true)
+    })
+  }, [])
 
   const refreshCategories = async () => {
     const data = await categoryApi.getAll()
@@ -51,14 +75,26 @@ export default function CategoriesPage() {
       toast.error('Veuillez entrer un nom')
       return
     }
+    if (saving) return
 
     try {
+      setSaving(true)
       if (editingId) {
         await categoryApi.update(editingId, formData)
         toast.success('Catégorie modifiée avec succès !')
       } else {
         await categoryApi.create(formData)
         toast.success('Catégorie créée avec succès !')
+        if (
+          setupMode ||
+          getSetupStep() === 'category-form' ||
+          getSetupStep() === 'categories-add'
+        ) {
+          setSetupStep('done')
+          toast.success('Configuration terminée — vous êtes prêt !')
+          router.push('/')
+          return
+        }
       }
       invalidateFinancialCaches()
       await refreshCategories()
@@ -70,6 +106,8 @@ export default function CategoriesPage() {
       }
       const message = error instanceof Error ? error.message : 'Une erreur est survenue'
       toast.error(message)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -84,6 +122,7 @@ export default function CategoriesPage() {
   }
 
   const handleDelete = async (category: Category) => {
+    if (deletingId) return
     const confirmed = await confirm({
       title: 'Supprimer la catégorie ?',
       message: `Êtes-vous sûr de vouloir supprimer "${category.name}" ? Cette action est irréversible.`,
@@ -95,6 +134,7 @@ export default function CategoriesPage() {
     if (!confirmed) return
 
     try {
+      setDeletingId(category._id)
       await categoryApi.delete(category._id)
       toast.success('Catégorie supprimée avec succès !')
       invalidateFinancialCaches()
@@ -102,6 +142,8 @@ export default function CategoriesPage() {
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Une erreur est survenue'
       toast.error(message)
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -130,7 +172,14 @@ export default function CategoriesPage() {
         title="Catégories" 
         action={
           <button 
-            onClick={() => setShowForm(!showForm)}
+            type="button"
+            data-coach="categories-add"
+            onClick={() => {
+              setShowForm(!showForm)
+              if (getSetupStep() === 'categories-add') {
+                setSetupStep('category-form')
+              }
+            }}
             className="p-2 touch-manipulation"
           >
             <Plus size={24} className="text-primary-500" />
@@ -147,7 +196,7 @@ export default function CategoriesPage() {
         )}
         {/* Formulaire d'ajout/modification */}
         {showForm && (
-          <div className="card p-4">
+          <div className="card p-4" data-coach="category-form">
             <h3 className="text-lg font-semibold mb-4">
               {editingId ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
             </h3>
@@ -181,10 +230,20 @@ export default function CategoriesPage() {
               />
 
               <div className="flex gap-2">
-                <Button type="submit" fullWidth>
-                  {editingId ? 'Modifier' : 'Créer'}
+                <Button type="submit" fullWidth loading={saving}>
+                  {saving
+                    ? 'Enregistrement…'
+                    : editingId
+                      ? 'Modifier'
+                      : 'Créer'}
                 </Button>
-                <Button type="button" variant="outline" fullWidth onClick={resetForm}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  fullWidth
+                  onClick={resetForm}
+                  disabled={saving}
+                >
                   Annuler
                 </Button>
               </div>
@@ -240,12 +299,13 @@ export default function CategoriesPage() {
                         >
                           <Pencil size={18} />
                         </button>
-                         <button
-                           onClick={() => handleDelete(category)}
-                           className="p-2 text-gray-400 hover:text-red-500 touch-manipulation"
-                         >
-                           <Trash2 size={18} />
-                         </button>
+                        <button
+                          onClick={() => handleDelete(category)}
+                          disabled={!!deletingId}
+                          className="p-2 text-gray-400 hover:text-red-500 touch-manipulation disabled:opacity-50"
+                        >
+                          <Trash2 size={18} />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -284,12 +344,13 @@ export default function CategoriesPage() {
                         >
                           <Pencil size={18} />
                         </button>
-                         <button
-                           onClick={() => handleDelete(category)}
-                           className="p-2 text-gray-400 hover:text-red-500 touch-manipulation"
-                         >
-                           <Trash2 size={18} />
-                         </button>
+                        <button
+                          onClick={() => handleDelete(category)}
+                          disabled={!!deletingId}
+                          className="p-2 text-gray-400 hover:text-red-500 touch-manipulation disabled:opacity-50"
+                        >
+                          <Trash2 size={18} />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -313,5 +374,20 @@ export default function CategoriesPage() {
       />
 
     </PageShell>
+  )
+}
+
+export default function CategoriesPage() {
+  return (
+    <Suspense
+      fallback={
+        <PageShell>
+          <Header title="Catégories" />
+          <LoadingSpinner />
+        </PageShell>
+      }
+    >
+      <CategoriesPageContent />
+    </Suspense>
   )
 }

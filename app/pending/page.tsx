@@ -25,10 +25,8 @@ import LineItemsCollapse from '@/components/LineItemsCollapse';
 
 function sourceLabel(item: PendingTransaction) {
   if (item.source === 'voice' || item.source_type === 'voice') return 'Audio';
-  if (item.source === 'ai_scan' || item.source_type === 'image') return 'Image';
-  if (item.source === 'notification') {
-    return item.source_type === 'ai' ? 'Notification (IA)' : 'Notification';
-  }
+  if (item.source === 'ai_scan' || item.source_type === 'image') return 'Ticket';
+  if (item.source === 'notification') return 'Notification';
   if (item.source === 'sms') return 'SMS';
   return 'Manuel';
 }
@@ -62,8 +60,8 @@ export default function PendingTransactionsPage() {
   });
   const [busy, setBusy] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) setLoading(true);
     try {
       const [list, w, c] = await Promise.all([
         pendingTransactionApi.getAll('pending'),
@@ -76,7 +74,7 @@ export default function PendingTransactionsPage() {
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Erreur chargement');
     } finally {
-      setLoading(false);
+      if (!opts?.quiet) setLoading(false);
     }
   }, []);
 
@@ -102,12 +100,49 @@ export default function PendingTransactionsPage() {
     });
   };
 
-  const cancelEdit = () => setEditingId(null);
+  const buildEditPayload = () => ({
+    amount: parseFloat(form.amount),
+    description: form.description,
+    wallet_id: form.wallet_id,
+    category_id: form.category_id || null,
+    type: form.type,
+    ...(form.ai_items && form.ai_items.length > 0
+      ? { ai_items: sanitizeLineItems(form.ai_items) }
+      : {}),
+  });
 
-  const toggleEdit = (item: PendingTransaction) => {
+  /** Enregistre les modifications (libellés inclus) sans valider. */
+  const saveEdit = async (id: string, options?: { close?: boolean; silent?: boolean }) => {
+    if (busy) return;
+    setBusy(id);
+    try {
+      await pendingTransactionApi.update(id, buildEditPayload());
+      await load({ quiet: true });
+      if (options?.close !== false) setEditingId(null);
+      if (!options?.silent) toast.success('Modifications enregistrées');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Enregistrement impossible');
+      throw e;
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const toggleEdit = async (item: PendingTransaction) => {
     if (editingId === item._id) {
-      cancelEdit();
+      try {
+        await saveEdit(item._id);
+      } catch {
+        /* toast déjà affiché */
+      }
       return;
+    }
+    if (editingId) {
+      try {
+        await saveEdit(editingId, { silent: true });
+      } catch {
+        return;
+      }
     }
     startEdit(item);
   };
@@ -122,21 +157,10 @@ export default function PendingTransactionsPage() {
   };
 
   const validate = async (id: string) => {
+    if (busy) return;
     setBusy(id);
     try {
-      const payload =
-        editingId === id
-          ? {
-              amount: parseFloat(form.amount),
-              description: form.description,
-              wallet_id: form.wallet_id,
-              category_id: form.category_id || null,
-              type: form.type,
-              ...(form.ai_items && form.ai_items.length > 0
-                ? { ai_items: sanitizeLineItems(form.ai_items) }
-                : {}),
-            }
-          : undefined;
+      const payload = editingId === id ? buildEditPayload() : undefined;
       await pendingTransactionApi.validate(id, payload);
       toast.success('Transaction enregistrée');
       setEditingId(null);
@@ -149,6 +173,7 @@ export default function PendingTransactionsPage() {
   };
 
   const reject = async (id: string) => {
+    if (busy) return;
     setBusy(id);
     try {
       await pendingTransactionApi.reject(id);
@@ -185,15 +210,17 @@ export default function PendingTransactionsPage() {
             <article key={item._id} className="card p-4 space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-primary-600 uppercase tracking-wide">
+                  <p className="text-xs font-medium text-primary-700">
                     {sourceLabel(item)}
                     {item.document_type ? ` · ${item.document_type}` : ''}
                   </p>
-                  <p className="font-semibold text-gray-900 mt-1">
+                  <p className="font-semibold text-ink mt-1">
                     {item.type === 'income' ? '+' : '−'}
                     {formatAmount(item.amount)}
                   </p>
-                  <p className="text-sm text-gray-600">{item.description}</p>
+                  <p className="text-sm text-ink-soft">
+                    {editingId === item._id ? form.description : item.description}
+                  </p>
                   {item.ai_items && item.ai_items.length > 1 && editingId !== item._id && (
                     <div className="mt-2">
                       <LineItemsCollapse items={item.ai_items} />
@@ -292,7 +319,7 @@ export default function PendingTransactionsPage() {
                   </label>
                   {form.ai_items && form.ai_items.length > 1 && (
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">Articles</p>
+                      <p className="text-sm font-medium text-ink mb-2">Articles</p>
                       <LineItemsCollapse
                         items={form.ai_items}
                         editable
@@ -301,6 +328,15 @@ export default function PendingTransactionsPage() {
                       />
                     </div>
                   )}
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    fullWidth
+                    onClick={() => void saveEdit(item._id)}
+                    loading={busy === item._id}
+                  >
+                    {busy === item._id ? 'Enregistrement…' : 'Enregistrer les modifications'}
+                  </Button>
                 </div>
               )}
 
@@ -309,7 +345,7 @@ export default function PendingTransactionsPage() {
                   type="button"
                   fullWidth
                   onClick={() => validate(item._id)}
-                  disabled={busy === item._id}
+                  loading={busy === item._id}
                   className="flex items-center justify-center gap-2"
                   aria-label="Confirmer"
                 >
@@ -319,7 +355,7 @@ export default function PendingTransactionsPage() {
                   type="button"
                   onClick={() => toggleEdit(item)}
                   disabled={busy === item._id}
-                  className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 touch-manipulation"
+                  className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 touch-manipulation disabled:opacity-50"
                   aria-label={editingId === item._id ? 'Fermer la modification' : 'Modifier'}
                   aria-expanded={editingId === item._id}
                 >
@@ -329,7 +365,7 @@ export default function PendingTransactionsPage() {
                   type="button"
                   onClick={() => reject(item._id)}
                   disabled={busy === item._id}
-                  className="px-4 py-2 rounded-xl border border-red-100 text-red-600 hover:bg-red-50 touch-manipulation"
+                  className="px-4 py-2 rounded-xl border border-red-100 text-red-600 hover:bg-red-50 touch-manipulation disabled:opacity-50"
                   aria-label="Supprimer"
                 >
                   <Trash2 size={18} />

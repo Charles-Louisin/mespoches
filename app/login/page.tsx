@@ -28,7 +28,7 @@ import {
 } from '@/lib/loginValidation'
 import { toast } from 'sonner'
 import { getGoogleOAuthOrigin } from '@/lib/google-oauth-origin'
-import { SmsMonitor } from '@/lib/capacitor/app-notifications'
+import LoadingBar from '@/components/LoadingBar'
 
 type TouchedState = Partial<Record<LoginField, boolean>>
 
@@ -191,7 +191,44 @@ function LoginPageContent() {
     setShowEmailForm(true)
   }
 
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+    let removeFinished: (() => void) | undefined
+    let removeUrlOpen: (() => void) | undefined
+
+    void (async () => {
+      try {
+        const finished = await Browser.addListener('browserFinished', () => {
+          setGoogleLoading(false)
+        })
+        removeFinished = () => {
+          void finished.remove()
+        }
+      } catch {
+        /* ignore */
+      }
+      try {
+        const { App } = await import('@capacitor/app')
+        const urlOpen = await App.addListener('appUrlOpen', () => {
+          setGoogleLoading(false)
+          void Browser.close().catch(() => undefined)
+        })
+        removeUrlOpen = () => {
+          void urlOpen.remove()
+        }
+      } catch {
+        /* ignore */
+      }
+    })()
+
+    return () => {
+      removeFinished?.()
+      removeUrlOpen?.()
+    }
+  }, [])
+
   const startGoogle = async () => {
+    if (googleLoading || loading) return
     setGoogleLoading(true)
     const isNative = Capacitor.isNativePlatform()
     const origin = getGoogleOAuthOrigin() || window.location.origin
@@ -206,24 +243,25 @@ function LoginPageContent() {
       sessionStorage.setItem('mp_oauth_client_nonce', clientNonce)
       url += `?mobile=1&client_nonce=${encodeURIComponent(clientNonce)}`
       try {
-        // Chrome système (évite WebView / Custom Tab → « Accès bloqué »)
-        await SmsMonitor.openExternalUrl({ url })
+        await Browser.open({
+          url,
+          presentationStyle: 'popover',
+          toolbarColor: '#2563EB',
+        })
       } catch {
-        try {
-          await Browser.open({ url, presentationStyle: 'popover' })
-        } catch {
-          sessionStorage.removeItem('mp_oauth_client_nonce')
-          setGoogleLoading(false)
-          toast.error('Impossible d’ouvrir Chrome pour Google.')
-        }
+        sessionStorage.removeItem('mp_oauth_client_nonce')
+        setGoogleLoading(false)
+        toast.error('Impossible d’ouvrir Google dans l’app.')
       }
       return
     }
+    url += url.includes('?') ? '&web=1' : '?web=1'
     window.location.href = url
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (loading || googleLoading) return
     setSubmitAttempted(true)
 
     if (!isLoginFormValid(formValues, isLogin ? undefined : availability)) {
@@ -288,19 +326,20 @@ function LoginPageContent() {
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
           <div className="flex flex-col items-center mb-8">
-            <AppLogo size="lg" priority className="mb-4 shadow-lg shadow-[#2563EB]/30" />
-            <h1 className="text-3xl font-bold text-gray-900">MES POCHES</h1>
-            <p className="text-gray-500 mt-2 text-center">
-              {isLogin ? 'Connectez-vous à votre compte' : 'Créez votre compte'}
-            </p>
+            <AppLogo size="lg" priority className="mb-4" />
+            <h1 className="text-2xl font-semibold text-ink">MES POCHES</h1>
           </div>
 
           <div className="card p-6 space-y-4">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              fullWidth
+              size="lg"
               onClick={startGoogle}
-              disabled={loading || googleLoading}
-              className="w-full flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-60 touch-manipulation"
+              loading={googleLoading}
+              disabled={loading}
+              className="gap-3 border-surface-line bg-white text-ink hover:bg-surface !shadow-none"
             >
               <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden>
                 <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.2 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.5-.4-3.5z"/>
@@ -309,16 +348,14 @@ function LoginPageContent() {
                 <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l.1.1 6.2 5.2C39.2 37.3 44 32 44 24c0-1.3-.1-2.5-.4-3.5z"/>
               </svg>
               {googleLoading ? 'Redirection…' : 'Continuer avec Google'}
-            </button>
+            </Button>
 
             <div className="relative py-1">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
+                <div className="w-full border-t border-surface-line" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-3 text-gray-400 uppercase tracking-wide">
-                  ou
-                </span>
+                <span className="bg-white px-3 text-ink-mute">ou</span>
               </div>
             </div>
 
@@ -326,7 +363,7 @@ function LoginPageContent() {
               <button
                 type="button"
                 onClick={() => setShowEmailForm(true)}
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 touch-manipulation"
+                className="w-full rounded-xl border border-surface-line px-4 py-3 text-sm font-medium text-ink hover:bg-surface touch-manipulation"
               >
                 Continuer avec email
               </button>
@@ -384,7 +421,7 @@ function LoginPageContent() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-[2.35rem] text-gray-500 touch-manipulation z-10"
+                    className="absolute right-3 top-[2.35rem] text-ink-mute touch-manipulation z-10"
                     tabIndex={-1}
                     aria-label={
                       showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'
@@ -418,7 +455,7 @@ function LoginPageContent() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-[2.35rem] text-gray-500 touch-manipulation z-10"
+                      className="absolute right-3 top-[2.35rem] text-ink-mute touch-manipulation z-10"
                       tabIndex={-1}
                       aria-label={
                         showConfirmPassword
@@ -437,7 +474,8 @@ function LoginPageContent() {
 
                 <Button
                   type="submit"
-                  disabled={loading || (submitAttempted && !formValid)}
+                  loading={loading}
+                  disabled={submitAttempted && !formValid}
                   fullWidth
                   size="lg"
                 >
@@ -448,18 +486,12 @@ function LoginPageContent() {
                       : 'Créer mon compte'}
                 </Button>
 
-                {!isLogin && (
-                  <p className="text-center text-xs text-primary-600 font-medium -mt-1">
-                    1 mois Premium offert lors de la création du compte
-                  </p>
-                )}
-
-                <p className="text-center text-sm text-gray-600">
+                <p className="text-center text-sm text-ink-soft">
                   {isLogin ? 'Pas encore de compte ?' : 'Déjà un compte ?'}
                   <button
                     type="button"
                     onClick={switchMode}
-                    className="ml-2 text-primary-500 hover:text-primary-600 font-semibold touch-manipulation"
+                    className="ml-2 text-ink font-medium touch-manipulation"
                   >
                     {isLogin ? "S'inscrire" : 'Se connecter'}
                   </button>
@@ -478,7 +510,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-surface flex items-center justify-center">
-          <p className="text-gray-500 text-sm">Chargement…</p>
+          <LoadingBar />
         </div>
       }
     >

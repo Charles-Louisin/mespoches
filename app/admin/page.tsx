@@ -87,39 +87,39 @@ export default function AdminDashboardPage() {
         <main className="max-w-5xl mx-auto px-4 py-6 space-y-6">
           {/* Stats globales */}
           {overview && (
-            <section className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Vue d’ensemble</h2>
+            <section className="bg-white rounded-xl p-4 md:p-6 border border-surface-line">
+              <h2 className="text-lg font-semibold text-ink mb-4">Vue d’ensemble</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-xs uppercase tracking-wide text-gray-500">Utilisateurs</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{overview.usersCount}</p>
+                <div className="bg-surface rounded-lg p-4">
+                  <p className="text-xs uppercase tracking-wide text-ink-mute">Utilisateurs</p>
+                  <p className="text-2xl font-semibold text-ink mt-1">{overview.usersCount}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-xs uppercase tracking-wide text-gray-500">Portefeuilles</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{overview.walletsCount}</p>
+                <div className="bg-surface rounded-lg p-4">
+                  <p className="text-xs uppercase tracking-wide text-ink-mute">Portefeuilles</p>
+                  <p className="text-2xl font-semibold text-ink mt-1">{overview.walletsCount}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-xs uppercase tracking-wide text-gray-500">Transactions</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{overview.transactionsCount}</p>
+                <div className="bg-surface rounded-lg p-4">
+                  <p className="text-xs uppercase tracking-wide text-ink-mute">Transactions</p>
+                  <p className="text-2xl font-semibold text-ink mt-1">{overview.transactionsCount}</p>
                 </div>
               </div>
 
               {/* Dernières connexions */}
               <div className="mt-6">
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                <h3 className="text-sm font-semibold text-ink mb-2">
                   Dernières connexions
                 </h3>
-                <div className="max-h-60 overflow-y-auto border border-gray-100 rounded-lg">
+                <div className="max-h-60 overflow-y-auto border border-surface-line rounded-lg">
                   <table className="min-w-full text-sm">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-surface">
                       <tr>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 py-2 text-left text-xs font-medium text-ink-mute uppercase tracking-wider">
                           Utilisateur
                         </th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 py-2 text-left text-xs font-medium text-ink-mute uppercase tracking-wider">
                           Rôle
                         </th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 py-2 text-left text-xs font-medium text-ink-mute uppercase tracking-wider">
                           Dernière connexion
                         </th>
                       </tr>
@@ -129,18 +129,18 @@ export default function AdminDashboardPage() {
                         <tr key={index}>
                           <td className="px-3 py-2">
                             <div className="flex flex-col">
-                              <span className="font-medium text-gray-900">
+                              <span className="font-medium text-ink">
                                 {u.name || '—'}
                               </span>
-                              <span className="text-xs text-gray-500">{u.email}</span>
+                              <span className="text-xs text-ink-mute">{u.email}</span>
                             </div>
                           </td>
                           <td className="px-3 py-2">
-                            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-surface-muted text-ink-soft">
                               {u.role === 'admin' ? 'Admin' : 'Utilisateur'}
                             </span>
                           </td>
-                          <td className="px-3 py-2 text-gray-700">
+                          <td className="px-3 py-2 text-ink-soft">
                             {formatDateTime(u.lastLoginAt)}
                           </td>
                         </tr>
@@ -155,24 +155,24 @@ export default function AdminDashboardPage() {
           {/* Utilisateurs + détails */}
           <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
             {/* Liste des utilisateurs */}
-            <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-white rounded-xl p-4 md:p-6 border border-surface-line">
+              <h2 className="text-lg font-semibold text-ink mb-4">
                 Utilisateurs ({users.length})
               </h2>
               <div className="max-h-[480px] overflow-y-auto -mx-4 md:mx-0">
                 <table className="min-w-full text-sm">
-                  <thead className="bg-gray-50 sticky top-0">
+                  <thead className="bg-surface sticky top-0">
                     <tr>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-xs font-medium text-ink-mute uppercase tracking-wider">
                         Utilisateur
                       </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-xs font-medium text-ink-mute uppercase tracking-wider">
                         Portefeuilles
                       </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-xs font-medium text-ink-mute uppercase tracking-wider">
                         Transactions
                       </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-xs font-medium text-ink-mute uppercase tracking-wider">
                         Dernière connexion
                       </th>
                     </tr>
@@ -181,29 +181,29 @@ export default function AdminDashboardPage() {
                     {users.map((u) => (
                       <tr
                         key={u.id}
-                        className={`cursor-pointer hover:bg-gray-50 ${
-                          selectedUserId === u.id ? 'bg-gray-50' : ''
+                        className={`cursor-pointer hover:bg-surface ${
+                          selectedUserId === u.id ? 'bg-surface' : ''
                         }`}
                         onClick={() => loadUserDetail(u.id)}
                       >
                         <td className="px-3 py-2">
                           <div className="flex flex-col">
-                            <span className="font-medium text-gray-900">
+                            <span className="font-medium text-ink">
                               {u.name || '—'}
                             </span>
-                            <span className="text-xs text-gray-500">{u.email}</span>
-                            <span className="text-[10px] text-gray-400">
+                            <span className="text-xs text-ink-mute">{u.email}</span>
+                            <span className="text-[10px] text-ink-mute">
                               {u.role === 'admin' ? 'Admin' : 'Utilisateur'}
                             </span>
                           </div>
                         </td>
-                        <td className="px-3 py-2 text-gray-700">
+                        <td className="px-3 py-2 text-ink-soft">
                           {u.walletsCount}
                         </td>
-                        <td className="px-3 py-2 text-gray-700">
+                        <td className="px-3 py-2 text-ink-soft">
                           {u.transactionsCount}
                         </td>
-                        <td className="px-3 py-2 text-gray-700 text-xs">
+                        <td className="px-3 py-2 text-ink-soft text-xs">
                           {formatDateTime(u.lastLoginAt)}
                         </td>
                       </tr>
@@ -214,8 +214,8 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Détails utilisateur sélectionné */}
-            <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200 w-full">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-white rounded-xl p-4 md:p-6 border border-surface-line w-full">
+              <h2 className="text-lg font-semibold text-ink mb-4">
                 Détails utilisateur
               </h2>
 
@@ -226,7 +226,7 @@ export default function AdminDashboardPage() {
               )}
 
               {!loadingUser && !selectedUserDetail && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-ink-mute">
                   Sélectionnez un utilisateur dans la liste pour voir ses détails.
                 </p>
               )}
@@ -234,14 +234,14 @@ export default function AdminDashboardPage() {
               {!loadingUser && selectedUserDetail && (
                 <div className="space-y-4 text-sm">
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-500">
+                    <p className="text-xs uppercase tracking-wide text-ink-mute">
                       Informations
                     </p>
-                    <p className="mt-1 font-semibold text-gray-900">
+                    <p className="mt-1 font-semibold text-ink">
                       {selectedUserDetail.user.name || '—'}
                     </p>
-                    <p className="text-gray-700">{selectedUserDetail.user.email}</p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-ink-soft">{selectedUserDetail.user.email}</p>
+                    <p className="text-xs text-ink-mute mt-1">
                       Rôle :{' '}
                       <span className="font-semibold">
                         {selectedUserDetail.user.role === 'admin'
@@ -249,50 +249,50 @@ export default function AdminDashboardPage() {
                           : 'Utilisateur'}
                       </span>
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-ink-mute">
                       Inscription : {formatDateTime(selectedUserDetail.user.created_at)}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-ink-mute">
                       Dernière connexion :{' '}
                       {formatDateTime(selectedUserDetail.user.lastLoginAt)}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+                    <p className="text-xs uppercase tracking-wide text-ink-mute mb-1">
                       Portefeuilles ({selectedUserDetail.wallets.length})
                     </p>
                     <div className="space-y-2 max-h-40 overflow-y-auto">
                       {selectedUserDetail.wallets.map((w) => (
                         <div
                           key={w._id}
-                          className="border border-gray-100 rounded-lg px-3 py-2 flex items-center justify-between"
+                          className="border border-surface-line rounded-lg px-3 py-2 flex items-center justify-between"
                         >
                           <div>
-                            <p className="font-medium text-gray-900">{w.name}</p>
-                            <p className="text-xs text-gray-500">{w.currency}</p>
+                            <p className="font-medium text-ink">{w.name}</p>
+                            <p className="text-xs text-ink-mute">{w.currency}</p>
                           </div>
-                          <p className="font-semibold text-gray-900 text-sm">
+                          <p className="font-semibold text-ink text-sm">
                             {formatCurrency(w.current_balance)}
                           </p>
                         </div>
                       ))}
 
                       {selectedUserDetail.wallets.length === 0 && (
-                        <p className="text-xs text-gray-400">Aucun portefeuille.</p>
+                        <p className="text-xs text-ink-mute">Aucun portefeuille.</p>
                       )}
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+                    <p className="text-xs uppercase tracking-wide text-ink-mute mb-1">
                       Dernières transactions ({selectedUserDetail.transactions.length})
                     </p>
                     <div className="space-y-1 max-h-48 overflow-y-auto">
                       {selectedUserDetail.transactions.map((t) => (
                         <div
                           key={t._id}
-                          className="border border-gray-100 rounded-lg px-3 py-2 flex items-center justify-between"
+                          className="border border-surface-line rounded-lg px-3 py-2 flex items-center justify-between"
                         >
                           <div className="flex flex-col">
                             <span
@@ -310,12 +310,12 @@ export default function AdminDashboardPage() {
                                 ? 'Dépense'
                                 : 'Transfert'}
                             </span>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-ink-mute">
                               {t.category_id && typeof t.category_id === 'object'
                                 ? (t.category_id as any).name
                                 : ''}
                             </span>
-                            <span className="text-[10px] text-gray-400">
+                            <span className="text-[10px] text-ink-mute">
                               {formatDateTime(t.date)}
                             </span>
                           </div>
@@ -332,7 +332,7 @@ export default function AdminDashboardPage() {
                               {t.type === 'expense' ? '-' : '+'}
                               {formatCurrency(t.amount)}
                             </p>
-                            <p className="text-[10px] text-gray-400">
+                            <p className="text-[10px] text-ink-mute">
                               Solde après : {formatCurrency(t.balance_after)}
                             </p>
                           </div>
@@ -340,7 +340,7 @@ export default function AdminDashboardPage() {
                       ))}
 
                       {selectedUserDetail.transactions.length === 0 && (
-                        <p className="text-xs text-gray-400">Aucune transaction.</p>
+                        <p className="text-xs text-ink-mute">Aucune transaction.</p>
                       )}
                     </div>
                   </div>
@@ -350,20 +350,20 @@ export default function AdminDashboardPage() {
           </section>
 
           {/* Utilisateurs actifs quotidiens */}
-          <section className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <section className="bg-white rounded-xl p-4 md:p-6 border border-surface-line">
+            <h2 className="text-lg font-semibold text-ink mb-4">
               Utilisateurs actifs par jour (14 derniers jours)
             </h2>
             {dailyActiveUsers.length === 0 ? (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-ink-mute">
                 Pas encore de données de connexion suffisantes.
               </p>
             ) : (
               <div className="space-y-2">
                 {dailyActiveUsers.map((d) => (
                   <div key={d.date} className="flex items-center gap-3 text-sm">
-                    <div className="w-24 text-gray-600">{d.date}</div>
-                    <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                    <div className="w-24 text-ink-soft">{d.date}</div>
+                    <div className="flex-1 bg-surface-muted rounded-full h-2 overflow-hidden">
                       <div
                         className="bg-indigo-500 h-2 rounded-full"
                         style={{
@@ -371,7 +371,7 @@ export default function AdminDashboardPage() {
                         }}
                       />
                     </div>
-                    <div className="w-10 text-right font-semibold text-gray-900">
+                    <div className="w-10 text-right font-semibold text-ink">
                       {d.activeUsers}
                     </div>
                   </div>

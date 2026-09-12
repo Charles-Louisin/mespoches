@@ -23,7 +23,7 @@ public final class PendingApiPoster {
     }
 
     public static void postSms(Context ctx, String apiBase, String token, String text, String fingerprint) {
-        MesPochesNotifier.showProcessing(ctx);
+        // Pas de notif « analyse en cours » : seule « Transaction prête » à la fin (201).
         String json = "{\"text\":" + jsonEscape(text) + "}";
         post(ctx, apiBase + "/pending-transactions/parse-sms", token, json, fingerprint);
     }
@@ -45,7 +45,7 @@ public final class PendingApiPoster {
             String body,
             String packageName,
             String fingerprint) {
-        MesPochesNotifier.showProcessing(ctx);
+        // Pas de notif « analyse en cours » pendant la lecture SMS/notif.
         StringBuilder sb = new StringBuilder();
         sb.append("{\"title\":").append(jsonEscape(title));
         sb.append(",\"body\":").append(jsonEscape(body));

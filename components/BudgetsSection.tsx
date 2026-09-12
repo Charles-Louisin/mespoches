@@ -65,7 +65,7 @@ export default function BudgetsSection({
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!categoryId || !limitAmount) return
+    if (!categoryId || !limitAmount || saving) return
     try {
       setSaving(true)
       await budgetApi.create({
@@ -94,7 +94,7 @@ export default function BudgetsSection({
 
   const handleUpdate = async (id: string) => {
     const limit = parseFloat(editLimit)
-    if (!limit || limit <= 0) return
+    if (!limit || limit <= 0 || saving) return
     try {
       setSaving(true)
       await budgetApi.update(id, limit)
@@ -110,13 +110,17 @@ export default function BudgetsSection({
   }
 
   const handleDelete = async (id: string) => {
+    if (saving) return
     try {
+      setSaving(true)
       await budgetApi.delete(id)
       toast.success('Budget supprimé')
       invalidateFinancialCaches()
       load()
     } catch (err) {
       onApiError(err, 'Erreur lors de la suppression')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -154,15 +158,16 @@ export default function BudgetsSection({
                     <Button
                       type="button"
                       className="flex-1"
-                      disabled={saving}
+                      loading={saving}
                       onClick={() => handleUpdate(b._id)}
                     >
-                      Enregistrer
+                      {saving ? 'Enregistrement…' : 'Enregistrer'}
                     </Button>
                     <Button
                       type="button"
                       variant="secondary"
                       className="flex-1"
+                      disabled={saving}
                       onClick={() => setEditingId(null)}
                     >
                       Annuler
@@ -182,7 +187,8 @@ export default function BudgetsSection({
                           <button
                             type="button"
                             onClick={() => startEdit(b)}
-                            className="p-1 text-gray-400 hover:text-primary-600"
+                            disabled={saving}
+                            className="p-1 text-gray-400 hover:text-primary-600 disabled:opacity-50"
                             aria-label="Modifier"
                           >
                             <Pencil size={16} />
@@ -190,7 +196,8 @@ export default function BudgetsSection({
                           <button
                             type="button"
                             onClick={() => handleDelete(b._id)}
-                            className="p-1 text-gray-400 hover:text-red-600"
+                            disabled={saving}
+                            className="p-1 text-gray-400 hover:text-red-600 disabled:opacity-50"
                             aria-label="Supprimer"
                           >
                             <Trash2 size={16} />
@@ -257,8 +264,8 @@ export default function BudgetsSection({
               onChange={(e) => setLimitAmount(e.target.value)}
               min={0}
             />
-            <Button type="submit" disabled={saving} className="w-full">
-              Ajouter un budget
+            <Button type="submit" loading={saving} className="w-full">
+              {saving ? 'Ajout…' : 'Ajouter un budget'}
             </Button>
           </form>
         )}

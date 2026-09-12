@@ -23,6 +23,7 @@ export default function PlannedExpensesInfoModal({
   const [saving, setSaving] = useState(false)
 
   const handleClose = async () => {
+    if (saving) return
     if (dontShowAgain) {
       try {
         setSaving(true)
@@ -133,7 +134,7 @@ export default function PlannedExpensesInfoModal({
                 type="button"
                 fullWidth
                 className="mt-4"
-                disabled={saving}
+                loading={saving}
                 onClick={() => void handleClose()}
               >
                 {saving ? 'Enregistrement...' : 'Compris'}

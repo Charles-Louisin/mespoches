@@ -4,28 +4,13 @@ import {
   applyAuthCookies,
   extractAuthSession,
 } from '@/lib/server/session-cookies';
+import {
+  parseOAuthState,
+  resolveCallbackOrigin,
+} from '@/lib/server/oauth-origin';
 
 const NONCE_COOKIE = 'google_oauth_client_nonce';
 const STATE_COOKIE = 'google_oauth_state';
-
-function appOrigin(request: NextRequest): string {
-  const override = (
-    process.env.GOOGLE_REDIRECT_ORIGIN ||
-    process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_ORIGIN ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    ''
-  ).replace(/\/$/, '');
-  if (override.startsWith('http')) return override;
-
-  const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
-  const forwardedProto =
-    request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() || 'https';
-  if (forwardedHost) {
-    return `${forwardedProto}://${forwardedHost}`.replace(/\/$/, '');
-  }
-
-  return request.nextUrl.origin;
-}
 
 function clearOAuthCookies(response: NextResponse): void {
   for (const name of [STATE_COOKIE, NONCE_COOKIE]) {
@@ -39,15 +24,17 @@ function clearOAuthCookies(response: NextResponse): void {
 
 /** Callback OAuth Google → session MES POCHES (7 jours). */
 export async function GET(request: NextRequest) {
-  const origin = appOrigin(request);
   const code = request.nextUrl.searchParams.get('code');
   const oauthError = request.nextUrl.searchParams.get('error');
   const returnedState = request.nextUrl.searchParams.get('state');
   const stateCookie = request.cookies.get(STATE_COOKIE)?.value;
-  const separator = stateCookie?.lastIndexOf(':') ?? -1;
-  const expectedState =
-    separator >= 0 ? stateCookie?.slice(0, separator) : undefined;
-  const mobile = separator >= 0 && stateCookie?.slice(separator + 1) === '1';
+  const parsedState = parseOAuthState(returnedState);
+  const parsedCookie = parseOAuthState(stateCookie ?? null);
+  const mobile =
+    parsedState?.mobile === true ||
+    parsedCookie?.mobile === true ||
+    Boolean(request.cookies.get(NONCE_COOKIE)?.value);
+  const origin = resolveCallbackOrigin(request, mobile);
   const clientNonce = request.cookies.get(NONCE_COOKIE)?.value;
 
   if (oauthError || !code) {
@@ -57,7 +44,14 @@ export async function GET(request: NextRequest) {
     clearOAuthCookies(next);
     return next;
   }
-  if (!returnedState || !expectedState || returnedState !== expectedState) {
+  if (
+    !returnedState ||
+    !stateCookie ||
+    returnedState !== stateCookie ||
+    !parsedState ||
+    !parsedCookie ||
+    parsedState.id !== parsedCookie.id
+  ) {
     const next = NextResponse.redirect(
       new URL('/login?error=google_state', origin)
     );
@@ -153,7 +147,7 @@ export async function GET(request: NextRequest) {
       return next;
     }
 
-    const next = NextResponse.redirect(new URL('/auth/complete', request.url));
+    const next = NextResponse.redirect(new URL('/auth/complete', `${origin}/`));
     applyAuthCookies(next, session.token, session.emailVerified);
     clearOAuthCookies(next);
     return next;
