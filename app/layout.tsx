@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import { Figtree, Fraunces } from 'next/font/google'
 import { Toaster } from 'sonner'
+import SyncIndicator from '@/components/SyncIndicator'
 import Providers from '@/components/Providers'
-import NativeAppCookie from '@/components/NativeAppCookie'
-import WebLandingGate from '@/components/WebLandingGate'
-import AppChrome from '@/components/AppChrome'
+import CapacitorBridge from '@/components/CapacitorBridge'
+import AppBootLoader from '@/components/AppBootLoader'
+import NativePermissionsOnLaunch from '@/components/NativePermissionsOnLaunch'
+import AutomationBridge from '@/components/AutomationBridge'
 import './globals.css'
 
 const figtree = Figtree({
@@ -63,10 +65,12 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${figtree.variable} ${fraunces.variable}`}>
       <body className={`${figtree.className} font-sans`}>
-        <NativeAppCookie />
-        <WebLandingGate />
         <Providers>{children}</Providers>
-        <AppChrome />
+        <AppBootLoader />
+        <NativePermissionsOnLaunch />
+        <AutomationBridge />
+        <CapacitorBridge />
+        <SyncIndicator />
         <Toaster position="top-center" richColors duration={3000} />
       </body>
     </html>

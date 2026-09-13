@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { Download, LogIn } from 'lucide-react'
 import AppLogo from '@/components/AppLogo'
-import { usePwaInstall } from '@/hooks/usePwaInstall'
 import HeaderActions from '@/components/HeaderActions'
 
 interface HomeHeaderProps {
@@ -12,8 +11,6 @@ interface HomeHeaderProps {
 }
 
 export default function HomeHeader({ userName, isLoggedIn }: HomeHeaderProps) {
-  const { isInstalled, install } = usePwaInstall()
-
   return (
     <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur-sm">
       <div className="max-w-md mx-auto px-4 pt-4 pb-2">
@@ -33,17 +30,14 @@ export default function HomeHeader({ userName, isLoggedIn }: HomeHeaderProps) {
           <div className="flex items-center gap-1">
             {isLoggedIn ? (
               <>
-                {!isInstalled && (
-                  <button
-                    type="button"
-                    onClick={install}
-                    className="p-2 text-gray-600 hover:text-primary-500 touch-manipulation"
-                    aria-label="Installer l'application"
-                    title="Installer l'application"
-                  >
-                    <Download size={22} strokeWidth={1.75} />
-                  </button>
-                )}
+                <Link
+                  href="/download"
+                  className="p-2 text-gray-600 hover:text-primary-500 touch-manipulation"
+                  aria-label="Télécharger l'application"
+                  title="Télécharger l'application"
+                >
+                  <Download size={22} strokeWidth={1.75} />
+                </Link>
                 <HeaderActions />
               </>
             ) : (
