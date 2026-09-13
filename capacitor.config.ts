@@ -55,6 +55,8 @@ const allowNavigation = Array.from(
       serverHost,
       'mespoches.vercel.app',
       '*.vercel.app',
+      'mespoches.store',
+      'www.mespoches.store',
       'mespochesbackend-production.up.railway.app',
       '*.up.railway.app',
       'accounts.google.com',
