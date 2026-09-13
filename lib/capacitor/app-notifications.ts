@@ -15,6 +15,7 @@ export interface SmsMonitorPlugin {
   storeAuthToken(options: { token: string; apiUrl?: string }): Promise<void>;
   clearAuthToken(): Promise<void>;
   requestSmsPermission(): Promise<void>;
+  isNotificationListenerEnabled(): Promise<{ enabled: boolean }>;
   openNotificationAccessSettings(): Promise<void>;
   openExternalUrl(options: { url: string }): Promise<void>;
 }
@@ -34,24 +35,30 @@ export async function syncSmsMonitorToken(token: string | undefined): Promise<vo
   }
 }
 
-/** Demande SMS + accès aux notifications système (une seule fois). */
+/** SMS + accès aux notifications système, tant que ce n’est pas activé. */
 export async function requestAutomationPermissions(): Promise<void> {
   if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') return;
-  if (typeof localStorage !== 'undefined' && localStorage.getItem('automation_perms_asked') === '1') {
-    return;
-  }
+
   try {
     await SmsMonitor.requestSmsPermission();
   } catch {
     /* refus utilisateur */
   }
+
+  let listenerEnabled = false;
+  try {
+    const status = await SmsMonitor.isNotificationListenerEnabled();
+    listenerEnabled = Boolean(status?.enabled);
+  } catch {
+    listenerEnabled = false;
+  }
+
+  if (listenerEnabled) return;
+
   try {
     await SmsMonitor.openNotificationAccessSettings();
   } catch {
     /* non bloquant */
-  }
-  if (typeof localStorage !== 'undefined') {
-    localStorage.setItem('automation_perms_asked', '1');
   }
 }
 

@@ -9,6 +9,7 @@ import android.provider.Settings;
 import android.util.Log;
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKeys;
+import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
@@ -133,6 +134,13 @@ public class SmsMonitorPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void isNotificationListenerEnabled(PluginCall call) {
+        JSObject ret = new JSObject();
+        ret.put("enabled", isNotificationListenerEnabled(getContext()));
+        call.resolve(ret);
+    }
+
+    @PluginMethod
     public void openNotificationAccessSettings(PluginCall call) {
         try {
             Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
@@ -142,6 +150,20 @@ public class SmsMonitorPlugin extends Plugin {
         } catch (Exception e) {
             call.reject("Impossible d'ouvrir les paramètres de notifications");
         }
+    }
+
+    static boolean isNotificationListenerEnabled(Context context) {
+        String pkg = context.getPackageName();
+        String flat = Settings.Secure.getString(
+            context.getContentResolver(),
+            "enabled_notification_listeners"
+        );
+        if (flat == null || flat.isEmpty()) return false;
+        String[] names = flat.split(":");
+        for (String name : names) {
+            if (name != null && name.contains(pkg)) return true;
+        }
+        return false;
     }
 
     /**

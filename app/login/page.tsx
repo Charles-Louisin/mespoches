@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Capacitor } from '@capacitor/core'
-import { Browser } from '@capacitor/browser'
 import AppLogo from '@/components/AppLogo'
 import { Eye, EyeOff } from 'lucide-react'
 import Button from '@/components/Button'
@@ -191,42 +190,6 @@ function LoginPageContent() {
     setShowEmailForm(true)
   }
 
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return
-    let removeFinished: (() => void) | undefined
-    let removeUrlOpen: (() => void) | undefined
-
-    void (async () => {
-      try {
-        const finished = await Browser.addListener('browserFinished', () => {
-          setGoogleLoading(false)
-        })
-        removeFinished = () => {
-          void finished.remove()
-        }
-      } catch {
-        /* ignore */
-      }
-      try {
-        const { App } = await import('@capacitor/app')
-        const urlOpen = await App.addListener('appUrlOpen', () => {
-          setGoogleLoading(false)
-          void Browser.close().catch(() => undefined)
-        })
-        removeUrlOpen = () => {
-          void urlOpen.remove()
-        }
-      } catch {
-        /* ignore */
-      }
-    })()
-
-    return () => {
-      removeFinished?.()
-      removeUrlOpen?.()
-    }
-  }, [])
-
   const startGoogle = async () => {
     if (googleLoading || loading) return
     setGoogleLoading(true)
@@ -243,15 +206,11 @@ function LoginPageContent() {
       sessionStorage.setItem('mp_oauth_client_nonce', clientNonce)
       url += `?mobile=1&client_nonce=${encodeURIComponent(clientNonce)}`
       try {
-        await Browser.open({
-          url,
-          presentationStyle: 'popover',
-          toolbarColor: '#2563EB',
-        })
+        window.location.href = url
       } catch {
         sessionStorage.removeItem('mp_oauth_client_nonce')
         setGoogleLoading(false)
-        toast.error('Impossible d’ouvrir Google dans l’app.')
+        toast.error('Impossible de démarrer Google.')
       }
       return
     }

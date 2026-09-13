@@ -26,7 +26,7 @@ export default function AutomationBridge() {
       await syncSmsMonitorToken(token);
       await scheduleDailyExpenseReminder(20, 0);
 
-      if (!permsRequested.current && token) {
+      if (!permsRequested.current) {
         permsRequested.current = true;
         await requestAutomationPermissions();
       }

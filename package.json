@@ -13,7 +13,8 @@
     "generate-android-brand": "node scripts/generate-android-brand.js",
     "cap:sync": "node scripts/cap-sync.js",
     "cap:open:android": "cap open android",
-    "cap:copy": "cap copy"
+    "cap:copy": "cap copy",
+    "android:apk": "npm run cap:sync && cd android && gradlew.bat assembleDebug"
   },
   "dependencies": {
     "@capacitor-community/speech-recognition": "^7.0.1",

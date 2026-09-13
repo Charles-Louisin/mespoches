@@ -30,13 +30,40 @@ loadEnvLocal();
 
 const serverUrl = process.env.CAPACITOR_SERVER_URL?.replace(/\/$/, '');
 
+function hostFromUrl(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return null;
+  }
+}
+
+const serverHost = hostFromUrl(serverUrl);
+
 if (!serverUrl) {
   console.warn(
     '[Capacitor] CAPACITOR_SERVER_URL non défini — ajoutez-le dans .env.local (ex. https://votre-app.vercel.app)'
   );
 } else {
-  console.log(`[Capacitor] server.url=${serverUrl}`);
+  console.log(`[Capacitor] server.url=${serverUrl} (host=${serverHost})`);
 }
+
+const allowNavigation = Array.from(
+  new Set(
+    [
+      serverHost,
+      'mespoches.vercel.app',
+      '*.vercel.app',
+      'mespochesbackend-production.up.railway.app',
+      '*.up.railway.app',
+      'accounts.google.com',
+      '*.google.com',
+      'localhost',
+      '127.0.0.1',
+    ].filter((h): h is string => Boolean(h))
+  )
+);
 
 const config: CapacitorConfig = {
   appId: 'com.mespoches.app',
@@ -52,15 +79,16 @@ const config: CapacitorConfig = {
       launchShowDuration: 0,
       backgroundColor: '#2563EB',
       androidSplashResourceName: 'splash',
-      showSpinner: false,
+      showSpinner: true,
+      androidSpinnerStyle: 'large',
+      spinnerColor: '#ffffff',
     },
   },
   ...(serverUrl
     ? {
         server: {
           url: serverUrl,
-          androidScheme: 'https',
-          allowNavigation: [serverUrl, `${serverUrl}/*`],
+          allowNavigation,
         },
       }
     : {}),

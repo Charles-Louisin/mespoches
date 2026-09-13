@@ -40,12 +40,16 @@ export async function requestCameraAndGalleryPermission(): Promise<void> {
   await Camera.requestPermissions({ permissions: ['camera', 'photos'] });
 }
 
-/** Dialogue système notifications (préparation rappels futurs). */
+/** Dialogue système notifications (rappels + alertes). */
 export async function requestNotificationPermission(): Promise<void> {
   if (!isNativeApp()) return;
-  const current = await LocalNotifications.checkPermissions();
-  if (current.display === 'granted') return;
-  await LocalNotifications.requestPermissions();
+  try {
+    const current = await LocalNotifications.checkPermissions();
+    if (current.display === 'granted') return;
+    await LocalNotifications.requestPermissions();
+  } catch {
+    /* plugin absent */
+  }
 }
 
 /**
@@ -54,8 +58,8 @@ export async function requestNotificationPermission(): Promise<void> {
  */
 export async function requestNativePermissionsOnLaunch(): Promise<void> {
   if (!isNativeApp()) return;
-  await requestCameraAndGalleryPermission();
   await requestNotificationPermission();
+  await requestCameraAndGalleryPermission();
 }
 
 /** Rétrocompatibilité (ex. upload image si refus au premier lancement). */
