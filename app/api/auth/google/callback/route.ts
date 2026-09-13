@@ -168,6 +168,15 @@ export async function GET(request: NextRequest) {
       return next;
     }
 
+    const { verifyAuthToken } = await import('@/lib/server/jwt');
+    if (!(await verifyAuthToken(session.token))) {
+      const next = NextResponse.redirect(
+        new URL('/login?error=google_session', origin)
+      );
+      clearOAuthCookies(next);
+      return next;
+    }
+
     const next = NextResponse.redirect(new URL('/auth/complete', `${origin}/`));
     applyAuthCookies(next, session.token, session.emailVerified);
     clearOAuthCookies(next);

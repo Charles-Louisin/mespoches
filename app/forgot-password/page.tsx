@@ -111,9 +111,10 @@ function ForgotPasswordContent() {
     try {
       const response = await resetPassword(email, code, password)
       if (response.success) {
-        await hydrateAuthSession()
+        await hydrateAuthSession({ preserveExisting: true })
         toast.success(response.message || 'Mot de passe mis à jour')
-        router.push('/')
+        window.location.assign('/')
+        return
       } else {
         toast.error(response.message || 'Code invalide')
       }

@@ -81,13 +81,13 @@ function LoginPageContent() {
       await hydrateAuthSession()
       if (cancelled) return
       if (getToken() && isAuthenticated()) {
-        router.replace('/')
+        window.location.replace('/')
       }
     })()
     return () => {
       cancelled = true
     }
-  }, [router])
+  }, [])
 
   const formValues: LoginFormValues = useMemo(
     () => ({ isLogin, name, email, password, confirmPassword }),
@@ -233,9 +233,16 @@ function LoginPageContent() {
       if (isLogin) {
         const response = await login(email.trim(), password)
         if (response.success) {
-          await hydrateAuthSession()
+          await hydrateAuthSession({ preserveExisting: true })
           toast.success('Connexion réussie !')
-          router.push('/')
+          // Navigation complète : le cookie HttpOnly doit être pris en compte par le middleware
+          window.location.assign('/')
+          return
+        } else if (response.code === 'JWT_MISMATCH') {
+          toast.error(
+            response.message ||
+              'JWT_SECRET Vercel différent de Railway — alignez les deux variables.'
+          )
         } else if (response.code === 'EMAIL_NOT_VERIFIED') {
           toast.error(response.message || 'Email non vérifié')
           redirectToVerification(email.trim())

@@ -5,6 +5,7 @@ import {
   extractAuthSession,
 } from '@/lib/server/session-cookies';
 import { clientIp, rateLimit } from '@/lib/server/rate-limit';
+import { verifyAuthToken } from '@/lib/server/jwt';
 
 export async function POST(request: NextRequest) {
   const ip = clientIp(request);
@@ -32,6 +33,21 @@ export async function POST(request: NextRequest) {
       data as Parameters<typeof extractAuthSession>[0]
     );
     if (session) {
+      const payload = await verifyAuthToken(session.token);
+      if (!payload) {
+        console.error(
+          '[auth/login] JWT non vérifiable — JWT_SECRET Vercel ≠ Railway ?'
+        );
+        return NextResponse.json(
+          {
+            success: false,
+            code: 'JWT_MISMATCH',
+            message:
+              'Session impossible : JWT_SECRET sur Vercel doit être identique à celui du backend Railway.',
+          },
+          { status: 500 }
+        );
+      }
       applyAuthCookies(next, session.token, session.emailVerified);
     }
 

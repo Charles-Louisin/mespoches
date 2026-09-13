@@ -54,9 +54,16 @@ export const removeToken = (): void => {
 };
 
 /** Charge le JWT depuis le cookie HttpOnly (same-origin). */
-export async function hydrateAuthSession(): Promise<void> {
+export async function hydrateAuthSession(options?: {
+  /** Si true, ne pas effacer un token déjà en mémoire (ex. juste après login). */
+  preserveExisting?: boolean;
+}): Promise<void> {
   if (typeof window === 'undefined') return;
   if (hydratePromise) return hydratePromise;
+
+  const preserveExisting = options?.preserveExisting === true;
+  const previousToken = memoryToken;
+  const previousVerified = memoryEmailVerified;
 
   hydratePromise = (async () => {
     try {
@@ -66,6 +73,11 @@ export async function hydrateAuthSession(): Promise<void> {
         cache: 'no-store',
       });
       if (!res.ok) {
+        if (preserveExisting && previousToken) {
+          memoryToken = previousToken;
+          memoryEmailVerified = previousVerified;
+          return;
+        }
         memoryToken = undefined;
         memoryEmailVerified = false;
         return;
@@ -74,11 +86,19 @@ export async function hydrateAuthSession(): Promise<void> {
       if (data.success && typeof data.token === 'string') {
         memoryToken = data.token;
         memoryEmailVerified = Boolean(data.emailVerified);
+      } else if (preserveExisting && previousToken) {
+        memoryToken = previousToken;
+        memoryEmailVerified = previousVerified;
       } else {
         memoryToken = undefined;
         memoryEmailVerified = false;
       }
     } catch {
+      if (preserveExisting && previousToken) {
+        memoryToken = previousToken;
+        memoryEmailVerified = previousVerified;
+        return;
+      }
       memoryToken = undefined;
       memoryEmailVerified = false;
     }

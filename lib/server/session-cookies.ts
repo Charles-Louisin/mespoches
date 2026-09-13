@@ -11,12 +11,23 @@ function cookieSecure(): boolean {
   return process.env.NODE_ENV === 'production';
 }
 
+/** Partage www / apex (mespoches.store) en production. */
+function cookieDomain(): string | undefined {
+  const raw =
+    process.env.COOKIE_DOMAIN ||
+    process.env.NEXT_PUBLIC_COOKIE_DOMAIN ||
+    '';
+  const trimmed = raw.trim();
+  if (trimmed) return trimmed;
+  return undefined;
+}
+
 const baseCookie = {
   httpOnly: true,
   secure: cookieSecure(),
-  // Lax obligatoire pour OAuth Google (retour cross-site → cookies visibles sur la redirection)
   sameSite: 'lax' as const,
   path: '/',
+  ...(cookieDomain() ? { domain: cookieDomain() } : {}),
 };
 
 export function applyAuthCookies(

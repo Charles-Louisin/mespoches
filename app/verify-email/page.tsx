@@ -67,7 +67,8 @@ export default function VerifyEmailPage() {
         const { startSetupGuide } = await import('@/lib/setupGuide')
         startSetupGuide()
         toast.success('Email vérifié ! Connexion en cours...')
-        router.push('/')
+        window.location.assign('/')
+        return
       } else {
         toast.error(response.message || 'Code invalide')
       }

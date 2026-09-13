@@ -34,6 +34,19 @@ export async function POST(request: NextRequest) {
       data as Parameters<typeof extractAuthSession>[0]
     );
     if (session) {
+      const { verifyAuthToken } = await import('@/lib/server/jwt');
+      const payload = await verifyAuthToken(session.token);
+      if (!payload) {
+        return NextResponse.json(
+          {
+            success: false,
+            code: 'JWT_MISMATCH',
+            message:
+              'Session impossible : JWT_SECRET sur Vercel doit être identique à celui du backend Railway.',
+          },
+          { status: 500 }
+        );
+      }
       applyAuthCookies(next, session.token, session.emailVerified);
     }
     return next;
