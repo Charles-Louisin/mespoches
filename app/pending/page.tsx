@@ -7,7 +7,7 @@ import PageShell from '@/components/PageShell';
 import Header from '@/components/Header';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Button from '@/components/Button';
-import Select from '@/components/Select';
+import SelectModal from '@/components/SelectModal';
 import {
   pendingTransactionApi,
   PendingTransaction,
@@ -273,7 +273,7 @@ export default function PendingTransactionsPage() {
               {editingId === item._id && (
                 <div className="space-y-3 pt-2 border-t border-gray-100">
                  
-                  <Select
+<SelectModal 
                     label="Type"
                     value={form.type}
                     onChange={(e) =>
@@ -294,13 +294,13 @@ export default function PendingTransactionsPage() {
                       className="mt-1 w-full px-3 py-2 border rounded-xl"
                     />
                   </label>
-                  <Select
+<SelectModal 
                     label="Poche"
                     value={form.wallet_id}
                     onChange={(e) => setForm((f) => ({ ...f, wallet_id: e.target.value }))}
                     options={wallets.map((w) => ({ value: w._id, label: w.name }))}
                   />
-                  <Select
+<SelectModal 
                     label="Catégorie"
                     value={form.category_id}
                     onChange={(e) => setForm((f) => ({ ...f, category_id: e.target.value }))}

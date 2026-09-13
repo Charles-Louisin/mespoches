@@ -54,9 +54,18 @@ public class MainActivity extends BridgeActivity {
                                 ? url.getHost().toLowerCase(Locale.ROOT)
                                 : "";
 
-                        // Deep link interne
+                        // Deep link interne : laisser Android le gérer
+                        // Ne JAMAIS essayer de charger mespoches:// dans la WebView
                         if ("mespoches".equals(scheme)) {
-                            return false;
+                            // Créer un intent pour que le système le traite
+                            Intent intent = new Intent(Intent.ACTION_VIEW, url);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            try {
+                                view.getContext().startActivity(intent);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Impossible de traiter le deep link: " + url, e);
+                            }
+                            return true; // Empêcher la WebView de charger l'URL
                         }
 
                         // Tout http(s) de l'app reste dans la WebView

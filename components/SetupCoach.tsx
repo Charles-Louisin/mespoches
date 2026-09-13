@@ -25,6 +25,10 @@ function isFormStep(step: SetupStep): boolean {
   return step === 'wallet-form' || step === 'category-form'
 }
 
+function shouldShowModal(step: SetupStep): boolean {
+  return isFormStep(step)
+}
+
 function readTargetRect(id: string): Rect | null {
   const el = document.querySelector(`[data-coach="${id}"]`) as HTMLElement | null
   if (!el) return null
@@ -200,6 +204,10 @@ export default function SetupCoach() {
     if (!mounted || !ready || !step || step === 'done' || !isSetupActive()) {
       return
     }
+    // Ne bloque le scroll que si ce n'est pas un formulaire
+    if (shouldShowModal(step)) {
+      return
+    }
     // Bloque le scroll tant que le guide (voile) est affiché
     const prevOverflow = document.body.style.overflow
     const prevTouch = document.body.style.touchAction
@@ -225,7 +233,53 @@ export default function SetupCoach() {
   const meta = COACH_STEPS[step]
   const vw = window.innerWidth
   const vh = window.innerHeight
-  const showTip = !isFormStep(step)
+  const showModalOnly = shouldShowModal(step)
+
+  if (showModalOnly) {
+    // Pour les formulaires : afficher uniquement un modal flottant sans voile
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none" aria-live="polite">
+        <motion.div
+          key={`modal-${step}`}
+          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+          transition={{ duration: 0.25 }}
+          className="relative z-[110] pointer-events-auto mx-4 max-w-sm w-full rounded-2xl bg-white p-5 shadow-xl border border-black/[0.08]"
+        >
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-primary-600">
+              Guide · démarrage
+            </p>
+            <button
+              type="button"
+              onClick={() => setSetupStep('done')}
+              className="p-1 -mr-1 text-gray-400 hover:text-gray-600 touch-manipulation"
+              aria-label="Passer le guide"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <h3 className="font-semibold text-ink text-base mb-2">{meta.title}</h3>
+          <p className="text-sm text-ink-soft mb-4 leading-relaxed">{meta.body}</p>
+          <button
+            type="button"
+            onClick={() => {
+              // Avancer au prochain step automatiquement
+              if (step === 'wallet-form') {
+                setSetupStep('nav-categories')
+              } else if (step === 'category-form') {
+                setSetupStep('done')
+              }
+            }}
+            className="w-full py-2.5 px-4 bg-primary-600 text-white rounded-xl font-semibold touch-manipulation active:scale-[0.98] transition"
+          >
+            J'ai compris
+          </button>
+        </motion.div>
+      </div>
+    )
+  }
 
   if (!rect) {
     return (
@@ -243,7 +297,7 @@ export default function SetupCoach() {
     )
   }
 
-  const tipStyle = showTip ? computeTipStyle(rect, vw, vh) : null
+  const tipStyle = computeTipStyle(rect, vw, vh)
 
   return (
     <div className="fixed inset-0 z-[80] pointer-events-none" aria-live="polite">
@@ -332,7 +386,7 @@ export default function SetupCoach() {
         }}
       />
 
-      {showTip && tipStyle && (
+      {!showModalOnly && tipStyle && (
         <motion.div
           key={`tip-${step}`}
           initial={{ opacity: 0, y: 10 }}

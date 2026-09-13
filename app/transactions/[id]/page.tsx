@@ -20,7 +20,7 @@ import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
-import Select from '@/components/Select'
+import SelectModal from '@/components/SelectModal'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { formatDateTime } from '@/lib/utils'
 import { useCurrency } from '@/contexts/CurrencyContext'
@@ -346,14 +346,14 @@ export default function TransactionDetailPage() {
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 required
               />
-              <Select
+<SelectModal 
                 label="Poche"
                 value={formData.wallet_id}
                 onChange={(e) => setFormData({ ...formData, wallet_id: e.target.value })}
                 options={walletOptions}
                 required
               />
-              <Select
+<SelectModal 
                 label="Catégorie (optionnel)"
                 value={formData.category_id}
                 onChange={(e) =>

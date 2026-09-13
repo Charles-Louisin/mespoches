@@ -7,7 +7,17 @@ const withPWA = require('next-pwa')({
   fallbacks: {
     document: null, // Désactiver la page de fallback offline
   },
+  // Ignorer les erreurs sur les sourcemaps et autres fichiers non critiques
+  cacheOnFrontEndNav: true,
   runtimeCaching: [
+    {
+      urlPattern: /\.(?:map|txt)$/i,
+      handler: 'NetworkOnly',
+      options: {
+        cacheName: 'sourcemaps',
+        networkTimeoutSeconds: 1,
+      },
+    },
     {
       urlPattern: /^https:\/\/fonts\.(?:gstatic)\.com\/.*/i,
       handler: 'CacheFirst',
@@ -155,6 +165,8 @@ function cspConnectSrc() {
 
 const nextConfig = {
   reactStrictMode: true,
+  // Désactiver les sourcemaps en production pour éviter les erreurs 404 en offline
+  productionBrowserSourceMaps: false,
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'utfs.io', pathname: '/**' },

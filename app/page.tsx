@@ -104,11 +104,17 @@ export default function HomePage() {
     }
   }, [isPremium])
 
-  const { data, loading } = useCachedData(
+  const { data, loading, refresh } = useCachedData(
     CACHE_KEYS.home,
     fetchHome,
     isLoggedIn
   )
+
+  const handleRefresh = useCallback(async () => {
+    if (isLoggedIn) {
+      await refresh()
+    }
+  }, [isLoggedIn, refresh])
 
   if (!authReady || (isLoggedIn && loading && !data)) {
     return (
@@ -120,7 +126,7 @@ export default function HomePage() {
   }
 
   return (
-    <PageShell>
+    <PageShell enablePullToRefresh={isLoggedIn} onRefresh={handleRefresh}>
       <HomeHeader userName={userName} isLoggedIn={isLoggedIn} />
 
       <main className="max-w-md mx-auto px-4 py-4 space-y-6">

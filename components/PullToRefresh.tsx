@@ -9,9 +9,15 @@ const MAX_PULL = 110
 
 interface PullToRefreshProps {
   children: React.ReactNode
+  enabled?: boolean
+  onRefresh?: () => Promise<void> | void
 }
 
-export default function PullToRefresh({ children }: PullToRefreshProps) {
+export default function PullToRefresh({ 
+  children, 
+  enabled = false,
+  onRefresh 
+}: PullToRefreshProps) {
   const [native, setNative] = useState(false)
   const startY = useRef(0)
   const pulling = useRef(false)
@@ -24,17 +30,17 @@ export default function PullToRefresh({ children }: PullToRefreshProps) {
 
   const onTouchStart = useCallback(
     (e: React.TouchEvent) => {
-      if (!native || refreshing) return
+      if (!native || refreshing || !enabled) return
       if (window.scrollY > 4) return
       startY.current = e.touches[0].clientY
       pulling.current = true
     },
-    [native, refreshing]
+    [native, refreshing, enabled]
   )
 
   const onTouchMove = useCallback(
     (e: React.TouchEvent) => {
-      if (!native || !pulling.current || refreshing) return
+      if (!native || !pulling.current || refreshing || !enabled) return
       const delta = e.touches[0].clientY - startY.current
       if (delta <= 0) {
         setPull(0)
@@ -47,20 +53,35 @@ export default function PullToRefresh({ children }: PullToRefreshProps) {
       }
       setPull(Math.min(delta * 0.45, MAX_PULL))
     },
-    [native, refreshing]
+    [native, refreshing, enabled]
   )
 
-  const onTouchEnd = useCallback(() => {
+  const onTouchEnd = useCallback(async () => {
     if (!native || !pulling.current) return
     pulling.current = false
     if (pull >= THRESHOLD && !refreshing) {
       setRefreshing(true)
       setPull(THRESHOLD)
-      window.location.reload()
+      
+      try {
+        if (onRefresh) {
+          await onRefresh()
+        } else {
+          // Rafraîchissement par défaut : recharger la page actuelle
+          window.location.reload()
+        }
+      } catch (error) {
+        console.error('Erreur lors du rafraîchissement:', error)
+      } finally {
+        setTimeout(() => {
+          setRefreshing(false)
+          setPull(0)
+        }, 500)
+      }
       return
     }
     setPull(0)
-  }, [native, pull, refreshing])
+  }, [native, pull, refreshing, onRefresh])
 
   if (!native) {
     return <div className="contents">{children}</div>

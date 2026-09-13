@@ -3,18 +3,27 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import BottomNav from '@/components/BottomNav'
 import PullToRefresh from '@/components/PullToRefresh'
+import OfflineIndicator from '@/components/OfflineIndicator'
 
 interface PageShellProps {
   children: React.ReactNode
   className?: string
+  enablePullToRefresh?: boolean
+  onRefresh?: () => Promise<void> | void
 }
 
-export default function PageShell({ children, className = '' }: PageShellProps) {
+export default function PageShell({ 
+  children, 
+  className = '',
+  enablePullToRefresh = true,
+  onRefresh
+}: PageShellProps) {
   const reduce = useReducedMotion()
 
   return (
     <div className={`min-h-screen bg-surface pb-28 ${className}`}>
-      <PullToRefresh>
+      <OfflineIndicator />
+      <PullToRefresh enabled={enablePullToRefresh} onRefresh={onRefresh}>
         <motion.div
           initial={reduce ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

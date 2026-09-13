@@ -26,7 +26,7 @@ import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
-import Select from '@/components/Select'
+import SelectModal from '@/components/SelectModal'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useCurrency } from '@/contexts/CurrencyContext'
@@ -375,64 +375,60 @@ function NewTransactionForm() {
 
             {multiLineEnabled ? (
               <>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-gray-700">
-                    {type === 'expense' ? 'Dépenses' : 'Revenus'}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setLines((prev) => [...prev, newLine()])}
-                    className="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 touch-manipulation"
-                  >
-                    <Plus size={16} />
-                    Ajouter
-                  </button>
-                </div>
+                <p className="text-sm font-medium text-gray-700 mb-3">
+                  {type === 'expense' ? 'Dépenses' : 'Revenus'}
+                </p>
 
-                <div className="space-y-3">
-                  {lines.map((line, index) => (
+                <div className="space-y-2.5">
+                  {lines.map((line) => (
                     <div
                       key={line.id}
-                      className="rounded-xl border border-gray-100 bg-gray-50/80 p-3 space-y-2 animate-rise"
+                      className="rounded-xl border border-gray-100 bg-gray-50/80 p-2.5 animate-rise"
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-semibold text-gray-500">
-                          Ligne {index + 1}
-                        </span>
+                      <div className="flex items-center gap-2 mb-2">
+                        <input
+                          type="text"
+                          value={line.description}
+                          onChange={(e) => updateLine(line.id, { description: e.target.value })}
+                          placeholder="Description (ex: Pain)"
+                          className="flex-1 text-sm px-3 py-1.5 rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200"
+                        />
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={line.amount}
+                          onChange={(e) => updateLine(line.id, { amount: e.target.value })}
+                          placeholder="Montant"
+                          className={`w-28 text-lg font-bold text-center bg-white rounded-lg px-2 py-1.5 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-200 ${
+                            amountExceedsBalance ? 'text-red-500' : 'text-primary-600'
+                          }`}
+                        />
                         {lines.length > 1 && (
                           <button
                             type="button"
                             onClick={() => removeLine(line.id)}
                             className="p-1.5 text-gray-400 hover:text-red-500 touch-manipulation"
-                            aria-label="Supprimer la ligne"
+                            aria-label="Supprimer"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={18} />
                           </button>
                         )}
                       </div>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={line.amount}
-                        onChange={(e) => updateLine(line.id, { amount: e.target.value })}
-                        placeholder="Montant"
-                        className={`w-full text-2xl font-bold text-center bg-transparent border-0 focus:outline-none ${
-                          amountExceedsBalance ? 'text-red-500' : 'text-primary-600'
-                        }`}
-                      />
-                      <input
-                        type="text"
-                        value={line.description}
-                        onChange={(e) => updateLine(line.id, { description: e.target.value })}
-                        placeholder="Description (ex: Pain)"
-                        className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200"
-                      />
                     </div>
                   ))}
                 </div>
 
-                <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setLines((prev) => [...prev, newLine()])}
+                  className="w-full py-2.5 px-4 rounded-xl border-2 border-dashed border-gray-300 text-sm font-semibold text-gray-600 hover:border-primary-300 hover:text-primary-600 transition touch-manipulation"
+                >
+                  <Plus size={16} className="inline mr-1" />
+                  Ajouter une ligne
+                </button>
+
+                <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
                   <span className="text-sm text-gray-500">Total</span>
                   <span
                     className={`text-lg font-bold ${
@@ -482,20 +478,20 @@ function NewTransactionForm() {
                 <span className="text-sm font-medium text-gray-800">Vers épargne</span>
               </label>
               {toSavings && (
-                <Select
-                  label="Objectif d'épargne"
-                  value={savingsGoalId}
-                  onChange={(e) => setSavingsGoalId(e.target.value)}
-                  options={savingsGoalOptions}
-                  required
-                />
+              <SelectModal
+                label="Objectif d'épargne"
+                value={savingsGoalId}
+                onChange={(e) => setSavingsGoalId(e.target.value)}
+                options={savingsGoalOptions}
+                required
+              />
               )}
             </div>
           )}
 
           <div className="card p-4 space-y-4">
             {(type !== 'income' || !toSavings) && (
-              <Select
+              <SelectModal
                 label={type === 'transfer' ? 'Depuis' : 'Poche'}
                 value={walletId}
                 onChange={(e) => setWalletId(e.target.value)}
@@ -506,7 +502,7 @@ function NewTransactionForm() {
             )}
 
             {type === 'transfer' && !toSavings && (
-              <Select
+              <SelectModal
                 label="Vers"
                 value={destinationWalletId}
                 onChange={(e) => setDestinationWalletId(e.target.value)}
@@ -517,7 +513,7 @@ function NewTransactionForm() {
             )}
 
             {type !== 'transfer' && !toSavings && (
-              <Select
+              <SelectModal
                 label="Catégorie (optionnel)"
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}

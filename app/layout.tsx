@@ -8,6 +8,7 @@ import AppBootLoader from '@/components/AppBootLoader'
 import NativePermissionsOnLaunch from '@/components/NativePermissionsOnLaunch'
 import AutomationBridge from '@/components/AutomationBridge'
 import './globals.css'
+import '@/lib/suppressNetworkErrors'
 
 const figtree = Figtree({
   subsets: ['latin'],

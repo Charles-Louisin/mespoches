@@ -13,7 +13,7 @@ import PageShell from '@/components/PageShell'
 import Header from '@/components/Header'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
-import Select from '@/components/Select'
+import SelectModal from '@/components/SelectModal'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import EmptyState from '@/components/EmptyState'
 import ConfirmModal from '@/components/ConfirmModal'
@@ -218,7 +218,7 @@ function CategoriesPageContent() {
                 required
               />
 
-              <Select
+<SelectModal 
                 label="Type"
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value as 'income' | 'expense' })}

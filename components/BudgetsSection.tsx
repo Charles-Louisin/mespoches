@@ -8,7 +8,7 @@ import ProFeature from '@/components/ProFeature'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
-import Select from '@/components/Select'
+import SelectModal from '@/components/SelectModal'
 import { budgetApi, categoryApi, Budget, Category } from '@/lib/api'
 import { useCurrency } from '@/contexts/CurrencyContext'
 import { getCurrencySymbol } from '@/lib/currencies'
@@ -248,7 +248,7 @@ export default function BudgetsSection({
 
         {!isHome && showForm && (
           <form onSubmit={handleCreate} className="card p-4 space-y-3">
-            <Select
+<SelectModal 
               label="Catégorie"
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}

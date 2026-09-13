@@ -16,7 +16,7 @@ import {
 import { getMinFutureUtcDateInputValue } from '@/lib/plannedExpenseDates'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
-import Select from '@/components/Select'
+import SelectModal from '@/components/SelectModal'
 
 interface EditPlannedExpenseModalProps {
   item: PlannedExpense | null
@@ -151,14 +151,14 @@ export default function EditPlannedExpenseModal({
                   onChange={(e) => setAmount(e.target.value)}
                   required
                 />
-                <Select
+<SelectModal 
                   label="Poche"
                   value={walletId}
                   onChange={(e) => setWalletId(e.target.value)}
                   options={walletOptions}
                   required
                 />
-                <Select
+<SelectModal 
                   label="Catégorie (optionnel)"
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}

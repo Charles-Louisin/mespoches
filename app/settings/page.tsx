@@ -18,7 +18,7 @@ import { useSubscription } from '@/hooks/useSubscription'
 import { isPremiumRequiredError } from '@/lib/subscription'
 import { exportApi } from '@/lib/api'
 import ProBadge from '@/components/ProBadge'
-import Select from '@/components/Select'
+import SelectModal from '@/components/SelectModal'
 import AppLogo from '@/components/AppLogo'
 import { useCurrency } from '@/contexts/CurrencyContext'
 import { AppCurrency, WALLET_CURRENCIES } from '@/lib/currencies'
@@ -135,7 +135,7 @@ export default function SettingsPage() {
       <main className="max-w-md mx-auto px-4 py-6 space-y-6">
         <div className="card p-4 space-y-3">
           <h3 className="text-sm font-semibold text-gray-500">Devise</h3>
-          <Select
+<SelectModal 
             value={currency}
             onChange={(e) => handleCurrencyChange(e.target.value)}
             options={WALLET_CURRENCIES.map((c) => ({
