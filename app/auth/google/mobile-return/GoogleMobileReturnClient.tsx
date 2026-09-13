@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { Capacitor } from '@capacitor/core'
 import AppLogo from '@/components/AppLogo'
 import LoadingBar from '@/components/LoadingBar'
@@ -13,7 +13,6 @@ const NONCE_KEY = 'mp_oauth_client_nonce'
  * Échange code + nonce local (jamais exposé au schéma custom seul).
  */
 export default function GoogleMobileReturnClient() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const [message, setMessage] = useState('Finalisation Google…')
 
@@ -39,7 +38,7 @@ export default function GoogleMobileReturnClient() {
 
         if (!code || !clientNonce) {
           setMessage('Session Google incomplète')
-          router.replace('/login?error=google_nonce')
+          window.location.replace('/login?error=google_nonce')
           return
         }
 
@@ -54,18 +53,18 @@ export default function GoogleMobileReturnClient() {
 
         if (!res.ok) {
           if (!cancelled) {
-            router.replace('/login?error=google_session')
+            window.location.replace('/login?error=google_session')
           }
           return
         }
 
         if (!cancelled) {
-          router.replace('/auth/complete')
+          window.location.replace('/auth/complete')
         }
       } catch {
         sessionStorage.removeItem(NONCE_KEY)
         if (!cancelled) {
-          router.replace('/login?error=google_session')
+          window.location.replace('/login?error=google_session')
         }
       }
     })()
@@ -73,7 +72,7 @@ export default function GoogleMobileReturnClient() {
     return () => {
       cancelled = true
     }
-  }, [router, searchParams])
+  }, [searchParams])
 
   return (
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-4 px-4">

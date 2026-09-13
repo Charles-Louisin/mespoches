@@ -25,7 +25,7 @@ export default function AuthCompletePage() {
           }
         }
 
-        await hydrateAuthSession()
+        await hydrateAuthSession({ preserveExisting: true })
         if (cancelled) return
 
         if (!getToken()) {
@@ -51,6 +51,15 @@ export default function AuthCompletePage() {
           lastLoginAt: me.lastLoginAt ?? undefined,
           emailVerified: true,
         })
+
+        try {
+          const { syncSmsMonitorToken } = await import(
+            '@/lib/capacitor/app-notifications'
+          )
+          await syncSmsMonitorToken(getToken())
+        } catch {
+          /* ignore hors Android */
+        }
 
         void import('@/lib/api').then(async ({ walletApi }) => {
           const { startSetupGuide, setSetupStep } = await import('@/lib/setupGuide')

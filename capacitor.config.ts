@@ -58,6 +58,7 @@ const allowNavigation = Array.from(
       'mespoches.store',
       'www.mespoches.store',
       'mespochesbackend-production.up.railway.app',
+      'mespochesbackend-production-9bfe.up.railway.app',
       '*.up.railway.app',
       'accounts.google.com',
       '*.google.com',

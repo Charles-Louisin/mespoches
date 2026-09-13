@@ -10,12 +10,18 @@ function localHttpOrigin(origin: string): string {
 
 /**
  * Origine OAuth Google.
- * Web : toujours l'onglet courant (cookie state = même host).
- * App native : URL publique du .env.
+ * Web : onglet courant.
+ * App native : host de la WebView (même origine que les cookies OAuth).
  */
 export function getGoogleOAuthOrigin(): string {
-  if (typeof window !== 'undefined' && !Capacitor.isNativePlatform()) {
-    return localHttpOrigin(stripSlash(window.location.origin))
+  if (typeof window !== 'undefined') {
+    const current = localHttpOrigin(stripSlash(window.location.origin))
+    if (Capacitor.isNativePlatform()) {
+      // Toujours l’URL chargée dans la WebView (évite vercel vs .store)
+      if (current.startsWith('https://')) return current
+    } else {
+      return current
+    }
   }
 
   const fromEnv = stripSlash(
@@ -24,9 +30,5 @@ export function getGoogleOAuthOrigin(): string {
       ''
   )
   if (fromEnv.startsWith('http')) return fromEnv
-
-  if (typeof window !== 'undefined' && window.location?.origin) {
-    return localHttpOrigin(stripSlash(window.location.origin))
-  }
   return ''
 }

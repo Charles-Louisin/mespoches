@@ -82,10 +82,15 @@ public class MainActivity extends BridgeActivity {
         if (host.equals("localhost") || host.equals("127.0.0.1") || host.equals("10.0.2.2")) {
             return true;
         }
+        if (host.equals("mespoches.store")
+            || host.equals("www.mespoches.store")
+            || host.endsWith(".mespoches.store")) {
+            return true;
+        }
         if (host.equals("mespoches.vercel.app") || host.endsWith(".vercel.app")) {
             return true;
         }
-        if (host.equals("mespochesbackend-production.up.railway.app")
+        if (host.contains("mespochesbackend")
             || host.endsWith(".up.railway.app")) {
             return true;
         }

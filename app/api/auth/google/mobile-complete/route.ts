@@ -67,6 +67,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { verifyAuthToken } = await import('@/lib/server/jwt');
+    if (!(await verifyAuthToken(session.token))) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: 'JWT_MISMATCH',
+          message:
+            'Session impossible : JWT_SECRET sur Vercel doit être identique à Railway.',
+        },
+        { status: 500 }
+      );
+    }
+
     const next = NextResponse.json({
       success: true,
       data: { redirect: '/auth/complete' },
