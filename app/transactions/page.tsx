@@ -62,7 +62,7 @@ export default function TransactionsPage() {
   const [cancellingId, setCancellingId] = useState<string | null>(null)
 
   const fetchTransactions = useCallback(async () => {
-    const data = await transactionApi.getAll()
+    const data = await transactionApi.getAll({ limit: 200 })
     return sortTransactionsByDateDesc(data)
   }, [])
 

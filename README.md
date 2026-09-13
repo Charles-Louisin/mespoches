@@ -175,5 +175,3 @@ Pour toute question ou problème :
 
 **Développé avec ❤️ pour une meilleure gestion financière personnelle**
 
-
-pendant le chargement de la page, je vois la bulle rester au milieu de l'ecran, je ne veux pas ce phenomene, mets un loarder pour ça mais je ne veux plus voir le modal pendant le chargement de la page

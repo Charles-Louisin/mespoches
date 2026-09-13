@@ -128,12 +128,14 @@ export const transactionApi = {
     type?: string;
     startDate?: string;
     endDate?: string;
+    limit?: number;
   }) => {
     const params = new URLSearchParams();
     if (filters?.wallet_id) params.append('wallet_id', filters.wallet_id);
     if (filters?.type) params.append('type', filters.type);
     if (filters?.startDate) params.append('startDate', filters.startDate);
     if (filters?.endDate) params.append('endDate', filters.endDate);
+    if (filters?.limit) params.append('limit', String(filters.limit));
     
     const query = params.toString();
     return fetchApi<Transaction[]>(`/transactions${query ? `?${query}` : ''}`);

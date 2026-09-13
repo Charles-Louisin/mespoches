@@ -87,7 +87,7 @@ export default function HomePage() {
       await Promise.all([
       walletApi.getAll().catch(() => []),
       walletApi.getTotalBalance().catch(() => ({ total: 0, totalSavings: 0, wallets: [] })),
-      transactionApi.getAll().catch(() => []),
+      transactionApi.getAll({ limit: 40 }).catch(() => []),
       analyticsApi.getCurrentMonth().catch(() => null),
       isPremium ? budgetApi.getAll(year, month).catch(() => []) : Promise.resolve([]),
       isPremium ? savingsGoalApi.getAll().catch(() => []) : Promise.resolve([]),

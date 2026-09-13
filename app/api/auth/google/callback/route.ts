@@ -8,6 +8,10 @@ import {
   parseOAuthState,
   resolveCallbackOrigin,
 } from '@/lib/server/oauth-origin';
+import {
+  localGoogleClientId,
+  localGoogleClientSecret,
+} from '@/lib/server/google-oauth';
 
 const NONCE_COOKIE = 'google_oauth_client_nonce';
 const STATE_COOKIE = 'google_oauth_state';
@@ -67,42 +71,51 @@ export async function GET(request: NextRequest) {
     return next;
   }
 
-  const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
-  if (!clientId || !clientSecret) {
-    return NextResponse.redirect(new URL('/login?error=google_config', origin));
-  }
+  const clientId = localGoogleClientId();
+  const clientSecret = localGoogleClientSecret();
+  const redirectUri = `${origin}/api/auth/google/callback`;
 
   try {
-    const redirectUri = `${origin}/api/auth/google/callback`;
-    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
+    let data: Record<string, unknown>;
+    let response: Response;
+
+    if (clientId && clientSecret) {
+      const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          code,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: redirectUri,
+          grant_type: 'authorization_code',
+        }),
+      });
+
+      const tokenData = (await tokenRes.json()) as {
+        id_token?: string;
+        error?: string;
+        error_description?: string;
+      };
+
+      if (!tokenRes.ok || !tokenData.id_token) {
+        console.error('Google token exchange failed:', tokenData);
+        return NextResponse.redirect(new URL('/login?error=google_token', origin));
+      }
+
+      ({ response, data } = await proxyAuthRequest('/auth/google', {
+        idToken: tokenData.id_token,
+        mobile,
+        ...(mobile ? { clientNonce } : {}),
+      }));
+    } else {
+      ({ response, data } = await proxyAuthRequest('/auth/google/exchange', {
         code,
-        client_id: clientId,
-        client_secret: clientSecret,
-        redirect_uri: redirectUri,
-        grant_type: 'authorization_code',
-      }),
-    });
-
-    const tokenData = (await tokenRes.json()) as {
-      id_token?: string;
-      error?: string;
-      error_description?: string;
-    };
-
-    if (!tokenRes.ok || !tokenData.id_token) {
-      console.error('Google token exchange failed:', tokenData);
-      return NextResponse.redirect(new URL('/login?error=google_token', origin));
+        redirectUri,
+        mobile,
+        ...(mobile ? { clientNonce } : {}),
+      }));
     }
-
-    const { response, data } = await proxyAuthRequest('/auth/google', {
-      idToken: tokenData.id_token,
-      mobile,
-      ...(mobile ? { clientNonce } : {}),
-    });
 
     if (!response.ok || !data.success) {
       const message =

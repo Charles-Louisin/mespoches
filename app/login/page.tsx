@@ -39,7 +39,8 @@ const INITIAL_AVAILABILITY: RegisterAvailability = {
 function googleErrorMessage(code: string | null): string | null {
   if (!code) return null
   const map: Record<string, string> = {
-    google_config: 'Connexion Google non configurée (CLIENT_ID / SECRET).',
+    google_config:
+      'Connexion Google indisponible. Vérifiez GOOGLE_CLIENT_ID / SECRET sur le backend.',
     google_denied: 'Connexion Google annulée.',
     google_token: 'Échange Google impossible. Réessayez.',
     google_session: 'Session Google invalide.',

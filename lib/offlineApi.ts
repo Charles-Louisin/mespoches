@@ -73,7 +73,7 @@ export const offlineTransactionApi = {
   getAll: async (): Promise<Transaction[]> => {
     if (isOnline()) {
       try {
-        const transactions = await transactionApi.getAll();
+        const transactions = await transactionApi.getAll({ limit: 500 });
         
         // Mettre à jour la base locale
         for (const transaction of transactions) {

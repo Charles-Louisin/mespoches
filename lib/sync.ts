@@ -226,7 +226,7 @@ const syncFromServer = async (): Promise<void> => {
     }
 
     // Récupérer les transactions
-    const transactions = await transactionApi.getAll();
+    const transactions = await transactionApi.getAll({ limit: 500 });
     for (const transaction of transactions) {
       const normalized = normalizeTransaction(transaction);
       const existing = await db.transactions.where('_id').equals(transaction._id).first();

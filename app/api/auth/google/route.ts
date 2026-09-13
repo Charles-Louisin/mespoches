@@ -3,6 +3,7 @@ import {
   buildOAuthState,
   resolveOAuthOrigin,
 } from '@/lib/server/oauth-origin';
+import { resolveGoogleClientId } from '@/lib/server/google-oauth';
 
 const NONCE_COOKIE = 'google_oauth_client_nonce';
 const STATE_COOKIE = 'google_oauth_state';
@@ -13,7 +14,7 @@ function isValidClientNonce(value: string | null): value is string {
 
 /** Démarre le flux OAuth Google (prioritaire). */
 export async function GET(request: NextRequest) {
-  const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
+  const clientId = await resolveGoogleClientId();
   if (!clientId) {
     return NextResponse.redirect(
       new URL('/login?error=google_config', request.url)
