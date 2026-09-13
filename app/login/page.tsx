@@ -239,8 +239,17 @@ function LoginPageContent() {
         } else if (response.code === 'EMAIL_NOT_VERIFIED') {
           toast.error(response.message || 'Email non vérifié')
           redirectToVerification(email.trim())
-        } else if (response.code === 'USE_GOOGLE') {
-          toast.error(response.message || 'Utilisez Google pour ce compte')
+        } else if (
+          response.code === 'NEED_PASSWORD' ||
+          response.code === 'USE_GOOGLE'
+        ) {
+          toast.error(
+            response.message ||
+              'Pas encore de mot de passe. Utilisez « Mot de passe oublié ».'
+          )
+          router.push(
+            `/forgot-password?email=${encodeURIComponent(email.trim())}`
+          )
         } else {
           toast.error(response.message || 'Connexion impossible')
         }
@@ -394,6 +403,26 @@ function LoginPageContent() {
                     )}
                   </button>
                 </div>
+
+                {isLogin && (
+                  <div className="flex justify-end -mt-1">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        router.push(
+                          `/forgot-password${
+                            email.trim()
+                              ? `?email=${encodeURIComponent(email.trim())}`
+                              : ''
+                          }`
+                        )
+                      }
+                      className="text-sm text-primary-500 hover:text-primary-600 font-medium touch-manipulation"
+                    >
+                      Mot de passe oublié ?
+                    </button>
+                  </div>
+                )}
 
                 {!isLogin && (
                   <div className="relative">

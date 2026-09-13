@@ -114,10 +114,10 @@ function productionBackendOrigin() {
   const raw = (
     process.env.BACKEND_API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
-    'https://mespochesbackend-production.up.railway.app'
+    'https://mespochesbackend-production-9bfe.up.railway.app'
   ).replace(/\/$/, '')
   if (!raw.startsWith('http')) {
-    return 'https://mespochesbackend-production.up.railway.app'
+    return 'https://mespochesbackend-production-9bfe.up.railway.app'
   }
   return raw.replace(/\/api$/i, '')
 }
@@ -147,7 +147,7 @@ function cspConnectSrc() {
   addUrl(process.env.NEXT_PUBLIC_API_URL)
   addUrl(process.env.NEXT_PUBLIC_APP_URL)
   addUrl(process.env.DEV_BACKEND_URL)
-  // API prod connue (Android / Railway)
+  origins.add('https://mespochesbackend-production-9bfe.up.railway.app')
   origins.add('https://mespochesbackend-production.up.railway.app')
 
   return Array.from(origins).join(' ')

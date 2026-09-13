@@ -48,13 +48,21 @@ export async function GET(request: NextRequest) {
     clearOAuthCookies(next);
     return next;
   }
+  if (!returnedState || !parsedState) {
+    const next = NextResponse.redirect(
+      new URL('/login?error=google_state', origin)
+    );
+    clearOAuthCookies(next);
+    return next;
+  }
+
+  // Si le cookie state est présent, il doit correspondre (anti-CSRF).
+  // S'il est absent (www ↔ apex), on continue : le code OAuth est à usage unique.
   if (
-    !returnedState ||
-    !stateCookie ||
-    returnedState !== stateCookie ||
-    !parsedState ||
-    !parsedCookie ||
-    parsedState.id !== parsedCookie.id
+    stateCookie &&
+    (returnedState !== stateCookie ||
+      !parsedCookie ||
+      parsedState.id !== parsedCookie.id)
   ) {
     const next = NextResponse.redirect(
       new URL('/login?error=google_state', origin)

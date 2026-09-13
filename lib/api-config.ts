@@ -29,7 +29,7 @@ export function getClientApiUrl(): string {
  * En dev avec NEXT_PUBLIC_API_URL=/api, le serveur appelle Express directement.
  */
 const PRODUCTION_BACKEND_API =
-  'https://mespochesbackend-production.up.railway.app/api';
+  'https://mespochesbackend-production-9bfe.up.railway.app/api';
 
 export function getServerBackendApiUrl(): string {
   const devBackend = (process.env.DEV_BACKEND_URL || 'http://localhost:5000').replace(

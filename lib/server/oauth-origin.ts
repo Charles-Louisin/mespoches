@@ -4,26 +4,12 @@ function stripSlash(value: string): string {
   return value.replace(/\/$/, '');
 }
 
-/** Apex et Vercel custom domain → même origine que Google Console. */
-function canonicalizePublicOrigin(origin: string): string {
-  try {
-    const parsed = new URL(origin);
-    const host = parsed.hostname.toLowerCase();
-    if (host === 'mespoches.store' || host === 'www.mespoches.store') {
-      return 'https://www.mespoches.store';
-    }
-  } catch {
-    /* ignore */
-  }
-  return stripSlash(origin);
-}
-
 function isLocalHost(host: string): boolean {
   return /^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(host);
 }
 
 function envPublicOrigin(): string {
-  return canonicalizePublicOrigin(
+  return stripSlash(
     process.env.GOOGLE_REDIRECT_ORIGIN ||
       process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_ORIGIN ||
       process.env.NEXT_PUBLIC_APP_URL ||
@@ -32,9 +18,8 @@ function envPublicOrigin(): string {
 }
 
 /**
- * Origine OAuth (redirect_uri).
- * - App (mobile=1) → tunnel / URL publique du .env
- * - Web sur localhost → reste sur localhost (jamais ngrok)
+ * Origine OAuth (redirect_uri) = host réel de la requête.
+ * Ne jamais forcer www : le cookie state doit rester sur le même host.
  */
 export function resolveOAuthOrigin(request: NextRequest): string {
   const forwardedHost = request.headers
@@ -47,25 +32,23 @@ export function resolveOAuthOrigin(request: NextRequest): string {
   const mobile = request.nextUrl.searchParams.get('mobile') === '1';
   const override = envPublicOrigin();
 
-  // 1) App native : toujours l'URL publique (ngrok / prod)
+  // App native : URL publique (Vercel / domaine custom)
   if (mobile && override.startsWith('http')) {
     try {
       const parsed = new URL(override);
-      if (!isLocalHost(parsed.host)) return canonicalizePublicOrigin(override);
+      if (!isLocalHost(parsed.host)) return stripSlash(override);
     } catch {
       /* ignore */
     }
   }
 
-  // 2) Navigateur local : Host localhost → jamais le .env ngrok
   if (requestHost && isLocalHost(requestHost)) {
     return `http://${requestHost}`;
   }
 
-  // 3) Tunnel / reverse-proxy
   if (forwardedHost && !isLocalHost(forwardedHost)) {
     const proto = forwardedProto || 'https';
-    return canonicalizePublicOrigin(`${proto}://${forwardedHost}`);
+    return `${proto}://${forwardedHost}`.replace(/\/$/, '');
   }
 
   const host = requestHost || forwardedHost || request.nextUrl.host;
@@ -76,7 +59,7 @@ export function resolveOAuthOrigin(request: NextRequest): string {
   if (override.startsWith('http')) {
     try {
       const parsed = new URL(override);
-      if (!isLocalHost(parsed.host)) return canonicalizePublicOrigin(override);
+      if (!isLocalHost(parsed.host)) return stripSlash(override);
     } catch {
       /* ignore */
     }
@@ -86,10 +69,10 @@ export function resolveOAuthOrigin(request: NextRequest): string {
     /^https:\/\/(localhost|127\.0\.0\.1)/i,
     'http://$1'
   );
-  return canonicalizePublicOrigin(origin);
+  return stripSlash(origin);
 }
 
-/** Callback : mobile → URL publique ; web → origine de la requête (localhost). */
+/** Callback : même host que la requête (ou override mobile). */
 export function resolveCallbackOrigin(
   request: NextRequest,
   mobile: boolean
@@ -99,7 +82,7 @@ export function resolveCallbackOrigin(
     if (override.startsWith('http')) {
       try {
         const parsed = new URL(override);
-        if (!isLocalHost(parsed.host)) return canonicalizePublicOrigin(override);
+        if (!isLocalHost(parsed.host)) return stripSlash(override);
       } catch {
         /* ignore */
       }
@@ -111,10 +94,23 @@ export function resolveCallbackOrigin(
     return `http://${requestHost}`;
   }
 
+  // Priorité au host réel du callback (cookie state sur ce host)
+  const forwardedHost = request.headers
+    .get('x-forwarded-host')
+    ?.split(',')[0]
+    ?.trim();
+  const forwardedProto =
+    request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
+  if (forwardedHost && !isLocalHost(forwardedHost)) {
+    return `${forwardedProto || 'https'}://${forwardedHost}`.replace(/\/$/, '');
+  }
+  if (requestHost) {
+    return `https://${requestHost}`.replace(/\/$/, '');
+  }
+
   return resolveOAuthOrigin(request);
 }
 
-/** state OAuth : uuid + flag mobile (survit même si le cookie tombe). */
 export function buildOAuthState(mobile: boolean): string {
   return `${crypto.randomUUID()}:${mobile ? '1' : '0'}`;
 }

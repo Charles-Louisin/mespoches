@@ -180,6 +180,11 @@ export const register = async (
 
   const data = await parseAuthResponse(response);
 
+  if (data.success && data.data?.token) {
+    persistAuth(data.data);
+    return data;
+  }
+
   if (data.success && data.needsVerification) {
     setPendingVerificationEmail(email);
   }
@@ -227,6 +232,43 @@ export const resendVerificationCode = async (
   }
 
   return json;
+};
+
+export const forgotPassword = async (
+  email: string
+): Promise<AuthResponse & { cooldownSeconds?: number }> => {
+  const response = await fetch('/api/auth/forgot-password', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  const json = await response.json();
+  if (!json.success && json.code === 'RESEND_COOLDOWN') {
+    return {
+      ...json,
+      cooldownSeconds: json.data?.cooldownSeconds ?? 60,
+    };
+  }
+  return json;
+};
+
+export const resetPassword = async (
+  email: string,
+  code: string,
+  password: string
+): Promise<AuthResponse> => {
+  const response = await fetch('/api/auth/reset-password', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, code, password }),
+  });
+  const data = await parseAuthResponse(response);
+  if (data.success && data.data) {
+    persistAuth(data.data);
+  }
+  return data;
 };
 
 export const logout = (): void => {

@@ -12,6 +12,7 @@ const PUBLIC_PREFIXES = [
   '/login',
   '/onboarding',
   '/verify-email',
+  '/forgot-password',
   '/auth',
   '/download',
 ]
@@ -74,7 +75,8 @@ export async function middleware(request: NextRequest) {
     emailVerified &&
     (pathname === '/login' ||
       pathname === '/onboarding' ||
-      pathname === '/verify-email')
+      pathname === '/verify-email' ||
+      pathname === '/forgot-password')
   ) {
     return NextResponse.redirect(new URL('/', request.url))
   }

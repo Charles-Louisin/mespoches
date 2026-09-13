@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  proxyAuthRequest,
-  sanitizeAuthResponseForClient,
-} from '@/lib/server/verification-email';
+import { proxyAuthRequest } from '@/lib/server/verification-email';
 import {
   applyAuthCookies,
-  applyPendingEmailCookie,
   extractAuthSession,
 } from '@/lib/server/session-cookies';
 import { clientIp, rateLimit } from '@/lib/server/rate-limit';
 
 export async function POST(request: NextRequest) {
   const ip = clientIp(request);
-  const limited = rateLimit(`register:${ip}`, 10, 15 * 60 * 1000);
+  const limited = rateLimit(`reset:${ip}`, 15, 15 * 60 * 1000);
   if (!limited.ok) {
     return NextResponse.json(
       {
@@ -29,23 +25,21 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { response, data } = await proxyAuthRequest('/auth/register', body);
-
-    const next = NextResponse.json(sanitizeAuthResponseForClient(data), {
-      status: response.status,
-    });
-
+    const { response, data } = await proxyAuthRequest(
+      '/auth/reset-password',
+      body
+    );
+    const next = NextResponse.json(data, { status: response.status });
     const session = extractAuthSession(
       data as Parameters<typeof extractAuthSession>[0]
     );
     if (session) {
       applyAuthCookies(next, session.token, session.emailVerified);
-    } else if (response.ok && typeof body.email === 'string') {
-      applyPendingEmailCookie(next, body.email);
     }
     return next;
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Erreur inscription';
+    const message =
+      error instanceof Error ? error.message : 'Erreur réinitialisation';
     return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }
