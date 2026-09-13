@@ -1,9 +1,12 @@
 /**
  * Supprime les erreurs réseau non critiques (sourcemaps, etc.) en mode offline
  * pour éviter d'afficher des pages d'erreur 404 à l'utilisateur
+ * 
+ * Ce module ne s'exécute que côté client
  */
 
-if (typeof window !== 'undefined') {
+// Guard complet pour éviter l'exécution côté serveur pendant le build
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   // Intercepter les erreurs de chargement de ressources
   window.addEventListener('error', (event) => {
     const target = event.target as HTMLElement

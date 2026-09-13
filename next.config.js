@@ -7,17 +7,7 @@ const withPWA = require('next-pwa')({
   fallbacks: {
     document: null, // Désactiver la page de fallback offline
   },
-  // Ignorer les erreurs sur les sourcemaps et autres fichiers non critiques
-  cacheOnFrontEndNav: true,
   runtimeCaching: [
-    {
-      urlPattern: /\.(?:map|txt)$/i,
-      handler: 'NetworkOnly',
-      options: {
-        cacheName: 'sourcemaps',
-        networkTimeoutSeconds: 1,
-      },
-    },
     {
       urlPattern: /^https:\/\/fonts\.(?:gstatic)\.com\/.*/i,
       handler: 'CacheFirst',

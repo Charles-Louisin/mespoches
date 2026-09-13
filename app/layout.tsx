@@ -7,8 +7,8 @@ import CapacitorBridge from '@/components/CapacitorBridge'
 import AppBootLoader from '@/components/AppBootLoader'
 import NativePermissionsOnLaunch from '@/components/NativePermissionsOnLaunch'
 import AutomationBridge from '@/components/AutomationBridge'
+import ClientSideInit from '@/components/ClientSideInit'
 import './globals.css'
-import '@/lib/suppressNetworkErrors'
 
 const figtree = Figtree({
   subsets: ['latin'],
@@ -66,6 +66,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${figtree.variable} ${fraunces.variable}`}>
       <body className={`${figtree.className} font-sans`}>
+        <ClientSideInit />
         <Providers>{children}</Providers>
         <AppBootLoader />
         <NativePermissionsOnLaunch />
