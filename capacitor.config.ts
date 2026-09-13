@@ -30,12 +30,26 @@ loadEnvLocal();
 
 const serverUrl = process.env.CAPACITOR_SERVER_URL?.replace(/\/$/, '');
 
-if (!serverUrl) {
+/** L'APK démarre avec ?native=1 pour que le middleware ne renvoie pas vers /download. */
+function nativeServerUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const u = new URL(url);
+    u.searchParams.set('native', '1');
+    return u.toString();
+  } catch {
+    return `${url}${url.includes('?') ? '&' : '?'}native=1`;
+  }
+}
+
+const resolvedServerUrl = nativeServerUrl(serverUrl);
+
+if (!resolvedServerUrl) {
   console.warn(
     '[Capacitor] CAPACITOR_SERVER_URL non défini — ajoutez-le dans .env.local (ex. https://votre-app.vercel.app)'
   );
 } else {
-  console.log(`[Capacitor] server.url=${serverUrl}`);
+  console.log(`[Capacitor] server.url=${resolvedServerUrl}`);
 }
 
 const config: CapacitorConfig = {
@@ -57,12 +71,17 @@ const config: CapacitorConfig = {
       showSpinner: false,
     },
   },
-  ...(serverUrl
+  ...(resolvedServerUrl
     ? {
         server: {
-          url: serverUrl,
+          url: resolvedServerUrl,
           androidScheme: 'https',
-          allowNavigation: [serverUrl],
+          allowNavigation: [
+            'https://mespoches.vercel.app',
+            'https://mespoches.vercel.app/*',
+            'https://*.vercel.app',
+            'https://*.vercel.app/*',
+          ],
         },
       }
     : {}),

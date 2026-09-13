@@ -2,11 +2,12 @@
  * Tri landing vs app.
  *
  * - Local / développement → l'app complète (tests)
- * - APK Capacitor → l'app complète (cookie posé au boot)
+ * - APK Capacitor → l'app complète (cookie / UA / ?native=1)
  * - Navigateur en production → landing de téléchargement
  */
 
 export const NATIVE_APP_COOKIE = 'mp_native'
+export const NATIVE_QUERY_PARAM = 'native'
 
 export const LANDING_PUBLIC_PREFIXES = [
   '/download',
@@ -30,7 +31,12 @@ export function isLandingPublicPath(pathname: string): boolean {
 /** User-Agent Capacitor (appendUserAgent dans capacitor.config.ts). */
 export function isNativeUserAgent(userAgent: string | null | undefined): boolean {
   if (!userAgent) return false
-  return /MesPochesNative/i.test(userAgent) || /Capacitor/i.test(userAgent)
+  return (
+    /MesPochesNative/i.test(userAgent) ||
+    /Capacitor/i.test(userAgent) ||
+    // WebView Android classique
+    (/; wv\)/i.test(userAgent) && /Android/i.test(userAgent))
+  )
 }
 
 export function shouldShowPublicLanding(opts: {

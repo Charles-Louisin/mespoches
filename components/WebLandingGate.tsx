@@ -3,11 +3,20 @@
 import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { Capacitor } from '@capacitor/core'
-import { isLandingPublicPath, shouldShowPublicLanding } from '@/lib/web-gate'
+import {
+  NATIVE_APP_COOKIE,
+  isLandingPublicPath,
+  shouldShowPublicLanding,
+} from '@/lib/web-gate'
+
+function setNativeCookie() {
+  const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+  document.cookie = `${NATIVE_APP_COOKIE}=1; Path=/; Max-Age=31536000; SameSite=Lax${secure}`
+}
 
 /**
- * Filet de sécurité : si le middleware n'a pas encore le cookie APK,
- * on évite d'afficher la landing dans l'app native.
+ * - Navigateur prod → /download
+ * - APK → jamais la landing ; si on y est, retour vers l'app
  */
 export default function WebLandingGate() {
   const pathname = usePathname()
@@ -15,9 +24,16 @@ export default function WebLandingGate() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (isLandingPublicPath(pathname)) return
 
-    if (Capacitor.isNativePlatform()) return
+    if (Capacitor.isNativePlatform()) {
+      setNativeCookie()
+      if (pathname === '/download' || pathname.startsWith('/download/')) {
+        router.replace('/login')
+      }
+      return
+    }
+
+    if (isLandingPublicPath(pathname)) return
 
     const showLanding = shouldShowPublicLanding({
       hostname: window.location.hostname,

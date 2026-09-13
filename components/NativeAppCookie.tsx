@@ -8,7 +8,8 @@ import { NATIVE_APP_COOKIE } from '@/lib/web-gate'
 export default function NativeAppCookie() {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return
-    document.cookie = `${NATIVE_APP_COOKIE}=1; Path=/; Max-Age=31536000; SameSite=Lax`
+    const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+    document.cookie = `${NATIVE_APP_COOKIE}=1; Path=/; Max-Age=31536000; SameSite=Lax${secure}`
   }, [])
 
   return null
