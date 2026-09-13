@@ -110,6 +110,18 @@ const withPWA = require('next-pwa')({
 
 const backendUrl = (process.env.DEV_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '')
 
+function productionBackendOrigin() {
+  const raw = (
+    process.env.BACKEND_API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    'https://mespochesbackend-production.up.railway.app'
+  ).replace(/\/$/, '')
+  if (!raw.startsWith('http')) {
+    return 'https://mespochesbackend-production.up.railway.app'
+  }
+  return raw.replace(/\/api$/i, '')
+}
+
 function cspConnectSrc() {
   const origins = new Set([
     "'self'",
@@ -196,18 +208,65 @@ const nextConfig = {
     ]
   },
   async rewrites() {
-    // Proxy dev uniquement — aucun rewrite en production (Vercel / build prod)
-    if (process.env.NODE_ENV !== 'development') {
-      return []
-    }
-    return {
-      afterFiles: [
-        {
-          source: '/api/:path*',
-          destination: `${backendUrl}/api/:path*`,
-        },
-      ],
-    }
+    const dest =
+      process.env.NODE_ENV === 'development'
+        ? backendUrl
+        : productionBackendOrigin()
+
+    // Ne pas proxyer /api/auth/login|token|google… (cookies Next.js).
+    const proxied = [
+      'wallets',
+      'transactions',
+      'categories',
+      'analytics',
+      'admin',
+      'budgets',
+      'savings-goals',
+      'recurring',
+      'export',
+      'subscription',
+      'webhooks',
+      'planned-expenses',
+      'pending-transactions',
+      'health',
+      'cinetpay-setup',
+    ]
+
+    const afterFiles = proxied.flatMap((prefix) => [
+      {
+        source: `/api/${prefix}`,
+        destination: `${dest}/api/${prefix}`,
+      },
+      {
+        source: `/api/${prefix}/:path*`,
+        destination: `${dest}/api/${prefix}/:path*`,
+      },
+    ])
+
+    afterFiles.push(
+      {
+        source: '/api/auth/me',
+        destination: `${dest}/api/auth/me`,
+      },
+      {
+        source: '/api/auth/check-availability',
+        destination: `${dest}/api/auth/check-availability`,
+      },
+      {
+        source: '/api/auth/google/exchange',
+        destination: `${dest}/api/auth/google/exchange`,
+      },
+      {
+        source: '/api/auth/google/handoff',
+        destination: `${dest}/api/auth/google/handoff`,
+      },
+      {
+        source: '/api/auth/google/client',
+        destination: `${dest}/api/auth/google/client`,
+      }
+    )
+
+    return { afterFiles }
   },
 }
 

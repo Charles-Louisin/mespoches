@@ -37,12 +37,7 @@ export async function middleware(request: NextRequest) {
     (emailVerifiedCookie || payload?.emailVerified === true)
 
   if (rawToken && !hasValidToken) {
-    const res = NextResponse.redirect(
-      new URL(
-        request.cookies.get('onboarding_seen')?.value ? '/login' : '/onboarding',
-        request.url
-      )
-    )
+    const res = NextResponse.redirect(new URL('/login', request.url))
     res.cookies.set(AUTH_TOKEN_COOKIE, '', {
       httpOnly: true,
       path: '/',
@@ -65,12 +60,13 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!hasValidToken && !isPublicRoute) {
-    const onboardingSeen = request.cookies.get('onboarding_seen')?.value
-
-    if (onboardingSeen) {
-      return NextResponse.redirect(new URL('/login', request.url))
+    if (pathname === '/') {
+      const onboardingSeen = request.cookies.get('onboarding_seen')?.value
+      if (!onboardingSeen) {
+        return NextResponse.redirect(new URL('/onboarding', request.url))
+      }
     }
-    return NextResponse.redirect(new URL('/onboarding', request.url))
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
   if (

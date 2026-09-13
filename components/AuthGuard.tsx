@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import {
   hydrateAuthSession,
   isAuthenticated,
-  hasSeenOnboarding,
 } from '@/lib/auth';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -21,11 +20,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       if (cancelled) return;
 
       if (!isAuthenticated()) {
-        if (!hasSeenOnboarding()) {
-          router.push('/onboarding');
-        } else {
-          router.push('/login');
-        }
+        router.push('/login');
       } else {
         setIsChecking(false);
       }

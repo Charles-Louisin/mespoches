@@ -136,6 +136,7 @@ export const clearPendingVerificationEmail = (): void => {
 const persistAuth = (data: { user: User; token: string }) => {
   setToken(data.token);
   setUser(data.user);
+  setOnboardingSeen();
   clearPendingVerificationEmail();
 };
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { authApi } from '@/lib/api'
-import { getToken, hydrateAuthSession, setUser } from '@/lib/auth'
+import { getToken, hydrateAuthSession, setOnboardingSeen, setUser } from '@/lib/auth'
 import AppLogo from '@/components/AppLogo'
 import LoadingBar from '@/components/LoadingBar'
 
@@ -37,6 +37,7 @@ export default function AuthCompletePage() {
         const me = await authApi.me()
         if (cancelled) return
 
+        setOnboardingSeen()
         setUser({
           id: me.id,
           email: me.email,
