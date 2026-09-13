@@ -4,12 +4,26 @@ function stripSlash(value: string): string {
   return value.replace(/\/$/, '');
 }
 
+/** Apex et Vercel custom domain → même origine que Google Console. */
+function canonicalizePublicOrigin(origin: string): string {
+  try {
+    const parsed = new URL(origin);
+    const host = parsed.hostname.toLowerCase();
+    if (host === 'mespoches.store' || host === 'www.mespoches.store') {
+      return 'https://www.mespoches.store';
+    }
+  } catch {
+    /* ignore */
+  }
+  return stripSlash(origin);
+}
+
 function isLocalHost(host: string): boolean {
   return /^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(host);
 }
 
 function envPublicOrigin(): string {
-  return stripSlash(
+  return canonicalizePublicOrigin(
     process.env.GOOGLE_REDIRECT_ORIGIN ||
       process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_ORIGIN ||
       process.env.NEXT_PUBLIC_APP_URL ||
@@ -37,7 +51,7 @@ export function resolveOAuthOrigin(request: NextRequest): string {
   if (mobile && override.startsWith('http')) {
     try {
       const parsed = new URL(override);
-      if (!isLocalHost(parsed.host)) return stripSlash(override);
+      if (!isLocalHost(parsed.host)) return canonicalizePublicOrigin(override);
     } catch {
       /* ignore */
     }
@@ -51,7 +65,7 @@ export function resolveOAuthOrigin(request: NextRequest): string {
   // 3) Tunnel / reverse-proxy
   if (forwardedHost && !isLocalHost(forwardedHost)) {
     const proto = forwardedProto || 'https';
-    return `${proto}://${forwardedHost}`.replace(/\/$/, '');
+    return canonicalizePublicOrigin(`${proto}://${forwardedHost}`);
   }
 
   const host = requestHost || forwardedHost || request.nextUrl.host;
@@ -62,7 +76,7 @@ export function resolveOAuthOrigin(request: NextRequest): string {
   if (override.startsWith('http')) {
     try {
       const parsed = new URL(override);
-      if (!isLocalHost(parsed.host)) return stripSlash(override);
+      if (!isLocalHost(parsed.host)) return canonicalizePublicOrigin(override);
     } catch {
       /* ignore */
     }
@@ -72,7 +86,7 @@ export function resolveOAuthOrigin(request: NextRequest): string {
     /^https:\/\/(localhost|127\.0\.0\.1)/i,
     'http://$1'
   );
-  return stripSlash(origin);
+  return canonicalizePublicOrigin(origin);
 }
 
 /** Callback : mobile → URL publique ; web → origine de la requête (localhost). */
@@ -85,7 +99,7 @@ export function resolveCallbackOrigin(
     if (override.startsWith('http')) {
       try {
         const parsed = new URL(override);
-        if (!isLocalHost(parsed.host)) return stripSlash(override);
+        if (!isLocalHost(parsed.host)) return canonicalizePublicOrigin(override);
       } catch {
         /* ignore */
       }

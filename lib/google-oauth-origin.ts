@@ -4,6 +4,19 @@ function stripSlash(value: string): string {
   return value.replace(/\/$/, '')
 }
 
+function canonicalizePublicOrigin(origin: string): string {
+  try {
+    const parsed = new URL(origin)
+    const host = parsed.hostname.toLowerCase()
+    if (host === 'mespoches.store' || host === 'www.mespoches.store') {
+      return 'https://www.mespoches.store'
+    }
+  } catch {
+    /* ignore */
+  }
+  return stripSlash(origin)
+}
+
 function localHttpOrigin(origin: string): string {
   return origin.replace(/^https:\/\/(localhost|127\.0\.0\.1)/i, 'http://$1')
 }
@@ -15,7 +28,7 @@ function localHttpOrigin(origin: string): string {
  */
 export function getGoogleOAuthOrigin(): string {
   if (typeof window !== 'undefined' && !Capacitor.isNativePlatform()) {
-    return localHttpOrigin(stripSlash(window.location.origin))
+    return canonicalizePublicOrigin(localHttpOrigin(stripSlash(window.location.origin)))
   }
 
   const fromEnv = stripSlash(
@@ -23,10 +36,10 @@ export function getGoogleOAuthOrigin(): string {
       process.env.NEXT_PUBLIC_APP_URL ||
       ''
   )
-  if (fromEnv.startsWith('http')) return fromEnv
+  if (fromEnv.startsWith('http')) return canonicalizePublicOrigin(fromEnv)
 
   if (typeof window !== 'undefined' && window.location?.origin) {
-    return localHttpOrigin(stripSlash(window.location.origin))
+    return canonicalizePublicOrigin(localHttpOrigin(stripSlash(window.location.origin)))
   }
   return ''
 }
