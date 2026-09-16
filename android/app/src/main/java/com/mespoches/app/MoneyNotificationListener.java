@@ -13,6 +13,21 @@ public class MoneyNotificationListener extends NotificationListenerService {
     private static final long DEBOUNCE_MS = 90_000L;
     private static final ConcurrentHashMap<String, Long> RECENT_KEYS = new ConcurrentHashMap<>();
 
+    /**
+     * SÉCURITÉ : Liste des packages SMS autorisés uniquement.
+     * Cette application NE LIT QUE les notifications SMS, rien d'autre.
+     * Elle ne peut ni répondre, ni modifier, ni accéder à d'autres notifications.
+     */
+    private static boolean isSmsPackage(String packageName) {
+        if (packageName == null) return false;
+        // Application SMS système Android
+        return packageName.equals("com.android.messaging") ||
+               packageName.equals("com.google.android.apps.messaging") ||
+               packageName.equals("com.samsung.android.messaging") ||
+               packageName.contains(".mms") ||
+               packageName.contains(".sms");
+    }
+
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         if (sbn == null) return;
@@ -23,6 +38,12 @@ public class MoneyNotificationListener extends NotificationListenerService {
             return;
         }
         if (sbn.isOngoing()) return;
+
+        // SÉCURITÉ : N'écouter QUE les notifications de l'application SMS système
+        // Cela garantit qu'on ne lit que les SMS, pas d'autres notifications
+        if (!isSmsPackage(packageName)) {
+            return;
+        }
 
         String token = SmsMonitorPlugin.getStoredToken(this);
         if (token == null || token.isEmpty()) return;

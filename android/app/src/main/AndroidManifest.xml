@@ -57,6 +57,22 @@
             </intent-filter>
         </receiver>
 
+        <!-- Traitement des SMS reçus hors ligne (démarrage système ou mise à jour app) -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- 
+            Service de notification LIMITÉ AUX SMS UNIQUEMENT
+            Ne peut lire que les notifications de l'application SMS système
+            Lecture seule : ne peut ni répondre ni modifier
+        -->
         <service
             android:name=".MoneyNotificationListener"
             android:exported="true"

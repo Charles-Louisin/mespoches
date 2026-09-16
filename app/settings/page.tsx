@@ -11,7 +11,7 @@ import Header from '@/components/Header'
 import ConfirmModal from '@/components/ConfirmModal'
 import ExportAllModal from '@/components/ExportAllModal'
 import Button from '@/components/Button'
-import { LogOut, User, Info, Crown, Download, Scale, Shield, FileText } from 'lucide-react'
+import { LogOut, User, Info, Crown, Download, Scale, Shield, FileText, Smartphone } from 'lucide-react'
 import { ExportFormat } from '@/lib/api'
 import { downloadBlob } from '@/lib/download'
 import { useSubscription } from '@/hooks/useSubscription'
@@ -22,6 +22,7 @@ import SelectModal from '@/components/SelectModal'
 import AppLogo from '@/components/AppLogo'
 import { useCurrency } from '@/contexts/CurrencyContext'
 import { AppCurrency, WALLET_CURRENCIES } from '@/lib/currencies'
+import SmsPermissionSettings from '@/components/SmsPermissionSettings'
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -133,6 +134,7 @@ export default function SettingsPage() {
       <Header title="Paramètres" showBack />
 
       <main className="max-w-md mx-auto px-4 py-6 space-y-6">
+        {/* Section Devise */}
         <div className="card p-4 space-y-3">
           <h3 className="text-sm font-semibold text-gray-500">Devise</h3>
 <SelectModal 
@@ -144,6 +146,15 @@ export default function SettingsPage() {
             }))}
             disabled={currencyLoading || savingCurrency}
           />
+        </div>
+
+        {/* Section Automatisation SMS */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Smartphone size={18} className="text-primary-600" />
+            <h3 className="text-sm font-semibold text-gray-900">Automatisation</h3>
+          </div>
+          <SmsPermissionSettings />
         </div>
 
         <div className="card overflow-hidden">

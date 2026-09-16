@@ -5,6 +5,8 @@ import {
   extractAuthSession,
 } from '@/lib/server/session-cookies';
 import {
+  appendHandoffCode,
+  isAllowedAppReturnTo,
   parseOAuthState,
   resolveCallbackOrigin,
 } from '@/lib/server/oauth-origin';
@@ -15,9 +17,10 @@ import {
 
 const NONCE_COOKIE = 'google_oauth_client_nonce';
 const STATE_COOKIE = 'google_oauth_state';
+const RETURN_COOKIE = 'google_oauth_return_to';
 
 function clearOAuthCookies(response: NextResponse): void {
-  for (const name of [STATE_COOKIE, NONCE_COOKIE]) {
+  for (const name of [STATE_COOKIE, NONCE_COOKIE, RETURN_COOKIE]) {
     response.cookies.set(name, '', {
       httpOnly: true,
       path: '/',
@@ -39,7 +42,8 @@ export async function GET(request: NextRequest) {
     parsedCookie?.mobile === true ||
     Boolean(request.cookies.get(NONCE_COOKIE)?.value);
   const origin = resolveCallbackOrigin(request, mobile);
-  const clientNonce = request.cookies.get(NONCE_COOKIE)?.value;
+  const clientNonce =
+    request.cookies.get(NONCE_COOKIE)?.value || parsedState?.nonce;
 
   if (oauthError || !code) {
     const next = NextResponse.redirect(
@@ -149,10 +153,13 @@ export async function GET(request: NextRequest) {
         return next;
       }
 
-      // Custom scheme → app. Le code seul ne suffit pas sans nonce WebView.
-      const next = NextResponse.redirect(
-        `mespoches://auth/google?code=${encodeURIComponent(handoffCode)}`
-      );
+      const returnTo =
+        request.cookies.get(RETURN_COOKIE)?.value || parsedState?.returnTo;
+      const appTarget = isAllowedAppReturnTo(returnTo)
+        ? returnTo
+        : 'mespoches://auth/google';
+
+      const next = NextResponse.redirect(appendHandoffCode(appTarget, handoffCode));
       clearOAuthCookies(next);
       return next;
     }

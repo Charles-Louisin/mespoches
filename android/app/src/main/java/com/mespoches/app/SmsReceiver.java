@@ -6,6 +6,20 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.telephony.SmsMessage;
 
+/**
+ * RÉCEPTEUR SMS - LECTURE SEULE
+ * 
+ * SÉCURITÉ & CONFIDENTIALITÉ :
+ * - Lit UNIQUEMENT les SMS entrants (RECEIVE_SMS)
+ * - NE PEUT PAS répondre aux SMS
+ * - NE PEUT PAS envoyer de SMS  
+ * - NE PEUT PAS modifier ou supprimer des SMS
+ * - NE PEUT PAS accéder aux SMS existants (sauf via BootReceiver avec READ_SMS)
+ * - Filtre automatique : seuls les SMS monétaires sont traités
+ * - Ne collecte AUCUNE donnée personnelle (numéro, contacts, etc.)
+ * 
+ * Permission requise : android.permission.RECEIVE_SMS (lecture uniquement)
+ */
 public class SmsReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {

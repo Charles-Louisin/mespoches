@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   buildOAuthState,
+  isAllowedAppReturnTo,
   resolveOAuthOrigin,
 } from '@/lib/server/oauth-origin';
 import { resolveGoogleClientId } from '@/lib/server/google-oauth';
 
 const NONCE_COOKIE = 'google_oauth_client_nonce';
 const STATE_COOKIE = 'google_oauth_state';
+const RETURN_COOKIE = 'google_oauth_return_to';
 
 function isValidClientNonce(value: string | null): value is string {
   return !!value && /^[A-Za-z0-9_-]{32,128}$/.test(value);
@@ -25,6 +27,7 @@ export async function GET(request: NextRequest) {
   const redirectUri = `${origin}/api/auth/google/callback`;
   const mobile = request.nextUrl.searchParams.get('mobile') === '1';
   const clientNonce = request.nextUrl.searchParams.get('client_nonce');
+  const returnTo = request.nextUrl.searchParams.get('return_to');
 
   if (mobile && !isValidClientNonce(clientNonce)) {
     return NextResponse.redirect(
@@ -32,7 +35,10 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const state = buildOAuthState(mobile);
+  const state = buildOAuthState(mobile, {
+    returnTo: isAllowedAppReturnTo(returnTo) ? returnTo : undefined,
+    nonce: mobile && clientNonce ? clientNonce : undefined,
+  });
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   url.searchParams.set('client_id', clientId);
   url.searchParams.set('redirect_uri', redirectUri);
@@ -63,6 +69,22 @@ export async function GET(request: NextRequest) {
     });
   } else {
     response.cookies.set(NONCE_COOKIE, '', {
+      httpOnly: true,
+      path: '/',
+      maxAge: 0,
+    });
+  }
+
+  if (mobile && isAllowedAppReturnTo(returnTo)) {
+    response.cookies.set(RETURN_COOKIE, returnTo, {
+      httpOnly: true,
+      secure,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 10 * 60,
+    });
+  } else {
+    response.cookies.set(RETURN_COOKIE, '', {
       httpOnly: true,
       path: '/',
       maxAge: 0,
