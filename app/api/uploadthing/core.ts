@@ -1,27 +1,15 @@
 import { createUploadthing, type FileRouter } from 'uploadthing/next'
 import { UploadThingError } from 'uploadthing/server'
-import { verifyAuthToken } from '@/lib/server/jwt'
-import { AUTH_TOKEN_COOKIE } from '@/lib/server/session-cookies'
+import { getRequestUserId } from '@/lib/server/request-auth'
 
 const f = createUploadthing()
 
 async function requireUser(req: Request) {
-  const cookieHeader = req.headers.get('cookie') ?? ''
-  const match = cookieHeader.match(
-    new RegExp(`(?:^|;\\s*)${AUTH_TOKEN_COOKIE}=([^;]+)`)
-  )
-  const token = match?.[1] ? decodeURIComponent(match[1]) : null
-
-  if (!token) {
+  const userId = await getRequestUserId(req)
+  if (!userId) {
     throw new UploadThingError('Non autorisé')
   }
-
-  const payload = await verifyAuthToken(token)
-  if (!payload?.id) {
-    throw new UploadThingError('Session invalide')
-  }
-
-  return { userId: String(payload.id) }
+  return { userId }
 }
 
 export const ourFileRouter = {
