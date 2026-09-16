@@ -34,6 +34,9 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
+  verification: {
+    google: 'RVafmc-RMHhi3At9jbpUHXBCtf9bD9Dz8YolzToMpS8',
+  },
   manifest: '/manifest.json',
   icons: {
     icon: [
