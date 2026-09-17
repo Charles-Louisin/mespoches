@@ -32,11 +32,15 @@ export function resolveOAuthOrigin(request: NextRequest): string {
   const mobile = request.nextUrl.searchParams.get('mobile') === '1';
   const override = envPublicOrigin();
 
-  // App native : URL publique (Vercel / domaine custom)
+  // App native depuis un host local : forcer l’URL publique (console Google).
+  // Sinon garder le host réel pour que start + callback aient le même redirect_uri.
   if (mobile && override.startsWith('http')) {
     try {
       const parsed = new URL(override);
-      if (!isLocalHost(parsed.host)) return stripSlash(override);
+      const host = forwardedHost || requestHost || '';
+      if (!isLocalHost(parsed.host) && (isLocalHost(host) || !host)) {
+        return stripSlash(override);
+      }
     } catch {
       /* ignore */
     }
@@ -72,11 +76,24 @@ export function resolveOAuthOrigin(request: NextRequest): string {
   return stripSlash(origin);
 }
 
-/** Callback : même host que la requête (ou override mobile). */
+/** Callback : host réel de la requête (même redirect_uri que Google). */
 export function resolveCallbackOrigin(
   request: NextRequest,
   mobile: boolean
 ): string {
+  const requestHost = request.headers.get('host')?.split(',')[0]?.trim();
+  const forwardedHost = request.headers
+    .get('x-forwarded-host')
+    ?.split(',')[0]
+    ?.trim();
+  const forwardedProto =
+    request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
+  const host = forwardedHost || requestHost || '';
+
+  if (host && !isLocalHost(host)) {
+    return `${forwardedProto || 'https'}://${host}`.replace(/\/$/, '');
+  }
+
   if (mobile) {
     const override = envPublicOrigin();
     if (override.startsWith('http')) {
@@ -89,23 +106,8 @@ export function resolveCallbackOrigin(
     }
   }
 
-  const requestHost = request.headers.get('host')?.split(',')[0]?.trim();
   if (requestHost && isLocalHost(requestHost)) {
     return `http://${requestHost}`;
-  }
-
-  // Priorité au host réel du callback (cookie state sur ce host)
-  const forwardedHost = request.headers
-    .get('x-forwarded-host')
-    ?.split(',')[0]
-    ?.trim();
-  const forwardedProto =
-    request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
-  if (forwardedHost && !isLocalHost(forwardedHost)) {
-    return `${forwardedProto || 'https'}://${forwardedHost}`.replace(/\/$/, '');
-  }
-  if (requestHost) {
-    return `https://${requestHost}`.replace(/\/$/, '');
   }
 
   return resolveOAuthOrigin(request);

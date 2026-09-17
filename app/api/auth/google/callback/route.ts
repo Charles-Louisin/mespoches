@@ -29,6 +29,30 @@ function clearOAuthCookies(response: NextResponse): void {
   }
 }
 
+function failRedirect(
+  request: NextRequest,
+  origin: string,
+  error: string,
+  mobile: boolean,
+  parsedState: ReturnType<typeof parseOAuthState>
+): NextResponse {
+  const returnTo =
+    request.cookies.get(RETURN_COOKIE)?.value || parsedState?.returnTo;
+  if (mobile && isAllowedAppReturnTo(returnTo)) {
+    const sep = returnTo.includes('?') ? '&' : '?';
+    const next = NextResponse.redirect(
+      `${returnTo}${sep}error=${encodeURIComponent(error)}`
+    );
+    clearOAuthCookies(next);
+    return next;
+  }
+  const next = NextResponse.redirect(
+    new URL(`/login?error=${encodeURIComponent(error)}`, origin)
+  );
+  clearOAuthCookies(next);
+  return next;
+}
+
 /** Callback OAuth Google → session MES POCHES (7 jours). */
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code');
@@ -46,18 +70,16 @@ export async function GET(request: NextRequest) {
     request.cookies.get(NONCE_COOKIE)?.value || parsedState?.nonce;
 
   if (oauthError || !code) {
-    const next = NextResponse.redirect(
-      new URL(`/login?error=${oauthError || 'google_denied'}`, origin)
+    return failRedirect(
+      request,
+      origin,
+      oauthError || 'google_denied',
+      mobile,
+      parsedState
     );
-    clearOAuthCookies(next);
-    return next;
   }
   if (!returnedState || !parsedState) {
-    const next = NextResponse.redirect(
-      new URL('/login?error=google_state', origin)
-    );
-    clearOAuthCookies(next);
-    return next;
+    return failRedirect(request, origin, 'google_state', mobile, parsedState);
   }
 
   // Si le cookie state est présent, il doit correspondre (anti-CSRF).
@@ -68,19 +90,11 @@ export async function GET(request: NextRequest) {
       !parsedCookie ||
       parsedState.id !== parsedCookie.id)
   ) {
-    const next = NextResponse.redirect(
-      new URL('/login?error=google_state', origin)
-    );
-    clearOAuthCookies(next);
-    return next;
+    return failRedirect(request, origin, 'google_state', mobile, parsedState);
   }
 
   if (mobile && (!clientNonce || clientNonce.length < 32)) {
-    const next = NextResponse.redirect(
-      new URL('/login?error=google_nonce', origin)
-    );
-    clearOAuthCookies(next);
-    return next;
+    return failRedirect(request, origin, 'google_nonce', mobile, parsedState);
   }
 
   const clientId = localGoogleClientId();
@@ -112,7 +126,7 @@ export async function GET(request: NextRequest) {
 
       if (!tokenRes.ok || !tokenData.id_token) {
         console.error('Google token exchange failed:', tokenData);
-        return NextResponse.redirect(new URL('/login?error=google_token', origin));
+        return failRedirect(request, origin, 'google_token', mobile, parsedState);
       }
 
       ({ response, data } = await proxyAuthRequest('/auth/google', {
@@ -132,11 +146,7 @@ export async function GET(request: NextRequest) {
     if (!response.ok || !data.success) {
       const message =
         typeof data.message === 'string' ? data.message : 'google_failed';
-      const next = NextResponse.redirect(
-        new URL(`/login?error=${encodeURIComponent(message)}`, origin)
-      );
-      clearOAuthCookies(next);
-      return next;
+      return failRedirect(request, origin, message, mobile, parsedState);
     }
 
     if (mobile) {
@@ -146,11 +156,7 @@ export async function GET(request: NextRequest) {
           : null;
       const handoffCode = inner?.handoffCode;
       if (typeof handoffCode !== 'string') {
-        const next = NextResponse.redirect(
-          new URL('/login?error=google_session', origin)
-        );
-        clearOAuthCookies(next);
-        return next;
+        return failRedirect(request, origin, 'google_session', mobile, parsedState);
       }
 
       const returnTo =
@@ -168,20 +174,12 @@ export async function GET(request: NextRequest) {
       data as Parameters<typeof extractAuthSession>[0]
     );
     if (!session) {
-      const next = NextResponse.redirect(
-        new URL('/login?error=google_session', origin)
-      );
-      clearOAuthCookies(next);
-      return next;
+      return failRedirect(request, origin, 'google_session', mobile, parsedState);
     }
 
     const { verifyAuthToken } = await import('@/lib/server/jwt');
     if (!(await verifyAuthToken(session.token))) {
-      const next = NextResponse.redirect(
-        new URL('/login?error=google_session', origin)
-      );
-      clearOAuthCookies(next);
-      return next;
+      return failRedirect(request, origin, 'google_session', mobile, parsedState);
     }
 
     const next = NextResponse.redirect(new URL('/auth/complete', `${origin}/`));
@@ -190,10 +188,6 @@ export async function GET(request: NextRequest) {
     return next;
   } catch (err) {
     console.error('Google callback error:', err);
-    const next = NextResponse.redirect(
-      new URL('/login?error=google_failed', origin)
-    );
-    clearOAuthCookies(next);
-    return next;
+    return failRedirect(request, origin, 'google_failed', mobile, parsedState);
   }
 }
