@@ -9,6 +9,7 @@ import {
   resendVerificationCode,
   getPendingVerificationEmail,
   isAuthenticated,
+  redirectAfterAuth,
 } from '@/lib/auth'
 import { toast } from 'sonner'
 
@@ -23,7 +24,7 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     if (isAuthenticated()) {
-      router.replace('/')
+      redirectAfterAuth()
       return
     }
 
@@ -64,10 +65,8 @@ export default function VerifyEmailPage() {
     try {
       const response = await verifyEmail(email, code)
       if (response.success) {
-        const { startSetupGuide } = await import('@/lib/setupGuide')
-        startSetupGuide()
         toast.success('Email vérifié ! Connexion en cours...')
-        window.location.assign('/')
+        redirectAfterAuth()
         return
       } else {
         toast.error(response.message || 'Code invalide')

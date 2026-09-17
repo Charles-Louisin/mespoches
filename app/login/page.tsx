@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Capacitor } from '@capacitor/core'
 import AppLogo from '@/components/AppLogo'
 import { Eye, EyeOff } from 'lucide-react'
 import Button from '@/components/Button'
@@ -15,7 +14,7 @@ import {
   checkRegisterAvailability,
   hydrateAuthSession,
   isAuthenticated,
-  getToken,
+  redirectAfterAuth,
 } from '@/lib/auth'
 import {
   validateLoginField,
@@ -28,25 +27,25 @@ import {
 import { toast } from 'sonner'
 import { getGoogleOAuthOrigin } from '@/lib/google-oauth-origin'
 import LoadingBar from '@/components/LoadingBar'
+import StoreChrome from '@/components/store/StoreChrome'
+import Link from 'next/link'
 
 type TouchedState = Partial<Record<LoginField, boolean>>
 
 const INITIAL_AVAILABILITY: RegisterAvailability = {
-  email: 'idle',
   name: 'idle',
 }
 
 function googleErrorMessage(code: string | null): string | null {
   if (!code) return null
   const map: Record<string, string> = {
-    google_config:
-      'Connexion Google indisponible. Vérifiez GOOGLE_CLIENT_ID / SECRET sur le backend.',
+    google_config: 'La connexion Google est temporairement indisponible. Réessayez plus tard.',
     google_denied: 'Connexion Google annulée.',
-    google_token: 'Échange Google impossible. Réessayez.',
-    google_session: 'Session Google invalide.',
-    google_state: 'Session Google expirée. Veuillez recommencer.',
-    google_nonce: 'Sécurité Google : relancez la connexion depuis l’app.',
-    google_failed: 'Connexion Google impossible.',
+    google_token: 'Impossible de finaliser la connexion Google. Réessayez.',
+    google_session: 'Session Google invalide. Veuillez recommencer.',
+    google_state: 'Session expirée. Veuillez recommencer.',
+    google_nonce: 'La connexion Google n’a pas pu aboutir. Réessayez.',
+    google_failed: 'Connexion Google impossible. Réessayez.',
     access_denied: 'Connexion Google annulée.',
   }
   return map[code] || decodeURIComponent(code)
@@ -80,8 +79,8 @@ function LoginPageContent() {
     void (async () => {
       await hydrateAuthSession()
       if (cancelled) return
-      if (getToken() && isAuthenticated()) {
-        window.location.replace('/')
+      if (isAuthenticated()) {
+        redirectAfterAuth()
       }
     })()
     return () => {
@@ -114,60 +113,35 @@ function LoginPageContent() {
       return
     }
 
-    const emailBase = validateLoginField('email', formValues)
     const nameBase = validateLoginField('name', formValues)
-
-    const needsEmailCheck = emailBase.valid && email.trim().length > 0
     const needsNameCheck = nameBase.valid && name.trim().length > 0
 
-    if (!needsEmailCheck && !needsNameCheck) {
+    if (!needsNameCheck) {
       setAvailability(INITIAL_AVAILABILITY)
       return
     }
 
-    setAvailability({
-      email: needsEmailCheck ? 'checking' : 'idle',
-      name: needsNameCheck ? 'checking' : 'idle',
-    })
+    setAvailability({ name: 'checking' })
 
     const timer = setTimeout(async () => {
       try {
-        const data = await checkRegisterAvailability({
-          email: needsEmailCheck ? email : undefined,
-          name: needsNameCheck ? name : undefined,
-        })
-
-        setAvailability({
-          email: !needsEmailCheck
-            ? 'idle'
-            : data.email?.available
-              ? 'available'
-              : 'taken',
-          name: !needsNameCheck
-            ? 'idle'
-            : data.name?.available
-              ? 'available'
-              : 'taken',
-        })
+        const data = await checkRegisterAvailability({ name })
+        setAvailability({ name: data.name?.available ? 'available' : 'taken' })
       } catch {
         setAvailability((prev) => ({
-          email:
-            prev.email === 'checking' && needsEmailCheck ? 'idle' : prev.email,
-          name: prev.name === 'checking' && needsNameCheck ? 'idle' : prev.name,
+          name: prev.name === 'checking' ? 'idle' : prev.name,
         }))
       }
     }, 450)
 
     return () => clearTimeout(timer)
-  }, [isLogin, email, name, formValues])
+  }, [isLogin, name, formValues])
 
   const resolveFieldProps = useCallback(
     (field: LoginField) => {
       const base = validateLoginField(field, formValues)
       const withAvailability =
-        field === 'email' || field === 'name'
-          ? applyAvailabilityToField(field, base, availability[field])
-          : base
+        field === 'name' ? applyAvailabilityToField(base, availability.name) : base
       const show = shouldShowFeedback(field)
       return {
         error: show && !withAvailability.valid ? withAvailability.error : undefined,
@@ -194,28 +168,8 @@ function LoginPageContent() {
   const startGoogle = async () => {
     if (googleLoading || loading) return
     setGoogleLoading(true)
-    const isNative = Capacitor.isNativePlatform()
     const origin = getGoogleOAuthOrigin() || window.location.origin
-    let url = `${origin}/api/auth/google`
-
-    if (isNative) {
-      const bytes = new Uint8Array(32)
-      crypto.getRandomValues(bytes)
-      const clientNonce = Array.from(bytes, (b) =>
-        b.toString(16).padStart(2, '0')
-      ).join('')
-      sessionStorage.setItem('mp_oauth_client_nonce', clientNonce)
-      url += `?mobile=1&client_nonce=${encodeURIComponent(clientNonce)}`
-      try {
-        window.location.href = url
-      } catch {
-        sessionStorage.removeItem('mp_oauth_client_nonce')
-        setGoogleLoading(false)
-        toast.error('Impossible de démarrer Google.')
-      }
-      return
-    }
-    url += url.includes('?') ? '&web=1' : '?web=1'
+    const url = `${origin}/api/auth/google?web=1`
     window.location.href = url
   }
 
@@ -234,15 +188,10 @@ function LoginPageContent() {
         const response = await login(email.trim(), password)
         if (response.success) {
           await hydrateAuthSession({ preserveExisting: true })
-          toast.success('Connexion réussie !')
-          // Navigation complète : le cookie HttpOnly doit être pris en compte par le middleware
-          window.location.assign('/')
+          redirectAfterAuth()
           return
         } else if (response.code === 'JWT_MISMATCH') {
-          toast.error(
-            response.message ||
-              'JWT_SECRET Vercel différent de Railway — alignez les deux variables.'
-          )
+          toast.error('Connexion impossible pour le moment. Réessayez plus tard.')
         } else if (response.code === 'EMAIL_NOT_VERIFIED') {
           toast.error(response.message || 'Email non vérifié')
           redirectToVerification(email.trim())
@@ -264,7 +213,7 @@ function LoginPageContent() {
         const response = await register(email.trim(), password, name.trim())
         if (response.success) {
           setPendingVerificationEmail(email.trim())
-          toast.success('Compte créé. 1 mois Premium offert — vérifiez votre email.')
+          toast.success('Compte créé. Vérifiez votre e-mail pour l’activer.')
           router.push(`/verify-email?email=${encodeURIComponent(email.trim())}`)
         } else {
           toast.error(response.message || 'Inscription impossible')
@@ -298,15 +247,46 @@ function LoginPageContent() {
       : undefined
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
-      <div className="flex-1 flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-md">
-          <div className="flex flex-col items-center mb-8">
-            <AppLogo size="lg" priority className="mb-4" />
-            <h1 className="text-2xl font-semibold text-ink">MES POCHES</h1>
+    <StoreChrome compact>
+      <div className="auth-split">
+        <section className="auth-brand">
+          <p className="auth-brand-mark" aria-hidden>
+            {'MES\nPOCHES'}
+          </p>
+          <div className="auth-brand-copy">
+            <AppLogo size="lg" priority />
+            <h1>Votre espace compte</h1>
+            <p>
+              Connectez-vous pour administrer le service ou gérer un compte MES POCHES. Le
+              suivi quotidien de vos poches se fait dans l’application mobile.
+            </p>
+            <ul className="auth-brand-list">
+              <li>
+                <b>—</b>
+                <span>Téléchargement officiel de l’APK Android depuis ce site.</span>
+              </li>
+              <li>
+                <b>—</b>
+                <span>Vos mouvements ne sont enregistrés qu’après validation.</span>
+              </li>
+              <li>
+                <b>—</b>
+                <span>Données personnelles traitées pour le seul fonctionnement du service.</span>
+              </li>
+            </ul>
           </div>
+        </section>
 
-          <div className="card p-6 space-y-4">
+        <section className="auth-form-col">
+          <div className="auth-card">
+            <h2>{isLogin ? 'Connexion' : 'Créer un compte'}</h2>
+            <p className="auth-lead">
+              {isLogin
+                ? 'Utilisez Google ou votre e-mail.'
+                : 'Un e-mail de vérification vous sera envoyé.'}
+            </p>
+
+            <div className="space-y-4">
             <Button
               type="button"
               variant="outline"
@@ -315,7 +295,7 @@ function LoginPageContent() {
               onClick={startGoogle}
               loading={googleLoading}
               disabled={loading}
-              className="gap-3 border-surface-line bg-white text-ink hover:bg-surface !shadow-none"
+              className="gap-3 border-black/[0.08] bg-white text-ink hover:bg-white/80 !shadow-none"
             >
               <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden>
                 <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.2 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.5-.4-3.5z"/>
@@ -328,10 +308,10 @@ function LoginPageContent() {
 
             <div className="relative py-1">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-surface-line" />
+                <div className="w-full border-t border-black/[0.08]" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-3 text-ink-mute">ou</span>
+                <span className="bg-white/80 px-3 text-[#6b6280]">ou</span>
               </div>
             </div>
 
@@ -339,9 +319,9 @@ function LoginPageContent() {
               <button
                 type="button"
                 onClick={() => setShowEmailForm(true)}
-                className="w-full rounded-xl border border-surface-line px-4 py-3 text-sm font-medium text-ink hover:bg-surface touch-manipulation"
+                className="w-full rounded-xl border border-black/[0.08] bg-white px-4 py-3 text-sm font-medium text-ink hover:bg-[#f7f5fb] touch-manipulation"
               >
-                Continuer avec email
+                Continuer avec e-mail
               </button>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -363,7 +343,7 @@ function LoginPageContent() {
                 )}
 
                 <Input
-                  label="Email"
+                  label="E-mail"
                   name="email"
                   type="email"
                   placeholder="votre@email.com"
@@ -424,7 +404,7 @@ function LoginPageContent() {
                           }`
                         )
                       }
-                      className="text-sm text-primary-500 hover:text-primary-600 font-medium touch-manipulation"
+                      className="text-sm text-[#2563EB] hover:underline font-medium touch-manipulation"
                     >
                       Mot de passe oublié ?
                     </button>
@@ -474,6 +454,7 @@ function LoginPageContent() {
                   disabled={submitAttempted && !formValid}
                   fullWidth
                   size="lg"
+                  className="!bg-[#2563eb] hover:!bg-[#1d4ed8]"
                 >
                   {loading
                     ? 'Chargement...'
@@ -482,22 +463,34 @@ function LoginPageContent() {
                       : 'Créer mon compte'}
                 </Button>
 
-                <p className="text-center text-sm text-ink-soft">
+                <p className="text-center text-sm text-[#6b6280]">
                   {isLogin ? 'Pas encore de compte ?' : 'Déjà un compte ?'}
                   <button
                     type="button"
                     onClick={switchMode}
-                    className="ml-2 text-ink font-medium touch-manipulation"
+                    className="ml-2 text-[#1b1630] font-semibold touch-manipulation"
                   >
                     {isLogin ? "S'inscrire" : 'Se connecter'}
                   </button>
                 </p>
               </form>
             )}
+            </div>
+            <p className="mt-6 text-center text-[12px] leading-relaxed text-[#6b6280]">
+              En continuant, vous acceptez les{' '}
+              <Link href="/legal/terms" className="font-semibold text-[#2563EB]">
+                conditions
+              </Link>{' '}
+              et la{' '}
+              <Link href="/legal/privacy" className="font-semibold text-[#2563EB]">
+                confidentialité
+              </Link>
+              .
+            </p>
           </div>
-        </div>
+        </section>
       </div>
-    </div>
+    </StoreChrome>
   )
 }
 
@@ -505,7 +498,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="store-root flex min-h-dvh items-center justify-center">
           <LoadingBar />
         </div>
       }

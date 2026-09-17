@@ -4,9 +4,14 @@ const USER_KEY = 'user_data';
 const ONBOARDING_KEY = 'onboarding_seen';
 const PENDING_EMAIL_KEY = 'pending_verification_email';
 
-/** Token en mémoire uniquement (pas dans document.cookie). Hydraté depuis /api/auth/token. */
-let memoryToken: string | undefined;
+/**
+ * État de session en mémoire, hydraté depuis /api/auth/token.
+ * Le JWT lui-même ne quitte jamais le cookie HttpOnly : les appels backend
+ * passent par /api/proxy qui pose l'en-tête Authorization côté serveur.
+ */
+let memorySignedIn = false;
 let memoryEmailVerified = false;
+let memoryRole: 'user' | 'admin' = 'user';
 let hydratePromise: Promise<void> | null = null;
 
 export interface User {
@@ -40,17 +45,15 @@ async function parseAuthResponse(response: Response): Promise<AuthResponse> {
   return response.json();
 }
 
-export const setToken = (token: string): void => {
-  memoryToken = token;
-};
-
-export const getToken = (): string | undefined => {
-  return memoryToken;
+/** Vrai dès qu'un cookie de session valide existe (indépendant de la vérif email). */
+export const hasSession = (): boolean => {
+  return memorySignedIn;
 };
 
 export const removeToken = (): void => {
-  memoryToken = undefined;
+  memorySignedIn = false;
   memoryEmailVerified = false;
+  memoryRole = 'user';
 };
 
 /** Charge le JWT depuis le cookie HttpOnly (same-origin). */
@@ -62,8 +65,21 @@ export async function hydrateAuthSession(options?: {
   if (hydratePromise) return hydratePromise;
 
   const preserveExisting = options?.preserveExisting === true;
-  const previousToken = memoryToken;
+  const previousSignedIn = memorySignedIn;
   const previousVerified = memoryEmailVerified;
+  const previousRole = memoryRole;
+
+  const restore = () => {
+    memorySignedIn = previousSignedIn;
+    memoryEmailVerified = previousVerified;
+    memoryRole = previousRole;
+  };
+
+  const clear = () => {
+    memorySignedIn = false;
+    memoryEmailVerified = false;
+    memoryRole = 'user';
+  };
 
   hydratePromise = (async () => {
     try {
@@ -73,34 +89,23 @@ export async function hydrateAuthSession(options?: {
         cache: 'no-store',
       });
       if (!res.ok) {
-        if (preserveExisting && previousToken) {
-          memoryToken = previousToken;
-          memoryEmailVerified = previousVerified;
-          return;
-        }
-        memoryToken = undefined;
-        memoryEmailVerified = false;
+        if (preserveExisting && previousSignedIn) restore();
+        else clear();
         return;
       }
       const data = await res.json();
-      if (data.success && typeof data.token === 'string') {
-        memoryToken = data.token;
+      if (data.success && data.authenticated === true) {
+        memorySignedIn = true;
         memoryEmailVerified = Boolean(data.emailVerified);
-      } else if (preserveExisting && previousToken) {
-        memoryToken = previousToken;
-        memoryEmailVerified = previousVerified;
+        memoryRole = data.role === 'admin' ? 'admin' : 'user';
+      } else if (preserveExisting && previousSignedIn) {
+        restore();
       } else {
-        memoryToken = undefined;
-        memoryEmailVerified = false;
+        clear();
       }
     } catch {
-      if (preserveExisting && previousToken) {
-        memoryToken = previousToken;
-        memoryEmailVerified = previousVerified;
-        return;
-      }
-      memoryToken = undefined;
-      memoryEmailVerified = false;
+      if (preserveExisting && previousSignedIn) restore();
+      else clear();
     }
   })();
 
@@ -154,7 +159,10 @@ export const clearPendingVerificationEmail = (): void => {
 };
 
 const persistAuth = (data: { user: User; token: string }) => {
-  setToken(data.token);
+  // Le cookie HttpOnly vient d'être posé par la route Next : on ne garde
+  // en mémoire que l'état de session, jamais le token lui-même.
+  memorySignedIn = true;
+  memoryRole = data.user.role === 'admin' ? 'admin' : 'user';
   setUser(data.user);
   setOnboardingSeen();
   clearPendingVerificationEmail();
@@ -291,17 +299,19 @@ export const resetPassword = async (
   return data;
 };
 
+export function homeAfterAuth(): string {
+  return getUser()?.role === 'admin' ? '/admin' : '/compte?connected=1';
+}
+
+export function redirectAfterAuth(): void {
+  window.location.assign(homeAfterAuth());
+}
+
 export const logout = (): void => {
   removeToken();
   removeUser();
   clearPendingVerificationEmail();
   void (async () => {
-    try {
-      const { syncSmsMonitorToken } = await import('./capacitor/app-notifications');
-      await syncSmsMonitorToken(undefined);
-    } catch {
-      /* ignore */
-    }
     try {
       await fetch('/api/auth/logout', {
         method: 'POST',
@@ -314,7 +324,12 @@ export const logout = (): void => {
 };
 
 export const isAuthenticated = (): boolean => {
-  return !!getToken() && memoryEmailVerified;
+  return memorySignedIn && memoryEmailVerified;
+};
+
+/** Rôle issu du JWT vérifié côté serveur (pas du localStorage). */
+export const isAdminSession = (): boolean => {
+  return isAuthenticated() && memoryRole === 'admin';
 };
 
 export const setOnboardingSeen = (): void => {
@@ -335,17 +350,15 @@ export const hasSeenOnboarding = (): boolean => {
   );
 };
 
+/** Disponibilité du nom public. L'email n'est pas vérifiable (anti-énumération). */
 export async function checkRegisterAvailability(params: {
-  email?: string;
   name?: string;
 }): Promise<{
-  email?: { available: boolean };
   name?: { available: boolean };
 }> {
   const { getClientApiUrl } = await import('./api-config');
   const API_URL = getClientApiUrl();
   const qs = new URLSearchParams();
-  if (params.email?.trim()) qs.set('email', params.email.trim());
   if (params.name?.trim()) qs.set('name', params.name.trim());
 
   const response = await fetch(

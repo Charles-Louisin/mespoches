@@ -12,8 +12,11 @@ export interface LoginFormValues {
   confirmPassword: string
 }
 
+/**
+ * Seul le nom public est vérifiable en direct. La disponibilité d'un email
+ * n'est pas exposée par l'API (oracle d'énumération de comptes).
+ */
 export interface RegisterAvailability {
-  email: AvailabilityStatus
   name: AvailabilityStatus
 }
 
@@ -70,7 +73,6 @@ export function validateLoginField(
 }
 
 export function applyAvailabilityToField(
-  field: 'name' | 'email',
   base: { error?: string; hint?: string; valid: boolean },
   status: AvailabilityStatus
 ): { error?: string; hint?: string; valid: boolean; checking?: boolean } {
@@ -80,13 +82,7 @@ export function applyAvailabilityToField(
     return { valid: false, checking: true }
   }
   if (status === 'taken') {
-    return {
-      error:
-        field === 'email'
-          ? 'Cet email est déjà utilisé'
-          : 'Ce nom est déjà utilisé',
-      valid: false,
-    }
+    return { error: 'Ce nom est déjà utilisé', valid: false }
   }
   if (status === 'available') {
     return { valid: true }
@@ -106,9 +102,6 @@ export function isLoginFormValid(
     const base = validateLoginField(f, values)
     if (!base.valid) return false
 
-    if (!values.isLogin && f === 'email') {
-      if (availability?.email !== 'available') return false
-    }
     if (!values.isLogin && f === 'name') {
       if (availability?.name !== 'available') return false
     }

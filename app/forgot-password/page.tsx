@@ -10,6 +10,7 @@ import {
   forgotPassword,
   resetPassword,
   hydrateAuthSession,
+  redirectAfterAuth,
 } from '@/lib/auth'
 import { toast } from 'sonner'
 
@@ -113,7 +114,7 @@ function ForgotPasswordContent() {
       if (response.success) {
         await hydrateAuthSession({ preserveExisting: true })
         toast.success(response.message || 'Mot de passe mis à jour')
-        window.location.assign('/')
+        redirectAfterAuth()
         return
       } else {
         toast.error(response.message || 'Code invalide')

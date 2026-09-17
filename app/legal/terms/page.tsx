@@ -1,179 +1,172 @@
-import LegalPageLayout, { LegalSection } from '@/components/LegalPageLayout';
-import { SUBSCRIPTION_PLANS } from '@/lib/planLimits';
-import { formatCurrency } from '@/lib/utils';
+import LegalPageLayout, { LegalSection } from '@/components/LegalPageLayout'
+import { SUBSCRIPTION_PLANS } from '@/lib/planLimits'
+import { formatCurrency } from '@/lib/utils'
 
 export const metadata = {
   title: "Conditions d'utilisation — MES POCHES",
-};
+}
 
 export default function TermsPage() {
-  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim();
-  const monthly = SUBSCRIPTION_PLANS.monthly;
-  const yearly = SUBSCRIPTION_PLANS.yearly;
+  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim()
+  const monthly = SUBSCRIPTION_PLANS.monthly
+  const yearly = SUBSCRIPTION_PLANS.yearly
 
   return (
-    <LegalPageLayout title="Conditions d'utilisation">
-      <p className="text-xs text-ink-mute">Dernière mise à jour : mai 2026</p>
-
+    <LegalPageLayout
+      title="Conditions d’utilisation"
+      intro="Les présentes conditions régissent l’accès au site MES POCHES et l’usage de l’application mobile de gestion financière personnelle."
+    >
       <LegalSection title="1. Objet">
         <p>
-          Les présentes conditions régissent l&apos;utilisation de l&apos;application{' '}
-          <strong>MES POCHES</strong>, service de gestion financière personnelle (suivi de
-          poches, transactions, catégories, statistiques et fonctionnalités associées). En
-          créant un compte ou en utilisant l&apos;application, vous acceptez ces conditions.
+          MES POCHES est un service d’aide au suivi de vos poches (espèces, mobile money,
+          compte bancaire) et de vos mouvements. En créant un compte, en téléchargeant
+          l’application ou en utilisant le service, vous acceptez ces conditions.
         </p>
       </LegalSection>
 
       <LegalSection title="2. Nature du service">
         <p>
-          MES POCHES est un outil d&apos;aide à la gestion personnelle de finances.{' '}
+          MES POCHES est un outil d’information personnelle.{' '}
           <strong>
-            Ce n&apos;est pas une banque, un établissement de paiement ni un conseil
-            financier réglementé.
+            Ce n’est pas une banque, un établissement de paiement, un service de transfert
+            d’argent ni un conseil financier réglementé.
           </strong>{' '}
-          Vous restez seul responsable de vos décisions financières et de l&apos;exactitude
-          des informations saisies.
+          L’application n’exécute aucune opération sur vos comptes d’opérateur ou bancaires
+          et ne détient pas vos fonds. Vous restez seul responsable de vos décisions
+          financières et de l’exactitude des informations que vous enregistrez.
         </p>
       </LegalSection>
 
-      <LegalSection title="3. Compte utilisateur">
-        <ul className="list-disc pl-5 space-y-1">
-          <li>Inscription avec adresse e-mail et mot de passe.</li>
-          <li>
-            Une vérification par code envoyé par e-mail peut être requise à
-            l&apos;inscription.
-          </li>
+      <LegalSection title="3. Distribution de l’application">
+        <p>
+          L’application est actuellement disponible en téléchargement direct au format APK
+          Android depuis ce site. Elle n’est pas encore distribuée via Google Play ni l’App
+          Store. Un fichier iOS (.ipa) sera proposé ultérieurement. Téléchargez uniquement
+          l’APK depuis ce site. L’éditeur ne saurait être tenu responsable d’une copie
+          obtenue auprès d’un tiers.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="4. Compte utilisateur">
+        <ul>
+          <li>L’inscription s’effectue avec une adresse e-mail et un mot de passe, ou via un prestataire d’identité s’il est proposé.</li>
+          <li>Une vérification de l’e-mail peut être exigée avant l’activation complète du compte.</li>
           <li>Vous êtes responsable de la confidentialité de vos identifiants.</li>
           <li>
-            Vous pouvez supprimer votre compte depuis la page Profil ; cette action est
-            irréversible et supprime vos données associées sur nos serveurs.
+            Vous pouvez supprimer votre compte depuis l’application. Cette action est
+            irréversible et supprime les données associées sur nos serveurs, sous réserve
+            des obligations légales.
           </li>
         </ul>
       </LegalSection>
 
-      <LegalSection title="4. Formules Gratuit et Premium">
+      <LegalSection title="5. Formules Gratuit et Premium">
         <p>
-          <strong>Essai Premium</strong> : chaque nouveau compte bénéficie d&apos;un
-          essai gratuit d&apos;un mois calendaire avec accès aux fonctionnalités Premium.
-          À l&apos;issue de cet essai, le compte repasse automatiquement en formule
-          gratuite sauf souscription payante. Aucun prélèvement automatique n&apos;est
-          effectué ; le paiement n&apos;intervient que si vous choisissez un abonnement.
+          <strong>Essai</strong> : un nouveau compte vérifié peut bénéficier d’une période
+          d’essai aux fonctionnalités Premium, d’une durée d’un mois calendaire. À l’issue
+          de l’essai, le compte revient à la formule gratuite sauf souscription. Aucun
+          prélèvement n’est déclenché sans action de votre part.
         </p>
         <p>
-          <strong>Formule gratuite</strong> (sans abonnement payant, ou après expiration
-          de l&apos;essai) : accès aux fonctionnalités de base, notamment gestion des
-          poches, saisie de revenus et dépenses, catégories limitées (10 par type
-          revenu/dépense), historique des transactions limité aux 3 derniers mois,
-          dépenses prévues, et autres écrans accessibles sans badge Premium dans
-          l&apos;application.
+          <strong>Formule gratuite</strong> : accès aux fonctions de suivi de base
+          (poches, saisie, historique récent, catégories dans la limite indiquée dans
+          l’application).
         </p>
         <p>
-          <strong>Formule Premium</strong> (abonnement payant, ou pendant l&apos;essai) :
-          débloque notamment les transferts entre poches, l&apos;historique complet, les
-          catégories illimitées, les images personnalisées pour poches/catégories, les
-          analyses avancées, les budgets mensuels par catégorie, les objectifs
-          d&apos;épargne, les transactions récurrentes et l&apos;export des transactions
-          (CSV, PDF, Excel selon les options proposées dans l&apos;app).
+          <strong>Formule Premium</strong> : débloque les fonctions avancées présentées
+          dans l’application au moment de la souscription (notamment historique étendu,
+          analyses, budgets, objectifs, récurrences, personnalisation et export, selon
+          l’offre en vigueur).
         </p>
         <p>
-          Tarifs affichés dans l&apos;application au moment de la souscription :{' '}
-          {formatCurrency(monthly.priceXaf)}
-          {monthly.periodLabel} (mensuel) ou {formatCurrency(yearly.priceXaf)}
-          {yearly.periodLabel} (annuel), en francs CFA (XAF). Les prix peuvent être
-          révisés ; le tarif applicable est celui affiché avant validation du paiement.
+          Tarifs affichés dans l’application avant paiement : {formatCurrency(monthly.priceXaf)}
+          {monthly.periodLabel} ou {formatCurrency(yearly.priceXaf)}
+          {yearly.periodLabel}, en francs CFA (XAF). Le prix applicable est celui affiché
+          au moment de la validation.
         </p>
       </LegalSection>
 
-      <LegalSection title="5. Paiement Premium">
+      <LegalSection title="6. Paiement">
         <p>
-          Le paiement de l&apos;abonnement Premium est traité par <strong>CinetPay</strong>{' '}
-          (Mobile Money MTN ou Orange, carte bancaire selon les moyens proposés au moment
-          du paiement, pour le Cameroun en XAF). MES POCHES ne stocke pas vos coordonnées
-          bancaires complètes ; le paiement s&apos;effectue sur l&apos;interface sécurisée
-          de CinetPay ou via leur flux de paiement intégré.
-        </p>
-        <p>
-          L&apos;activation Premium intervient après confirmation du paiement par notre
-          système. En cas de litige de
-          paiement, contactez-nous
+          L’abonnement Premium, lorsqu’il est proposé, est encaissé par un prestataire de
+          paiement (CinetPay), selon les moyens affichés au moment de la souscription
+          (Mobile Money et/ou carte). MES POCHES ne conserve pas vos coordonnées de
+          paiement secrètes. L’activation intervient après confirmation du paiement. En cas
+          de difficulté
           {contactEmail ? (
             <>
-              {' '}
-              à{' '}
-              <a href={`mailto:${contactEmail}`} className="text-primary-600 underline">
-                {contactEmail}
-              </a>
+              , écrivez à <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
             </>
           ) : (
-            <> via votre e-mail de compte</>
+            <> , contactez-nous via l’e-mail de votre compte</>
           )}{' '}
-          en indiquant la référence de transaction affichée après le paiement.
+          en indiquant la référence affichée après l’opération.
         </p>
       </LegalSection>
 
-      <LegalSection title="6. Utilisation de l'application">
-        <p>
-          L&apos;application mobile peut détecter automatiquement vos opérations Mobile Money
-          (SMS et notifications) pour proposer des transactions à valider. Le scan de reçus
-          par photo est disponible depuis la création de transaction (abonnés Premium).
-        </p>
-        <p className="mt-2">Vous vous engagez à :</p>
-        <ul className="list-disc pl-5 space-y-1">
-          <li>Utiliser l&apos;application conformément aux lois applicables.</li>
-          <li>Ne pas tenter d&apos;accéder aux comptes d&apos;autres utilisateurs.</li>
-          <li>Valider chaque proposition détectée avant enregistrement définitif.</li>
+      <LegalSection title="7. Usage de l’application">
+        <p>Vous vous engagez à :</p>
+        <ul>
+          <li>utiliser le service conformément aux lois applicables ;</li>
+          <li>ne pas tenter d’accéder au compte d’un tiers ;</li>
+          <li>
+            valider, modifier ou ignorer chaque proposition issue d’un SMS, d’une
+            notification, d’un scan ou d’une dictée avant de la considérer comme
+            enregistrée ;
+          </li>
+          <li>ne pas détourner l’application à des fins frauduleuses.</li>
         </ul>
-      </LegalSection>
-
-      <LegalSection title="7. Disponibilité et évolutions">
         <p>
-          Nous nous efforçons d&apos;assurer la disponibilité du service, sans garantie
-          d&apos;absence d&apos;interruption. Des mises à jour, corrections ou modifications
-          de fonctionnalités peuvent intervenir. Le mode hors ligne permet une utilisation
-          limitée ; la synchronisation nécessite une connexion Internet.
+          Les permissions Android (SMS, notifications, appareil photo, microphone, stockage
+          local) sont optionnelles au regard des fonctions correspondantes. Les retirer
+          peut limiter certaines fonctionnalités, sans empêcher une saisie manuelle.
         </p>
       </LegalSection>
 
-      <LegalSection title="8. Propriété intellectuelle">
+      <LegalSection title="8. Disponibilité">
         <p>
-          L&apos;application, son interface et ses contenus (hors données que vous saisissez)
-          restent protégés. Vous conservez la propriété des données financières que vous
-          entrez dans l&apos;application.
+          Nous nous efforçons d’assurer un service continu, sans garantir l’absence
+          d’interruption. Des mises à jour peuvent modifier des fonctions. Le mode hors
+          ligne permet un usage limité ; la synchronisation nécessite une connexion.
         </p>
       </LegalSection>
 
-      <LegalSection title="9. Limitation de responsabilité">
+      <LegalSection title="9. Propriété intellectuelle">
+        <p>
+          L’application, le site, la marque et les éléments de design restent protégés.
+          Vous conservez la propriété des informations financières que vous y enregistrez.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="10. Limitation de responsabilité">
         <p>
           Dans les limites autorisées par la loi, MES POCHES ne saurait être tenu
-          responsable des pertes financières liées à vos décisions, aux erreurs de saisie,
-          aux indisponibilités temporaires du service ou aux actions de prestataires tiers
-          (hébergeur, CinetPay, opérateurs Mobile Money).
+          responsable des pertes liées à vos décisions, à une saisie inexacte, à une
+          indisponibilité temporaire, à une installation depuis une source non officielle,
+          ou aux actes d’un prestataire ou d’un opérateur tiers.
         </p>
       </LegalSection>
 
-      <LegalSection title="10. Résiliation">
+      <LegalSection title="11. Résiliation">
         <p>
-          Vous pouvez cesser d&apos;utiliser le service et supprimer votre compte à tout
+          Vous pouvez cesser d’utiliser le service et supprimer votre compte à tout
           moment. Nous pouvons suspendre un compte en cas de violation grave des présentes
           conditions.
         </p>
       </LegalSection>
 
-      <LegalSection title="11. Contact">
+      <LegalSection title="12. Contact">
         <p>
-          Questions relatives aux conditions :
+          Pour toute question relative à ces conditions
           {contactEmail ? (
             <>
-              {' '}
-              <a href={`mailto:${contactEmail}`} className="text-primary-600 underline">
-                {contactEmail}
-              </a>
+              : <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
             </>
           ) : (
-            <> contactez-nous via l&apos;e-mail associé à votre compte dans l&apos;application.</>
+            <> , contactez-nous via l’e-mail associé à votre compte.</>
           )}
         </p>
       </LegalSection>
     </LegalPageLayout>
-  );
+  )
 }

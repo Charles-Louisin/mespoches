@@ -1,9 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Capacitor } from '@capacitor/core'
 import { authApi } from '@/lib/api'
-import { getToken, hydrateAuthSession, setOnboardingSeen, setUser } from '@/lib/auth'
+import { hasSession, hydrateAuthSession, redirectAfterAuth, setUser } from '@/lib/auth'
 import AppLogo from '@/components/AppLogo'
 import LoadingBar from '@/components/LoadingBar'
 
@@ -16,19 +15,10 @@ export default function AuthCompletePage() {
 
     void (async () => {
       try {
-        if (Capacitor.isNativePlatform()) {
-          try {
-            const { Browser } = await import('@capacitor/browser')
-            await Browser.close()
-          } catch {
-            /* déjà fermé */
-          }
-        }
-
         await hydrateAuthSession({ preserveExisting: true })
         if (cancelled) return
 
-        if (!getToken()) {
+        if (!hasSession()) {
           setMessage('Session introuvable')
           window.location.replace('/login?error=google_session')
           return
@@ -37,7 +27,6 @@ export default function AuthCompletePage() {
         const me = await authApi.me()
         if (cancelled) return
 
-        setOnboardingSeen()
         setUser({
           id: me.id,
           email: me.email,
@@ -52,23 +41,7 @@ export default function AuthCompletePage() {
           emailVerified: true,
         })
 
-        try {
-          const { syncSmsMonitorToken } = await import(
-            '@/lib/capacitor/app-notifications'
-          )
-          await syncSmsMonitorToken(getToken())
-        } catch {
-          /* ignore hors Android */
-        }
-
-        void import('@/lib/api').then(async ({ walletApi }) => {
-          const { startSetupGuide, setSetupStep } = await import('@/lib/setupGuide')
-          const wallets = await walletApi.getAll().catch(() => [])
-          if (wallets.length === 0) startSetupGuide()
-          else setSetupStep('done')
-        })
-
-        window.location.replace('/')
+        redirectAfterAuth()
       } catch {
         if (!cancelled) {
           window.location.replace('/login?error=google_session')
@@ -82,7 +55,7 @@ export default function AuthCompletePage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-5 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-surface px-4">
       <AppLogo size="md" />
       <LoadingBar label={message} />
     </div>

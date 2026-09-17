@@ -7,19 +7,20 @@ import {
 } from '@/lib/server/session-cookies';
 
 /**
- * Expose le JWT au JS same-origin pour les appels Bearer vers l'API Express
- * et le bridge Android. Le cookie reste HttpOnly (non lisible via document.cookie).
+ * Décrit la session au JS same-origin SANS jamais renvoyer le JWT :
+ * le token reste dans le cookie HttpOnly et n'est ajouté aux appels backend
+ * que côté serveur (/api/proxy). Une XSS ne peut donc pas voler la session.
  */
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(AUTH_TOKEN_COOKIE)?.value;
   if (!token) {
-    return NextResponse.json({ success: false, token: null }, { status: 401 });
+    return NextResponse.json({ success: false, authenticated: false }, { status: 401 });
   }
 
   const payload = await verifyAuthToken(token);
   if (!payload) {
     const res = NextResponse.json(
-      { success: false, token: null, message: 'Session invalide' },
+      { success: false, authenticated: false, message: 'Session invalide' },
       { status: 401 }
     );
     clearAuthCookies(res);
@@ -32,7 +33,8 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     success: true,
-    token,
+    authenticated: true,
     emailVerified,
+    role: payload.role === 'admin' ? 'admin' : 'user',
   });
 }
