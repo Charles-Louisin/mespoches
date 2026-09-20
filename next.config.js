@@ -93,6 +93,7 @@ const nextConfig = {
       { source: '/api/auth/check-availability', destination: `${dest}/api/auth/check-availability` },
       { source: '/api/auth/google/exchange', destination: `${dest}/api/auth/google/exchange` },
       { source: '/api/auth/google/handoff', destination: `${dest}/api/auth/google/handoff` },
+      { source: '/api/auth/google/handoff-poll', destination: `${dest}/api/auth/google/handoff-poll` },
       { source: '/api/auth/google/client', destination: `${dest}/api/auth/google/client` },
     ]
 

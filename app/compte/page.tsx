@@ -16,8 +16,7 @@ import {
   setUser,
   type User,
 } from '@/lib/auth'
-
-const APK_URL = process.env.NEXT_PUBLIC_APK_URL?.trim() || '/mes-poches.apk'
+import { APK_URL } from '@/lib/apk'
 
 export default function ComptePage() {
   return (
@@ -144,7 +143,7 @@ function ComptePageContent() {
               ) : null}
             </div>
 
-            <a href={APK_URL} download className="store-apk mt-6 w-full">
+            <a href={APK_URL} target="_blank" rel="noopener noreferrer" className="store-apk mt-6 w-full">
               Télécharger l’APK Android
             </a>
 

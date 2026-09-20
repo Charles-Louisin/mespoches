@@ -9,8 +9,7 @@ import PreviewStrip from '@/components/store/PreviewStrip'
 import FeatureDeck from '@/components/store/FeatureDeck'
 import ExtraInfo from '@/components/store/ExtraInfo'
 import StoreNav from '@/components/store/StoreNav'
-
-const APK_URL = process.env.NEXT_PUBLIC_APK_URL?.trim() || '/mes-poches.apk'
+import { APK_URL } from '@/lib/apk'
 
 export default function StoreLanding() {
   const router = useRouter()
@@ -63,7 +62,7 @@ export default function StoreLanding() {
               <p className=" truncate text-[11px] text-[#6b6280] sm:block">Application de gestion financière</p>
             </div>
           </div>
-          <a href={APK_URL} download className="store-pill-btn">
+          <a href={APK_URL} target="_blank" rel="noopener noreferrer" className="store-pill-btn">
             Télécharger l'APK
           </a>
         </div>
@@ -180,7 +179,7 @@ function DownloadActions() {
           </span>
         </div>
       </div>
-      <a href={APK_URL} download className="store-apk mt-4">
+      <a href={APK_URL} target="_blank" rel="noopener noreferrer" className="store-apk mt-4">
         Téléchargement direct de l’APK
       </a>
       <p className="store-ipa-note">
