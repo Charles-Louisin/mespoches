@@ -9,7 +9,7 @@ import PreviewStrip from '@/components/store/PreviewStrip'
 import FeatureDeck from '@/components/store/FeatureDeck'
 import ExtraInfo from '@/components/store/ExtraInfo'
 import StoreNav from '@/components/store/StoreNav'
-import { APK_URL } from '@/lib/apk'
+import { DownloadApkButton } from '@/components/store/DownloadApkButton'
 
 export default function StoreLanding() {
   const router = useRouter()
@@ -62,9 +62,7 @@ export default function StoreLanding() {
               <p className=" truncate text-[11px] text-[#6b6280] sm:block">Application de gestion financière</p>
             </div>
           </div>
-          <a href={APK_URL} target="_blank" rel="noopener noreferrer" className="store-pill-btn">
-            Télécharger l'APK
-          </a>
+          <DownloadApkButton className="store-pill-btn">Télécharger l'APK</DownloadApkButton>
         </div>
       ) : null}
 
@@ -179,9 +177,7 @@ function DownloadActions() {
           </span>
         </div>
       </div>
-      <a href={APK_URL} target="_blank" rel="noopener noreferrer" className="store-apk mt-4">
-        Téléchargement direct de l’APK
-      </a>
+      <DownloadApkButton className="store-apk mt-4">Téléchargement direct de l’APK</DownloadApkButton>
       <p className="store-ipa-note">
         Le fichier <span className="font-medium text-[#3f3358]">.ipa</span> iOS sera bientôt
         disponible.

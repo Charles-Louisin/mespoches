@@ -247,7 +247,7 @@ function LoginPageContent() {
       : undefined
 
   return (
-    <StoreChrome compact>
+    <StoreChrome bare>
       <div className="auth-split">
         <section className="auth-brand">
           <p className="auth-brand-mark" aria-hidden>

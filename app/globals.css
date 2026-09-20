@@ -192,6 +192,15 @@ body {
 .store-apk:hover {
   background: #1d4ed8;
 }
+button.store-apk,
+button.store-pill-btn {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+button.store-apk.w-full {
+  width: 100%;
+}
 
 .store-auth-btn {
   display: inline-flex;
@@ -1072,6 +1081,105 @@ body {
   .store-pill {
     width: 75%;
   }
+}
+
+.apk-guide {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+}
+@media (min-width: 640px) {
+  .apk-guide {
+    align-items: center;
+  }
+}
+.apk-guide-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(15, 23, 42, 0.55);
+  cursor: pointer;
+}
+.apk-guide-card {
+  position: relative;
+  z-index: 1;
+  width: min(520px, 100%);
+  max-height: min(88dvh, 720px);
+  overflow: auto;
+  border-radius: 20px;
+  background: #fff;
+  padding: 22px 20px 20px;
+  box-shadow: 0 24px 60px -24px rgba(15, 23, 42, 0.45);
+}
+.apk-guide-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #2563eb;
+}
+.apk-guide-card h2 {
+  margin-top: 6px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #111;
+}
+.apk-guide-lead {
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #3f3358;
+}
+.apk-guide-steps {
+  margin: 14px 0 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1b1630;
+}
+.apk-guide-protect {
+  margin-top: 18px;
+  border-radius: 14px;
+  background: #fff7ed;
+  padding: 14px 14px 12px;
+}
+.apk-guide-protect-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #9a3412;
+}
+.apk-guide-protect > p:not(.apk-guide-protect-title) {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #7c2d12;
+}
+.apk-guide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+.apk-guide-close {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  background: #fff;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1b1630;
+  cursor: pointer;
 }
 
 .store-nav-mobile {

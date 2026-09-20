@@ -16,7 +16,7 @@ import {
   setUser,
   type User,
 } from '@/lib/auth'
-import { APK_URL } from '@/lib/apk'
+import { DownloadApkButton } from '@/components/store/DownloadApkButton'
 
 export default function ComptePage() {
   return (
@@ -143,9 +143,7 @@ function ComptePageContent() {
               ) : null}
             </div>
 
-            <a href={APK_URL} target="_blank" rel="noopener noreferrer" className="store-apk mt-6 w-full">
-              Télécharger l’APK Android
-            </a>
+            <DownloadApkButton className="store-apk mt-6 w-full">Télécharger l’APK Android</DownloadApkButton>
 
             <div className="mt-4 flex flex-col gap-2">
               <Link
