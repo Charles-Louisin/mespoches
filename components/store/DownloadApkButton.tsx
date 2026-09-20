@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { APK_URL } from '@/lib/apk'
 
 export function DownloadApkButton({
@@ -37,7 +38,7 @@ export function DownloadApkButton({
 }
 
 function InstallGuide({ onClose }: { onClose: () => void }) {
-  return (
+  return createPortal(
     <div className="apk-guide" role="dialog" aria-modal="true" aria-labelledby="apk-guide-title">
       <button type="button" className="apk-guide-backdrop" aria-label="Fermer" onClick={onClose} />
       <div className="apk-guide-card">
@@ -71,6 +72,7 @@ function InstallGuide({ onClose }: { onClose: () => void }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
