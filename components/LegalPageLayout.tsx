@@ -16,7 +16,7 @@ export default function LegalPageLayout({
   children,
 }: LegalPageLayoutProps) {
   return (
-    <StoreChrome>
+    <StoreChrome bare>
       <div className="legal-page">
         <aside className="legal-aside">
           <p className="legal-kicker">Documents</p>

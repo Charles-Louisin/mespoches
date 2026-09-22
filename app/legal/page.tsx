@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function LegalIndexPage() {
   return (
-    <StoreChrome>
+    <StoreChrome bare>
       <div className="legal-index">
         <header className="legal-index-hero">
           <p className="legal-kicker">MES POCHES</p>
