@@ -22,9 +22,14 @@ export default function AdminPeek({
   selectedId,
   detail,
   loadingDetail,
+  acting,
   onClose,
   onBack,
   onPick,
+  onMakeFree,
+  onSuspend,
+  onUnsuspend,
+  onDelete,
 }: {
   title: string
   count: number
@@ -33,9 +38,14 @@ export default function AdminPeek({
   selectedId: string | null
   detail: AdminUserDetail | null
   loadingDetail: boolean
+  acting?: string | null
   onClose: () => void
   onBack: () => void
   onPick: (id: string) => void
+  onMakeFree?: () => void
+  onSuspend?: () => void
+  onUnsuspend?: () => void
+  onDelete?: () => void
 }) {
   const showUser = !!selectedId
   const [on, setOn] = useState(false)
@@ -76,7 +86,14 @@ export default function AdminPeek({
           <div className="ad-peek-body">
             {loadingDetail ? <p className="text-sm text-[#8a829c]">Chargement du parcours…</p> : null}
             {!loadingDetail && detail ? (
-              <UserSheet detail={detail} />
+              <UserSheet
+                detail={detail}
+                acting={acting}
+                onMakeFree={onMakeFree}
+                onSuspend={onSuspend}
+                onUnsuspend={onUnsuspend}
+                onDelete={onDelete}
+              />
             ) : null}
           </div>
         ) : (
@@ -110,20 +127,68 @@ export default function AdminPeek({
   )
 }
 
-function UserSheet({ detail }: { detail: AdminUserDetail }) {
+function planLabel(user: AdminUserDetail['user']) {
+  if (user.suspendedAt) return 'Suspendu'
+  if (user.plan === 'premium' && user.premiumSource === 'trial') return 'Essai Premium'
+  if (user.plan === 'premium') return 'Premium'
+  return 'Gratuit'
+}
+
+function UserSheet({
+  detail,
+  acting,
+  onMakeFree,
+  onSuspend,
+  onUnsuspend,
+  onDelete,
+}: {
+  detail: AdminUserDetail
+  acting?: string | null
+  onMakeFree?: () => void
+  onSuspend?: () => void
+  onUnsuspend?: () => void
+  onDelete?: () => void
+}) {
   const errors = (detail.events || []).filter((e) => e.name === 'error')
+  const isAdmin = detail.user.role === 'admin'
+  const suspended = Boolean(detail.user.suspendedAt)
+  const canManage = !isAdmin && (onMakeFree || onSuspend || onUnsuspend || onDelete)
+  const busy = Boolean(acting)
   return (
     <div className="space-y-4 text-sm">
       <div>
         <p className="font-semibold text-[#111]">{detail.user.name || 'Sans nom'}</p>
         <p className="text-[#5b5270]">{detail.user.email}</p>
         <p className="mt-1 text-[12px] text-[#8a829c]">
-          {detail.user.plan || 'free'}
-          {detail.user.premiumSource ? ` · ${detail.user.premiumSource}` : ''} ·{' '}
-          {detail.user.emailVerified ? 'e-mail confirmé' : 'e-mail non confirmé'} · inscrit{' '}
+          {planLabel(detail.user)}
+          {detail.user.premiumUntil && !suspended
+            ? ` jusqu’au ${new Date(detail.user.premiumUntil).toLocaleDateString('fr-FR')}`
+            : ''}{' '}
+          · {detail.user.emailVerified ? 'e-mail confirmé' : 'e-mail non confirmé'} · inscrit{' '}
           {fmtTime(detail.user.created_at)} · dernière session {fmtTime(detail.user.lastLoginAt)}
         </p>
       </div>
+      {canManage ? (
+        <div className="ad-user-actions">
+          {detail.user.plan === 'premium' || detail.user.premiumUntil ? (
+            <button type="button" disabled={busy} onClick={onMakeFree}>
+              {acting === 'free' ? 'Passage en gratuit…' : 'Passer en gratuit'}
+            </button>
+          ) : null}
+          {suspended ? (
+            <button type="button" disabled={busy} onClick={onUnsuspend}>
+              {acting === 'unsuspend' ? 'Réactivation…' : 'Réactiver le compte'}
+            </button>
+          ) : (
+            <button type="button" disabled={busy} onClick={onSuspend}>
+              {acting === 'suspend' ? 'Suspension…' : 'Suspendre'}
+            </button>
+          )}
+          <button type="button" className="is-danger" disabled={busy} onClick={onDelete}>
+            {acting === 'delete' ? 'Suppression…' : 'Supprimer le compte'}
+          </button>
+        </div>
+      ) : null}
       <div className="ad-census">
         <span>
           En file <b>{detail.pendingByStatus?.pending || 0}</b>

@@ -54,7 +54,7 @@ export default function AdminDashboardPage() {
       <div className="ad-mobile-lock lg:hidden">
         <p>La console interne est conçue pour un écran d’ordinateur.</p>
       </div>
-      <div className="hidden min-h-dvh lg:block">
+      <div className="hidden h-dvh overflow-hidden lg:block">
         {loading && !insights ? (
           <div className="flex min-h-dvh items-center justify-center bg-[#0f1220]">
             <LoadingBar label="Chargement de la console…" />
@@ -78,6 +78,7 @@ export default function AdminDashboardPage() {
             users={users}
             days={days}
             onDays={setDays}
+            onRefreshUsers={() => load(days, true)}
           />
         )}
       </div>

@@ -56,12 +56,14 @@ export default function AdminDashboard({
   users,
   days,
   onDays,
+  onRefreshUsers,
 }: {
   insights: AdminInsights
   telemetry: AdminTelemetry
   users: AdminUserSummary[]
   days: number
   onDays: (n: number) => void
+  onRefreshUsers?: () => Promise<void> | void
 }) {
   const router = useRouter()
   const [tab, setTab] = useState<'vue' | 'users' | 'events'>('vue')
@@ -73,6 +75,30 @@ export default function AdminDashboard({
   const [detail, setDetail] = useState<AdminUserDetail | null>(null)
   const [loadingUser, setLoadingUser] = useState(false)
   const [q, setQ] = useState('')
+  const [acting, setActing] = useState<string | null>(null)
+
+  const refreshDetail = async (id: string) => {
+    const next = await adminApi.getUserById(id)
+    setDetail(next)
+    await onRefreshUsers?.()
+  }
+
+  const runUserAction = async (
+    kind: 'free' | 'suspend' | 'unsuspend' | 'delete',
+    confirmText: string,
+    fn: () => Promise<void>
+  ) => {
+    if (!selectedId || acting) return
+    if (!window.confirm(confirmText)) return
+    setActing(kind)
+    try {
+      await fn()
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Action impossible')
+    } finally {
+      setActing(null)
+    }
+  }
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase()
@@ -493,7 +519,13 @@ export default function AdminDashboard({
                         <div className="text-[11px] text-[#8a829c]">{u.email}</div>
                       </td>
                       <td>
-                        {u.plan === 'premium' ? 'Premium' : 'Gratuit'}
+                        {u.suspended
+                          ? 'Suspendu'
+                          : u.plan === 'premium'
+                            ? u.premiumSource === 'trial'
+                              ? 'Essai'
+                              : 'Premium'
+                            : 'Gratuit'}
                         {!u.emailVerified ? (
                           <div className="text-[10px] text-[#b45309]">e-mail à confirmer</div>
                         ) : null}
@@ -612,6 +644,50 @@ export default function AdminDashboard({
             setDetail(null)
           }}
           onPick={openUser}
+          acting={acting}
+          onMakeFree={() =>
+            void runUserAction(
+              'free',
+              'Annuler l’essai ou l’abonnement et passer ce compte en gratuit ?',
+              async () => {
+                await adminApi.makeUserFree(selectedId!)
+                await refreshDetail(selectedId!)
+              }
+            )
+          }
+          onSuspend={() =>
+            void runUserAction(
+              'suspend',
+              'Suspendre ce compte ? Il ne pourra plus se connecter.',
+              async () => {
+                await adminApi.suspendUser(selectedId!)
+                await refreshDetail(selectedId!)
+              }
+            )
+          }
+          onUnsuspend={() =>
+            void runUserAction(
+              'unsuspend',
+              'Réactiver ce compte ?',
+              async () => {
+                await adminApi.unsuspendUser(selectedId!)
+                await refreshDetail(selectedId!)
+              }
+            )
+          }
+          onDelete={() =>
+            void runUserAction(
+              'delete',
+              'Supprimer définitivement ce compte et toutes ses données ? Cette action est irréversible.',
+              async () => {
+                await adminApi.deleteUser(selectedId!)
+                setSelectedId(null)
+                setDetail(null)
+                setPeekKey(null)
+                await onRefreshUsers?.()
+              }
+            )
+          }
         />
       ) : null}
     </div>

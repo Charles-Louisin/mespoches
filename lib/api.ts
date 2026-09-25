@@ -48,6 +48,14 @@ export const adminApi = {
   getTelemetry: (days = 30) => fetchApi<AdminTelemetry>(`/admin/telemetry?days=${days}`),
   getCohort: (key: string, days = 30) =>
     fetchApi<AdminCohort>(`/admin/cohorts?key=${encodeURIComponent(key)}&days=${days}`),
+  makeUserFree: (id: string) =>
+    fetchApi<{ user: MeUser }>(`/admin/users/${id}/make-free`, { method: 'POST' }),
+  suspendUser: (id: string) =>
+    fetchApi<{ user: MeUser }>(`/admin/users/${id}/suspend`, { method: 'POST' }),
+  unsuspendUser: (id: string) =>
+    fetchApi<{ user: MeUser }>(`/admin/users/${id}/unsuspend`, { method: 'POST' }),
+  deleteUser: (id: string) =>
+    fetchApi<{ deleted: boolean }>(`/admin/users/${id}`, { method: 'DELETE' }),
 }
 
 export interface MeUser {
@@ -62,6 +70,7 @@ export interface MeUser {
   hidePlannedExpensesHelp?: boolean
   created_at: string
   lastLoginAt?: string | null
+  suspended?: boolean
 }
 
 export interface AdminUserSummary {
@@ -73,6 +82,7 @@ export interface AdminUserSummary {
   lastLoginAt?: string
   plan?: 'free' | 'premium'
   premiumSource?: 'trial' | 'paid' | null
+  suspended?: boolean
   emailVerified?: boolean
   authProvider?: 'email' | 'google' | 'both'
   walletsCount: number
@@ -112,6 +122,7 @@ export interface AdminUserDetail {
     authProvider?: 'email' | 'google' | 'both'
     premiumUntil?: string | null
     currency?: string
+    suspendedAt?: string | null
   }
   wallets: {
     _id: string
