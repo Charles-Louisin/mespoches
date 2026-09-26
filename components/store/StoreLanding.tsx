@@ -62,7 +62,7 @@ export default function StoreLanding() {
               <p className=" truncate text-[11px] text-[#6b6280] sm:block">Application de gestion financière</p>
             </div>
           </div>
-          <DownloadApkButton className="store-pill-btn">Télécharger l'APK</DownloadApkButton>
+          <DownloadApkButton className="store-pill-btn">Télécharger l'APP</DownloadApkButton>
         </div>
       ) : null}
 
@@ -177,7 +177,7 @@ function DownloadActions() {
           </span>
         </div>
       </div>
-      <DownloadApkButton className="store-apk mt-4">Téléchargement direct de l’APK</DownloadApkButton>
+      <DownloadApkButton className="store-apk mt-4">Téléchargement direct de l’APP</DownloadApkButton>
       <p className="store-ipa-note">
         Le fichier <span className="font-medium text-[#3f3358]">.ipa</span> iOS sera bientôt
         disponible.
