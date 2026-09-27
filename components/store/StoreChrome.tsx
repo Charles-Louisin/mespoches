@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import AppLogo from '@/components/AppLogo'
 import StoreAuthActions from '@/components/store/StoreAuthActions'
+import SaasIndexBadge from '@/components/store/SaasIndexBadge'
 
 export default function StoreChrome({
   children,
@@ -41,6 +42,7 @@ export default function StoreChrome({
           }`}
         >
           <p>© {new Date().getFullYear()} MES POCHES</p>
+          <SaasIndexBadge />
           <nav className="flex flex-wrap gap-x-6 gap-y-2">
             <Link href="/legal" className="hover:text-[#2563EB]">
               Informations légales

@@ -10,6 +10,7 @@ import FeatureDeck from '@/components/store/FeatureDeck'
 import ExtraInfo from '@/components/store/ExtraInfo'
 import StoreNav from '@/components/store/StoreNav'
 import { DownloadApkButton } from '@/components/store/DownloadApkButton'
+import SaasIndexBadge from '@/components/store/SaasIndexBadge'
 
 export default function StoreLanding() {
   const router = useRouter()
@@ -142,6 +143,7 @@ export default function StoreLanding() {
             </button>{' '}
             MES POCHES
           </p>
+          <SaasIndexBadge />
           <nav className="flex flex-wrap gap-x-6 gap-y-2">
             <Link href="/legal" className="hover:text-[#2563EB]">
               Informations légales
