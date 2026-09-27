@@ -8,6 +8,7 @@ import Phone3D from '@/components/store/Phone3D'
 import PreviewStrip from '@/components/store/PreviewStrip'
 import FeatureDeck from '@/components/store/FeatureDeck'
 import ExtraInfo from '@/components/store/ExtraInfo'
+import PremiumOffer from '@/components/store/PremiumOffer'
 import StoreNav from '@/components/store/StoreNav'
 import { DownloadApkButton } from '@/components/store/DownloadApkButton'
 import SaasIndexBadge from '@/components/store/SaasIndexBadge'
@@ -132,6 +133,8 @@ export default function StoreLanding() {
         <FeatureDeck />
       </section>
 
+      <PremiumOffer />
+
       <ExtraInfo />
 
       <footer className="relative z-10 border-t border-black/[0.06] bg-white">
@@ -171,19 +174,15 @@ function DownloadActions() {
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <span className="store-soon-btn">
             <PlayBadge />
-            Télécharger Android
+            Play Store
           </span>
           <span className="store-soon-btn">
             <AppleBadge />
-            Télécharger iOS
+            App Store
           </span>
         </div>
       </div>
       <DownloadApkButton className="store-apk mt-4">Téléchargement direct de l’APP</DownloadApkButton>
-      <p className="store-ipa-note">
-        Le fichier <span className="font-medium text-[#3f3358]">.ipa</span> iOS sera bientôt
-        disponible.
-      </p>
     </div>
   )
 }

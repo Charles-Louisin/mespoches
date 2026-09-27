@@ -16,7 +16,7 @@ const SLIDES = [
     body: (
       <>
         Orange Money, MTN, la banque. <span className="store-k">MES POCHES lit</span> le
-        message, extrait le montant, le compte, le type et le libéllé. Et vous <span className="store-k">validez</span>.
+        message, extrait le montant, le compte, le type et le libellé. Et vous <span className="store-k">validez</span>.
         Tout simplement.
       </>
     ),

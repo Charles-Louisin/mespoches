@@ -29,7 +29,7 @@ export function HomeScreen() {
             <span className="text-[#FFB4AE]">↑ Sorties 41 200</span>
           </div>
           <div className="mt-3 flex items-end justify-between">
-            <p className="text-[7px] tracking-widest text-white/70">CHARLES LUCIANO</p>
+            <p className="text-[7px] tracking-widest text-white/70">JOHN DOE</p>
             <div className="h-4 w-6 rounded-[2px] bg-gradient-to-br from-[#F8E7B0] to-[#C9A227]" />
           </div>
         </div>

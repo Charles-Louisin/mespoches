@@ -36,7 +36,7 @@ export default function ExtraInfo() {
 
         <Meta label="Cette application peut">
           <ul>
-            <li>Proposer des transactions à partir de SMS ou de notifications liés à un mouvement d’argent — à valider par vos soins</li>
+            <li>Proposer des transactions à partir de notifications liées à un mouvement d’argent — à valider par vos soins</li>
             <li>Utiliser l’appareil photo pour scanner un reçu</li>
             <li>Utiliser le microphone pour une note vocale</li>
             <li>Conserver un cache sur l’appareil (usage hors ligne)</li>
