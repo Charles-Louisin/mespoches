@@ -302,6 +302,18 @@ button.store-apk.w-full {
   background: #eef1f7;
   color: #1b1630;
 }
+.ad-topbar {
+  display: none;
+}
+.ad-nav-mask {
+  display: none;
+}
+.ad-side-head {
+  display: contents;
+}
+.ad-side-close {
+  display: none;
+}
 .ad-side {
   position: sticky;
   top: 0;
@@ -979,6 +991,215 @@ button.store-apk.w-full {
 @keyframes ad-bar {
   0%, 100% { transform: scaleY(0.72); }
   50% { transform: scaleY(1); }
+}
+
+@media (max-width: 1023px) {
+  .ad-shell {
+    display: flex;
+    flex-direction: column;
+  }
+  .ad-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 40;
+    padding: 10px 14px;
+    padding-top: max(10px, env(safe-area-inset-top));
+    background: #101322;
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .ad-menu-btn {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 11px 10px;
+    cursor: pointer;
+  }
+  .ad-menu-btn span {
+    display: block;
+    height: 2px;
+    border-radius: 2px;
+    background: #fff;
+  }
+  .ad-topbar-copy {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .ad-topbar-brand {
+    font-family: var(--font-fraunces), Georgia, serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+  }
+  .ad-topbar-sub {
+    margin-top: 2px;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #8b86a4;
+  }
+  .ad-topbar-periods {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 4px;
+  }
+  .ad-topbar-periods button {
+    min-width: 38px;
+    min-height: 34px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    background: transparent;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #9b96b0;
+  }
+  .ad-topbar-periods button.is-on {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
+  }
+  .ad-nav-mask {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 85;
+    border: 0;
+    background: rgba(8, 10, 22, 0.55);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+  }
+  .ad-shell.is-nav-open .ad-nav-mask {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .ad-side {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 90;
+    width: min(298px, 88vw);
+    height: 100dvh;
+    padding: 18px 16px 24px;
+    padding-top: max(18px, env(safe-area-inset-top));
+    overflow-y: auto;
+    transform: translate3d(-105%, 0, 0);
+    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 18px 0 48px -24px rgba(0, 0, 0, 0.55);
+  }
+  .ad-shell.is-nav-open .ad-side {
+    transform: translate3d(0, 0, 0);
+  }
+  .ad-side-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .ad-side-head .ad-brand-sub {
+    margin-bottom: 0;
+  }
+  .ad-side-close {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    border: 0;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: 650;
+    color: #c9c4db;
+    cursor: pointer;
+  }
+  .ad-main {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    padding: 16px 14px 40px;
+    padding-bottom: max(40px, env(safe-area-inset-bottom));
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  .ad-hero {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .ad-hero h1 {
+    font-size: 1.7rem;
+  }
+  .ad-scene {
+    display: none;
+  }
+  .ad-census-hero {
+    padding: 16px 14px 14px;
+    border-radius: 1.15rem;
+  }
+  .ad-census-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .ad-census-hit {
+    padding: 12px;
+    border-radius: 12px;
+  }
+  .ad-census-hit strong {
+    font-size: 1.55rem;
+  }
+  .ad-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ad-grid-2,
+  .ad-grid-3,
+  .ad-funnel,
+  .ad-users {
+    grid-template-columns: 1fr;
+  }
+  .ad-journey li {
+    grid-template-columns: 1fr;
+  }
+  .ad-card {
+    padding: 14px;
+  }
+  .ad-peek {
+    width: 100vw;
+  }
+  .ad-table-wrap {
+    max-height: none;
+    margin: 0 -4px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ad-table {
+    min-width: 560px;
+  }
+  .ad-search {
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .ad-topbar-periods button {
+    min-width: 34px;
+    padding: 0 6px;
+  }
+  .ad-census-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ad-kpis {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .store-outline-btn {

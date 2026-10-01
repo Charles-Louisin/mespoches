@@ -76,6 +76,23 @@ export default function AdminDashboard({
   const [loadingUser, setLoadingUser] = useState(false)
   const [q, setQ] = useState('')
   const [acting, setActing] = useState<string | null>(null)
+  const [navOpen, setNavOpen] = useState(false)
+
+  const closeNav = () => setNavOpen(false)
+
+  useEffect(() => {
+    if (!navOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeNav()
+    }
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prev
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [navOpen])
 
   const refreshDetail = async (id: string) => {
     const next = await adminApi.getUserById(id)
@@ -177,10 +194,55 @@ export default function AdminDashboard({
   ]
 
   return (
-    <div className="ad-shell">
+    <div className={`ad-shell${navOpen ? ' is-nav-open' : ''}`}>
+      <header className="ad-topbar">
+        <button
+          type="button"
+          className="ad-menu-btn"
+          aria-label="Ouvrir le menu"
+          aria-expanded={navOpen}
+          onClick={() => setNavOpen(true)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+        <div className="ad-topbar-copy">
+          <p className="ad-topbar-brand">MES POCHES</p>
+          <p className="ad-topbar-sub">Console</p>
+        </div>
+        <div className="ad-topbar-periods">
+          {[7, 30, 90].map((n) => (
+            <button
+              key={n}
+              type="button"
+              className={days === n ? 'is-on' : ''}
+              onClick={() => onDays(n)}
+            >
+              {n} j
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <button
+        type="button"
+        className="ad-nav-mask"
+        aria-label="Fermer le menu"
+        tabIndex={navOpen ? 0 : -1}
+        onClick={closeNav}
+      />
+
       <aside className="ad-side">
-        <p className="ad-brand">MES POCHES</p>
-        <p className="ad-brand-sub">Console interne</p>
+        <div className="ad-side-head">
+          <div>
+            <p className="ad-brand">MES POCHES</p>
+            <p className="ad-brand-sub">Console interne</p>
+          </div>
+          <button type="button" className="ad-side-close" aria-label="Fermer le menu" onClick={closeNav}>
+            Fermer
+          </button>
+        </div>
         <nav className="ad-nav">
           {(
             [
@@ -193,7 +255,10 @@ export default function AdminDashboard({
               key={id}
               type="button"
               className={tab === id ? 'is-on' : ''}
-              onClick={() => setTab(id)}
+              onClick={() => {
+                setTab(id)
+                closeNav()
+              }}
             >
               {label}
             </button>
@@ -205,13 +270,23 @@ export default function AdminDashboard({
               key={n}
               type="button"
               className={days === n ? 'is-on' : ''}
-              onClick={() => onDays(n)}
+              onClick={() => {
+                onDays(n)
+                closeNav()
+              }}
             >
               {n} j
             </button>
           ))}
         </div>
-        <button type="button" className="ad-side-out" onClick={() => router.push('/')}>
+        <button
+          type="button"
+          className="ad-side-out"
+          onClick={() => {
+            closeNav()
+            router.push('/')
+          }}
+        >
           Site public
         </button>
         <button type="button" className="ad-side-out is-red" onClick={() => logout()}>
@@ -484,7 +559,7 @@ export default function AdminDashboard({
 
         {tab === 'users' ? (
           <section className="ad-card">
-            <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2>Toutes les personnes</h2>
                 <p className="ad-card-sub">Cliquez une ligne pour le parcours complet</p>

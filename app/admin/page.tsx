@@ -51,37 +51,32 @@ export default function AdminDashboardPage() {
 
   return (
     <AuthGuard>
-      <div className="ad-mobile-lock lg:hidden">
-        <p>La console interne est conçue pour un écran d’ordinateur.</p>
-      </div>
-      <div className="hidden h-dvh overflow-hidden lg:block">
-        {loading && !insights ? (
-          <div className="flex min-h-dvh items-center justify-center bg-[#0f1220]">
-            <LoadingBar label="Chargement de la console…" />
+      {loading && !insights ? (
+        <div className="flex min-h-dvh items-center justify-center bg-[#0f1220]">
+          <LoadingBar label="Chargement de la console…" />
+        </div>
+      ) : error || !insights || !telemetry ? (
+        <div className="ad-session">
+          <p>{error || 'Données indisponibles'}</p>
+          <div className="ad-session-actions">
+            <button type="button" className="ad-session-btn" onClick={() => router.push('/login')}>
+              Aller à la connexion
+            </button>
+            <button type="button" className="ad-session-btn is-ghost" onClick={() => window.location.reload()}>
+              Actualiser
+            </button>
           </div>
-        ) : error || !insights || !telemetry ? (
-          <div className="ad-session">
-            <p>{error || 'Données indisponibles'}</p>
-            <div className="ad-session-actions">
-              <button type="button" className="ad-session-btn" onClick={() => router.push('/login')}>
-                Aller à la connexion
-              </button>
-              <button type="button" className="ad-session-btn is-ghost" onClick={() => window.location.reload()}>
-                Actualiser
-              </button>
-            </div>
-          </div>
-        ) : (
-          <AdminDashboard
-            insights={insights}
-            telemetry={telemetry}
-            users={users}
-            days={days}
-            onDays={setDays}
-            onRefreshUsers={() => load(days, true)}
-          />
-        )}
-      </div>
+        </div>
+      ) : (
+        <AdminDashboard
+          insights={insights}
+          telemetry={telemetry}
+          users={users}
+          days={days}
+          onDays={setDays}
+          onRefreshUsers={() => load(days, true)}
+        />
+      )}
     </AuthGuard>
   )
 }

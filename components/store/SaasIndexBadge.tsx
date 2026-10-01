@@ -19,6 +19,7 @@ export default function SaasIndexBadge() {
         textDecoration: 'none',
         boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
         border: '1px solid rgba(148,163,184,0.25)',
+        flexShrink: 0,
       }}
     >
       <img
