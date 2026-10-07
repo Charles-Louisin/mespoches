@@ -26,7 +26,7 @@ export function getClientApiUrl(): string {
  * URL API Express pour les routes Next.js server-side (login / Google / register).
  */
 const PRODUCTION_BACKEND_API =
-  'https://mespochesbackend-production-9bfe.up.railway.app/api'
+  'https://mespochesbackend-production-dafd.up.railway.app/api'
 
 export function getServerBackendApiUrl(): string {
   const devBackend = (process.env.DEV_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '')

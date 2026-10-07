@@ -50,6 +50,13 @@ export const adminApi = {
     fetchApi<AdminCohort>(`/admin/cohorts?key=${encodeURIComponent(key)}&days=${days}`),
   makeUserFree: (id: string) =>
     fetchApi<{ user: MeUser }>(`/admin/users/${id}/make-free`, { method: 'POST' }),
+  setUserSubscription: (id: string, body: { tier: 'free' | 'pro' | 'pro_plus' | 'business'; lifetime?: boolean }) =>
+    fetchApi<{ user: MeUser; planLabel: string }>(`/admin/users/${id}/subscription`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  resumeUserBilling: (id: string) =>
+    fetchApi<{ user: MeUser; planLabel: string }>(`/admin/users/${id}/resume-billing`, { method: 'POST' }),
   suspendUser: (id: string) =>
     fetchApi<{ user: MeUser }>(`/admin/users/${id}/suspend`, { method: 'POST' }),
   unsuspendUser: (id: string) =>
@@ -81,14 +88,18 @@ export interface AdminUserSummary {
   created_at: string
   lastLoginAt?: string
   plan?: 'free' | 'premium'
-  premiumSource?: 'trial' | 'paid' | null
+  planLabel?: string
+  subscriptionTier?: 'free' | 'pro' | 'pro_plus' | 'business'
+  lifetime?: boolean
+  premiumSource?: 'trial' | 'paid' | 'lifetime' | null
   suspended?: boolean
   emailVerified?: boolean
   authProvider?: 'email' | 'google' | 'both'
   walletsCount: number
   transactionsCount: number
-  totalIncome: number
-  totalExpense: number
+  incomeCount?: number
+  expenseCount?: number
+  transferCount?: number
 }
 
 export interface AdminOverviewStats {
@@ -117,26 +128,23 @@ export interface AdminUserDetail {
     created_at: string
     lastLoginAt?: string
     plan?: 'free' | 'premium'
-    premiumSource?: 'trial' | 'paid' | null
+    planLabel?: string
+    subscriptionTier?: 'free' | 'pro' | 'pro_plus' | 'business'
+    lifetime?: boolean
+    premiumSource?: 'trial' | 'paid' | 'lifetime' | null
     emailVerified?: boolean
     authProvider?: 'email' | 'google' | 'both'
     premiumUntil?: string | null
     currency?: string
     suspendedAt?: string | null
   }
-  wallets: {
-    _id: string
-    name: string
-    currency: string
-    current_balance: number
-  }[]
+  walletsCount: number
+  categoriesCount: number
+  transactionsByType?: Record<string, number>
   transactions: {
     _id: string
     type: 'income' | 'expense' | 'transfer'
-    amount: number
-    category_id?: { name?: string } | string
     date: string
-    balance_after: number
   }[]
   pendingByStatus?: Record<string, number>
   events?: { name: string; screen: string; props?: Record<string, string | number>; at: string }[]

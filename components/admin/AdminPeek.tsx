@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { formatCurrency } from '@/lib/utils'
 import type { AdminCohort, AdminUserDetail } from '@/lib/api'
+
+type PlanTier = 'free' | 'pro' | 'pro_plus' | 'business'
 
 function fmtTime(value?: string | Date | null) {
   if (!value) return 'jamais'
@@ -27,6 +28,8 @@ export default function AdminPeek({
   onBack,
   onPick,
   onMakeFree,
+  onSetPlan,
+  onResumeBilling,
   onSuspend,
   onUnsuspend,
   onDelete,
@@ -43,6 +46,8 @@ export default function AdminPeek({
   onBack: () => void
   onPick: (id: string) => void
   onMakeFree?: () => void
+  onSetPlan?: (tier: PlanTier, lifetime: boolean) => void
+  onResumeBilling?: () => void
   onSuspend?: () => void
   onUnsuspend?: () => void
   onDelete?: () => void
@@ -90,6 +95,8 @@ export default function AdminPeek({
                 detail={detail}
                 acting={acting}
                 onMakeFree={onMakeFree}
+                onSetPlan={onSetPlan}
+                onResumeBilling={onResumeBilling}
                 onSuspend={onSuspend}
                 onUnsuspend={onUnsuspend}
                 onDelete={onDelete}
@@ -128,16 +135,33 @@ export default function AdminPeek({
 }
 
 function planLabel(user: AdminUserDetail['user']) {
+  if (user.planLabel) return user.planLabel
   if (user.suspendedAt) return 'Suspendu'
-  if (user.plan === 'premium' && user.premiumSource === 'trial') return 'Essai Premium'
+  if (user.lifetime) return 'Forfait à vie'
+  if (user.plan === 'premium' && user.premiumSource === 'trial') return 'Essai Pro'
   if (user.plan === 'premium') return 'Premium'
   return 'Gratuit'
 }
+
+const TYPE_LABEL: Record<string, string> = {
+  expense: 'dépenses',
+  income: 'revenus',
+  transfer: 'virements',
+}
+
+const PLANS: { id: PlanTier; label: string }[] = [
+  { id: 'free', label: 'Gratuit' },
+  { id: 'pro', label: 'Pro' },
+  { id: 'pro_plus', label: 'Pro+' },
+  { id: 'business', label: 'Business' },
+]
 
 function UserSheet({
   detail,
   acting,
   onMakeFree,
+  onSetPlan,
+  onResumeBilling,
   onSuspend,
   onUnsuspend,
   onDelete,
@@ -145,10 +169,24 @@ function UserSheet({
   detail: AdminUserDetail
   acting?: string | null
   onMakeFree?: () => void
+  onSetPlan?: (tier: PlanTier, lifetime: boolean) => void
+  onResumeBilling?: () => void
   onSuspend?: () => void
   onUnsuspend?: () => void
   onDelete?: () => void
 }) {
+  const currentTier: PlanTier =
+    detail.user.subscriptionTier && detail.user.subscriptionTier !== 'free'
+      ? detail.user.subscriptionTier
+      : detail.user.plan === 'premium'
+        ? 'pro'
+        : 'free'
+  const [tier, setTier] = useState<PlanTier>(currentTier)
+  const [lifetime, setLifetime] = useState(Boolean(detail.user.lifetime))
+  useEffect(() => {
+    setTier(currentTier)
+    setLifetime(Boolean(detail.user.lifetime))
+  }, [detail.user._id, detail.user.plan, detail.user.subscriptionTier, detail.user.lifetime, currentTier])
   const errors = (detail.events || []).filter((e) => e.name === 'error')
   const isAdmin = detail.user.role === 'admin'
   const suspended = Boolean(detail.user.suspendedAt)
@@ -170,7 +208,43 @@ function UserSheet({
       </div>
       {canManage ? (
         <div className="ad-user-actions">
-          {detail.user.plan === 'premium' || detail.user.premiumUntil ? (
+          {onSetPlan ? (
+            <div className="flex flex-col gap-2">
+              <label className="text-[12px] text-[#5b5270]">
+                Forfait
+                <select
+                  className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2 py-2"
+                  value={tier}
+                  disabled={busy}
+                  onChange={(e) => setTier(e.target.value as PlanTier)}
+                >
+                  {PLANS.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex items-center gap-2 text-[12px] text-[#5b5270]">
+                <input
+                  type="checkbox"
+                  checked={lifetime && tier !== 'free'}
+                  disabled={busy || tier === 'free'}
+                  onChange={(e) => setLifetime(e.target.checked)}
+                />
+                Forfait à vie (il garde ce palier, sans payer)
+              </label>
+              <button type="button" disabled={busy} onClick={() => onSetPlan(tier, lifetime && tier !== 'free')}>
+                {acting === 'plan' ? 'Mise à jour…' : 'Appliquer le forfait'}
+              </button>
+            </div>
+          ) : null}
+          {detail.user.lifetime && onResumeBilling ? (
+            <button type="button" disabled={busy} onClick={onResumeBilling}>
+              {acting === 'resume' ? 'Retrait…' : 'Lui faire reprendre le paiement'}
+            </button>
+          ) : null}
+          {detail.user.plan === 'premium' || detail.user.premiumUntil || detail.user.lifetime ? (
             <button type="button" disabled={busy} onClick={onMakeFree}>
               {acting === 'free' ? 'Passage en gratuit…' : 'Passer en gratuit'}
             </button>
@@ -214,15 +288,22 @@ function UserSheet({
           </ul>
         </div>
       ) : null}
-      <div className="max-h-36 space-y-1 overflow-y-auto">
-        {detail.wallets.map((w) => (
-          <div key={w._id} className="flex justify-between rounded-lg bg-[#f6f4fb] px-3 py-2">
-            <span>{w.name}</span>
-            <b>{formatCurrency(w.current_balance)}</b>
-          </div>
-        ))}
-        {!detail.wallets.length ? <p className="text-[#8a829c]">Aucune poche.</p> : null}
+      <div className="ad-census">
+        <span>
+          Catégories <b>{detail.categoriesCount}</b>
+        </span>
+        <span>
+          Poches <b>{detail.walletsCount}</b>
+        </span>
+        <span>
+          Opérations <b>{Object.values(detail.transactionsByType || {}).reduce((s, n) => s + n, 0)}</b>
+        </span>
       </div>
+      <p className="text-[12px] text-[#5b5270]">
+        {(['expense', 'income', 'transfer'] as const)
+          .map((key) => `${detail.transactionsByType?.[key] || 0} ${TYPE_LABEL[key]}`)
+          .join(' · ')}
+      </p>
       <div>
         <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-[#8a829c]">
           Parcours (dernières actions)
@@ -250,10 +331,8 @@ function UserSheet({
         <ul className="max-h-36 space-y-1 overflow-y-auto text-[12px]">
           {detail.transactions.slice(0, 8).map((t) => (
             <li key={t._id} className="flex justify-between gap-2">
-              <span>
-                {t.type} · {typeof t.category_id === 'object' ? t.category_id?.name : '—'}
-              </span>
-              <span>{formatCurrency(t.amount)}</span>
+              <span>{TYPE_LABEL[t.type] || t.type}</span>
+              <span className="shrink-0 text-[#8a829c]">{fmtTime(t.date)}</span>
             </li>
           ))}
           {!detail.transactions.length ? <li className="text-[#8a829c]">Aucune opération.</li> : null}

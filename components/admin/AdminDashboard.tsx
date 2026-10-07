@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { logout } from '@/lib/auth'
-import { formatCurrency } from '@/lib/utils'
 import {
   adminApi,
   type AdminCohort,
@@ -101,7 +100,7 @@ export default function AdminDashboard({
   }
 
   const runUserAction = async (
-    kind: 'free' | 'suspend' | 'unsuspend' | 'delete',
+    kind: 'free' | 'suspend' | 'unsuspend' | 'delete' | 'plan' | 'resume',
     confirmText: string,
     fn: () => Promise<void>
   ) => {
@@ -379,7 +378,7 @@ export default function AdminDashboard({
               />
               <Kpi
                 label="Ont dépensé"
-                hint={formatCurrency(k.expenseVolume30d)}
+                hint="Personnes avec au moins une dépense"
                 value={people(insights.finance.expenseUsers || 0)}
                 onClick={() => openCohort('expense_users')}
               />
@@ -471,27 +470,18 @@ export default function AdminDashboard({
 
             <section className="ad-grid-2">
               <article className="ad-card">
-                <h2>Argent qui circule</h2>
-                <p className="ad-card-sub">Volumes, et combien de personnes ça concerne</p>
+                <h2>Mouvements</h2>
+                <p className="ad-card-sub">Nombre d’opérations et de personnes, sans montants</p>
                 <div className="mb-4 flex flex-wrap gap-6 text-sm">
                   <button type="button" className="ad-text-hit" onClick={() => openCohort('income_users')}>
-                    Revenus · {people(insights.finance.incomeUsers || 0)} ·{' '}
-                    {formatCurrency(insights.finance.incomeVolume)}
+                    Revenus · {insights.finance.incomeCount} · {people(insights.finance.incomeUsers || 0)}
                   </button>
                   <button type="button" className="ad-text-hit" onClick={() => openCohort('expense_users')}>
-                    Dépenses · {people(insights.finance.expenseUsers || 0)} ·{' '}
-                    {formatCurrency(insights.finance.expenseVolume)}
+                    Dépenses · {insights.finance.expenseCount} · {people(insights.finance.expenseUsers || 0)}
                   </button>
                   <span>
                     Transferts <b>{insights.finance.transferCount}</b>
                   </span>
-                </div>
-                <div className="h-44">
-                  <LineChart
-                    data={insights.series.volume}
-                    keys={['income', 'expense']}
-                    colors={['#059669', '#dc2626']}
-                  />
                 </div>
               </article>
               <article className="ad-card">
@@ -522,7 +512,7 @@ export default function AdminDashboard({
                 <BarList
                   items={insights.finance.topCategories.map((c) => ({
                     label: `${c.name} (${c.type === 'income' ? 'revenu' : 'dépense'})`,
-                    value: Math.round(c.volume),
+                    value: c.count,
                   }))}
                   color="#1d4ed8"
                 />
@@ -536,7 +526,7 @@ export default function AdminDashboard({
                 </p>
                 <BarList
                   items={insights.finance.walletsByCurrency.map((w) => ({
-                    label: `${w.currency} · ${formatCurrency(w.balance)}`,
+                    label: w.currency,
                     value: w.count,
                   }))}
                   color="#0f766e"
@@ -594,19 +584,18 @@ export default function AdminDashboard({
                         <div className="text-[11px] text-[#8a829c]">{u.email}</div>
                       </td>
                       <td>
-                        {u.suspended
-                          ? 'Suspendu'
-                          : u.plan === 'premium'
-                            ? u.premiumSource === 'trial'
-                              ? 'Essai'
-                              : 'Premium'
-                            : 'Gratuit'}
+                        {u.planLabel || (u.plan === 'premium' ? 'Premium' : 'Gratuit')}
                         {!u.emailVerified ? (
                           <div className="text-[10px] text-[#b45309]">e-mail à confirmer</div>
                         ) : null}
                       </td>
                       <td>{u.walletsCount}</td>
-                      <td>{u.transactionsCount}</td>
+                      <td>
+                        {u.transactionsCount}
+                        <div className="text-[10px] text-[#8a829c]">
+                          {u.expenseCount || 0} dépenses · {u.incomeCount || 0} revenus · {u.transferCount || 0} virements
+                        </div>
+                      </td>
                       <td className="text-[12px]">{fmtTime(u.lastLoginAt)}</td>
                     </tr>
                   ))}
@@ -720,6 +709,28 @@ export default function AdminDashboard({
           }}
           onPick={openUser}
           acting={acting}
+          onSetPlan={(tier, lifetime) =>
+            void runUserAction(
+              'plan',
+              lifetime
+                ? 'Offrir ce forfait à vie ? Il garde le palier et ne paie plus.'
+                : 'Appliquer ce forfait pour un mois ?',
+              async () => {
+                await adminApi.setUserSubscription(selectedId!, { tier, lifetime })
+                await refreshDetail(selectedId!)
+              }
+            )
+          }
+          onResumeBilling={() =>
+            void runUserAction(
+              'resume',
+              'Retirer le forfait à vie ? Le compte devra à nouveau payer pour retrouver l’accès.',
+              async () => {
+                await adminApi.resumeUserBilling(selectedId!)
+                await refreshDetail(selectedId!)
+              }
+            )
+          }
           onMakeFree={() =>
             void runUserAction(
               'free',
