@@ -418,9 +418,6 @@ function Hero({ heroRef }: { heroRef: React.RefObject<HTMLElement> }) {
               <Check /> 1 mois Pro offert
             </li>
             <li>
-              <Check /> Sans carte bancaire
-            </li>
-            <li>
               <Check /> Version gratuite à vie
             </li>
           </ul>
@@ -449,7 +446,6 @@ function OperatorMarquee() {
             <li key={o}>{o}</li>
           ))}
         </ul>
-        <p className="lp-ops-note">Paiements, transferts et retraits confirmés, avec leur ID de transaction.</p>
       </div>
     </section>
   )
