@@ -156,6 +156,14 @@ export default function PrivacyPolicyPage() {
           des données associées sur nos serveurs, sous réserve d’éventuelles obligations légales
           de conservation.
         </p>
+        <p>
+          Pour éviter qu’un même utilisateur ouvre plusieurs essais gratuits, nous conservons après
+          la suppression une empreinte chiffrée et irréversible (HMAC) de votre adresse e-mail, de
+          votre identifiant Google le cas échéant et d’un identifiant aléatoire propre à
+          l’installation de l’app. Ces empreintes ne permettent pas de retrouver votre adresse ni vos
+          données ; elles servent uniquement à savoir si l’essai gratuit a déjà été accordé
+          (intérêt légitime : prévention de la fraude).
+        </p>
       </LegalSection>
 
       <LegalSection title="9. Destinataires">
@@ -168,7 +176,7 @@ export default function PrivacyPolicyPage() {
           <li>envoi des e-mails de vérification ou de récupération de compte ;</li>
           <li>
             paiement de l’abonnement, le cas échéant, via le prestataire de paiement affiché au
-            moment de la souscription (aujourd’hui CinetPay) — MES POCHES ne stocke pas vos
+            moment de la souscription (aujourd’hui SasPay) — MES POCHES ne stocke pas vos
             numéros de carte ni vos codes Mobile Money ;
           </li>
           <li>stockage des images que vous choisissez d’ajouter.</li>

@@ -6,10 +6,10 @@ function productionBackendOrigin() {
   const raw = (
     process.env.BACKEND_API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
-    'https://mespochesbackend-production-dafd.up.railway.app'
+    'https://mespochesbackend-production-9835.up.railway.app'
   ).replace(/\/$/, '')
   if (!raw.startsWith('http')) {
-    return 'https://mespochesbackend-production-dafd.up.railway.app'
+    return 'https://mespochesbackend-production-9835.up.railway.app'
   }
   return raw.replace(/\/api$/i, '')
 }
@@ -36,7 +36,7 @@ function cspConnectSrc() {
   addUrl(process.env.NEXT_PUBLIC_API_URL)
   addUrl(process.env.NEXT_PUBLIC_APP_URL)
   addUrl(process.env.DEV_BACKEND_URL)
-  origins.add('https://mespochesbackend-production-dafd.up.railway.app')
+  origins.add('https://mespochesbackend-production-9835.up.railway.app')
   origins.add('https://mespochesbackend-production.up.railway.app')
 
   return Array.from(origins).join(' ')
@@ -95,6 +95,8 @@ const nextConfig = {
       { source: '/api/auth/google/handoff', destination: `${dest}/api/auth/google/handoff` },
       { source: '/api/auth/google/handoff-poll', destination: `${dest}/api/auth/google/handoff-poll` },
       { source: '/api/auth/google/client', destination: `${dest}/api/auth/google/client` },
+      // Page de retour paiement (statut seul, sans donnée personnelle)
+      { source: '/api/subscription/return-status', destination: `${dest}/api/subscription/return-status` },
     ]
 
     return { afterFiles }

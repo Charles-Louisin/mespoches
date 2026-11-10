@@ -193,7 +193,7 @@ Plan réaliste :
 
 iOS : pas d’équivalent SMS background. Rester manuel / scan / Siri dictée.
 
-## 10. Paiement CinetPay
+## 10. Paiement SasPay
 
 `POST /subscription/checkout` → ouvrir `paymentUrl` dans le navigateur.
 

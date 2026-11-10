@@ -107,7 +107,7 @@ Auth gate dans `app/_layout.tsx` :
 - `expo-image-picker` → compress → `ai-scan`
 - Speech → `voice-note`
 - Google : `expo-auth-session` + `/auth/google/exchange` **ou** browser vers le site existant
-- Paiement : WebBrowser CinetPay + deep link verify
+- Paiement : WebBrowser SasPay + deep link verify
 
 Scheme app actuel Android Capacitor : `com.mespoches.app`. Pour Expo, définir un scheme `mespoches` cohérent avec les redirect Google déjà enregistrés. **Attention :** changer le redirect Google OAuth implique la console Google, pas Express. Préférer réutiliser le redirect **web** `https://www.mespoches.store/api/auth/google/callback` (flux BFF) pour ne rien casser.
 

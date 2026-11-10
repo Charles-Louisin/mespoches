@@ -89,7 +89,7 @@ export default function TermsPage() {
       <LegalSection title="6. Paiement">
         <p>
           L’abonnement Premium, lorsqu’il est proposé, est encaissé par un prestataire de
-          paiement (CinetPay), selon les moyens affichés au moment de la souscription
+          paiement (SasPay), selon les moyens affichés au moment de la souscription
           (Mobile Money et/ou carte). MES POCHES ne conserve pas vos coordonnées de
           paiement secrètes. L’activation intervient après confirmation du paiement. En cas
           de difficulté

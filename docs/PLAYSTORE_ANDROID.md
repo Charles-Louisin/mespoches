@@ -101,7 +101,7 @@ Accessible aussi dans l’app : **Paramètres** → **Informations légales**.
 **Tests à faire :**
 - Connexion / inscription
 - Création d’une transaction
-- Abonnement Premium (sandbox CinetPay si configuré)
+- Abonnement Premium (paiement SasPay, clé sk_test en recette)
 - Retour après paiement
 - Pages **Paramètres** → **Informations légales**
 
@@ -143,7 +143,7 @@ Conservez le keystore : **obligatoire** pour toutes les mises à jour futures su
 3. **Fiche Play Store** : description, captures d’écran (téléphone), icône 512×512.
 4. **Politique de confidentialité** : URL `…/legal/privacy`.
 5. **Catégorie** : Finance (ou Productivité selon votre positionnement).
-6. **Données utilisateur** (formulaire Data safety) : aligné sur la politique de confidentialité (e-mail, données financiées saisies, paiement via CinetPay).
+6. **Données utilisateur** (formulaire Data safety) : aligné sur la politique de confidentialité (e-mail, données financiées saisies, paiement via SasPay).
 7. **Compte supprimable** : oui, dans l’application (Profil).
 8. Téléversez l’**AAB** en **Production** ou **Test interne** pour essai.
 
@@ -187,7 +187,7 @@ Pour changer la version Android : `android/app/build.gradle` → `versionCode` (
 | Écran blanc au lancement | `CAPACITOR_SERVER_URL` incorrect ou site injoignable ; revérifier `cap sync`. |
 | Erreur API / CORS | `CORS_ORIGIN` sur le backend = URL exacte du frontend. |
 | Gradle sync failed | Android Studio → SDK Manager, installer API 34 + Build-Tools. |
-| Paiement CinetPay | Les redirections externes fonctionnent dans la WebView ; tester en release, pas seulement debug. |
+| Paiement SasPay | Les redirections externes fonctionnent dans la WebView ; tester en release, pas seulement debug. |
 
 ---
 

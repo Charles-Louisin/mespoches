@@ -65,7 +65,7 @@ function InstallGuide({ onClose }: { onClose: () => void }) {
 
         <div className="apk-guide-actions">
           <a href={APK_URL} target="_blank" rel="noopener noreferrer" className="store-apk">
-            Lancer le téléchargement (135 MB)
+            Lancer le téléchargement
           </a>
           <button type="button" className="apk-guide-close" onClick={onClose}>
             Annuler

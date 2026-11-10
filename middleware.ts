@@ -7,7 +7,7 @@ import {
   PENDING_EMAIL_COOKIE,
 } from '@/lib/server/session-cookies'
 
-const PUBLIC_PREFIXES = ['/legal', '/login', '/verify-email', '/forgot-password', '/auth']
+const PUBLIC_PREFIXES = ['/legal', '/login', '/verify-email', '/forgot-password', '/auth', '/paiement']
 
 function isPublicPath(pathname: string): boolean {
   if (pathname === '/') return true

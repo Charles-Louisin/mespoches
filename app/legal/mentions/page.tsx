@@ -50,7 +50,7 @@ export default function LegalNoticePage() {
 
       <LegalSection title="Prestataires">
         <ul>
-          <li>Paiement de l’abonnement, le cas échéant : CinetPay.</li>
+          <li>Paiement de l’abonnement, le cas échéant : SasPay (saspay.me).</li>
           <li>Envoi des e-mails de service (vérification, récupération de compte).</li>
           <li>Stockage des images que vous ajoutez volontairement dans l’application.</li>
         </ul>

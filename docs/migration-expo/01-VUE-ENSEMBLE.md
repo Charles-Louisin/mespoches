@@ -28,7 +28,7 @@ Le dépôt `note` contient **les deux** : frontend Next.js **et** backend Expres
 | Base de données | MongoDB + Mongoose | `backend/src/models/` | MongoDB Atlas |
 | Auth | JWT `jsonwebtoken` + bcrypt + `tokenVersion` | `backend/src/routes/authRoutes.ts` | Même `JWT_SECRET` Vercel = backend |
 | Uploads images | UploadThing | Next `app/api/uploadthing` | `utfs.io` / `ufs.sh` |
-| Paiements | CinetPay Orange / MTN / carte | `backend/src/utils/cinetpay.ts` | Webhook `/api/webhooks/cinetpay` |
+| Paiements | SasPay Orange / MTN / carte | `backend/src/utils/saspay.ts` | Webhook `/webhooks/saspay` |
 | IA (reçus, SMS, voix) | OpenRouter (Gemini déprécié) | `backend/src/services/ai/` | Railway |
 | App Android actuelle | Capacitor 8 WebView + Java SMS | `android/` | Play Store / APK |
 | Offline web | Dexie / IndexedDB | `lib/db.ts` | Navigateur |
@@ -49,7 +49,7 @@ Le dépôt `note` contient **les deux** : frontend Next.js **et** backend Expres
 │  Express (`note/backend/`)  │
 │  Port 5000 — npm run dev    │
 │  CRUD, parse-sms, ai-scan,  │
-│  CinetPay, cron dépenses    │
+│  SasPay, cron dépenses    │
 └──────────────┬──────────────┘
                │
                ▼

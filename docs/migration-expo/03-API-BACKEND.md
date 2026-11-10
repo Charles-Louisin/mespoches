@@ -75,7 +75,7 @@ Middleware `protect` (`backend/src/middleware/auth.ts`) : Bearer obligatoire, us
 | `aiScanLimiter` | 1 h | 30 / user | `ai-scan`, `voice-note` |
 | `parseIngestLimiter` | 1 h | 60 / user | parse-sms, parse-notification |
 | `exportLimiter` | 15 min | 8 / user | exports |
-| `webhookLimiter` | 1 min | 60 / IP | CinetPay |
+| `webhookLimiter` | 1 min | 60 / IP | SasPay |
 
 SMS / notif : texte max **4000** caractères (`MAX_PARSE_TEXT_CHARS`).
 
@@ -405,13 +405,13 @@ Limite free : 10 catégories par type (`FREE_MAX_CATEGORIES_PER_TYPE`).
 | GET | `/subscription/plans` | Plans + `paymentAvailable` + `sandbox` + `paymentMethods` |
 | GET | `/subscription/status` | `{ user, isPremium, paymentAvailable }` |
 | POST | `/subscription/checkout` | Body `{ period: 'monthly' \| 'yearly', payment_method: 'all' \| 'orange' \| 'mtn' }` → `{ paymentUrl, transactionId }` |
-| GET | `/subscription/verify?transaction_id=` | Après retour CinetPay |
+| GET | `/subscription/verify?transaction_id=` | Après retour SasPay |
 
-`paymentUrl` doit être un host `*.cinetpay.com` / `cinetpay.net` (whitelist frontend `lib/payment-url.ts`).
+`paymentUrl` doit être un host `*.saspay.com` / `saspay.net` (whitelist frontend `lib/payment-url.ts`).
 
 Côté produit actuel : paiement **désactivé en production web** (`isSubscriptionPaymentEnabled()` = localhost only). L’API peut quand même exister.
 
-Webhooks CinetPay : `/webhooks/...` (serveur only, pas d’appel app).
+Webhooks SasPay : `/webhooks/...` (serveur only, pas d’appel app).
 
 ---
 
@@ -558,8 +558,8 @@ Hors scope migration mobile grand public (garder sur le web).
 | Méthode | Path |
 |---|---|
 | GET | `/health` | Rewrite présent |
-| * | `/cinetpay-setup` | Setup paiement serveur |
-| * | `/webhooks/*` | CinetPay → Express |
+| * | `/saspay-setup` | Setup paiement serveur |
+| * | `/webhooks/*` | SasPay → Express |
 
 ---
 

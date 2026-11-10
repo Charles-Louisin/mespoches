@@ -38,6 +38,42 @@ export const authApi = {
   me: () => fetchApi<MeUser>('/auth/me'),
 }
 
+export type GithubReleaseInfo = {
+  version: string | null
+  apkUrl: string | null
+  sizeMb: number | null
+  notes: string | null
+  publishedAt: string | null
+}
+
+export type AdminAppRelease = {
+  _id: string
+  version: string
+  apkUrl: string
+  notes: string | null
+  minVersion: string | null
+  created_at: string
+}
+
+export type EffectiveAppVersion = {
+  latestVersion: string | null
+  minVersion: string | null
+  apkUrl: string
+  sizeMb: number | null
+  notes: string | null
+  source: 'github' | 'admin' | 'none'
+}
+
+export const adminReleaseApi = {
+  get: () =>
+    fetchApi<{ github: GithubReleaseInfo; admin: AdminAppRelease | null; effective: EffectiveAppVersion }>(
+      '/admin/app-release'
+    ),
+  publish: (body: { version: string; apkUrl: string; notes?: string; minVersion?: string }) =>
+    fetchApi<{ effective: EffectiveAppVersion }>('/admin/app-release', { method: 'POST', body: JSON.stringify(body) }),
+  withdraw: () => fetchApi<{ effective: EffectiveAppVersion }>('/admin/app-release', { method: 'DELETE' }),
+}
+
 export const adminApi = {
   getUsers: () => fetchApi<AdminUserSummary[]>('/admin/users'),
   getUserById: (id: string) => fetchApi<AdminUserDetail>(`/admin/users/${id}`),

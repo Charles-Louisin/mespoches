@@ -48,7 +48,7 @@ backend/
       security.ts             # rate limits
       userPayload.ts          # toPublicUser
       subscription.ts
-      cinetpay.ts
+      saspay.ts
       email.ts                # Resend
       verification.ts         # OTP
       transactionExport.ts    # csv/pdf/xlsx
@@ -60,7 +60,7 @@ backend/
 | Préfixe | Fichier |
 |---|---|
 | `GET /api/health` | inline |
-| `GET /api/cinetpay-setup` | inline (secret header) |
+| `GET /api/saspay-setup` | inline (secret header) |
 | `/api/auth` | `routes/authRoutes.ts` |
 | `/api/wallets` | `routes/walletRoutes.ts` |
 | `/api/transactions` | `routes/transactionRoutes.ts` |
@@ -93,7 +93,7 @@ Le détail request/response est dans [03-API-BACKEND.md](./03-API-BACKEND.md).
 | `PendingTransaction.ts` | file SMS / IA / voix |
 | `SmsHabit.ts` | habitudes après validation |
 | `NotificationPattern.ts` | patterns notif MM |
-| `SubscriptionPayment.ts` | paiements CinetPay |
+| `SubscriptionPayment.ts` | paiements SasPay |
 | `AuthHandoff.ts` | codes OAuth mobile (TTL 5 min) |
 | `JobLock.ts` | verrou cron multi-instance |
 
@@ -144,12 +144,12 @@ Voir `backend/.env.example`. Les plus importantes pour Expo :
 | `JWT_SECRET` | **identique** au frontend Next si le BFF vérifie encore les JWT |
 | `JWT_EXPIRES_IN` | défaut code `12h` ; example fichier `7d` |
 | `CORS_ORIGIN` | origines web |
-| `APP_URL` | retours CinetPay / emails |
-| `API_PUBLIC_URL` | webhook CinetPay |
+| `APP_URL` | retours SasPay / emails |
+| `API_PUBLIC_URL` | webhook SasPay |
 | `GOOGLE_CLIENT_ID` / `SECRET` | OAuth |
 | `RESEND_*` | emails OTP |
 | `OPENROUTER_API_KEY` | IA |
-| `CINETPAY_*` | paiements |
+| `SASPAY_SECRET_KEY*` | paiements |
 
 ## Tests existants
 
@@ -166,4 +166,4 @@ backend/src/tests/real-sms-parser.test.ts
 - Recalculer Premium (le serveur synce `syncExpiredPremium` à chaque `protect`)
 - Appeler Gemini / OpenRouter depuis le mobile — toujours passer par `/pending-transactions/*`
 - Inventer un refresh token (n’existe pas)
-- Poster un webhook CinetPay depuis l’app
+- Poster un webhook SasPay depuis l’app

@@ -61,7 +61,7 @@ Auth : cookie `auth_token` vérifié avec `JWT_SECRET`.
 
 ### 1.4 Prefixes rewrite vers Express
 
-`wallets`, `transactions`, `categories`, `analytics`, `admin`, `budgets`, `savings-goals`, `recurring`, `export`, `subscription`, `webhooks`, `planned-expenses`, `pending-transactions`, `health`, `cinetpay-setup`.
+`wallets`, `transactions`, `categories`, `analytics`, `admin`, `budgets`, `savings-goals`, `recurring`, `export`, `subscription`, `webhooks`, `planned-expenses`, `pending-transactions`, `health`, `saspay-setup`.
 
 ## 2. Flux Android Capacitor actuel
 

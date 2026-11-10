@@ -137,7 +137,7 @@ Expo : `expo-file-system` + `expo-sharing`.
 
 - Essai 1 mois (`TRIAL_MONTHS`) après vérif email, `premiumSource: 'trial'`
 - Plans 2500 XAF / mois, 24000 / an (−20 %)
-- Checkout CinetPay Orange / MTN / all
+- Checkout SasPay Orange / MTN / all
 - Verify après retour
 - Paiement **feature-flagué** (désactivé en prod web aujourd’hui)
 - Admin = Premium automatique
@@ -205,7 +205,7 @@ Transferts, budgets, épargne, récurrences, analytics avancés, export, gate Pr
 
 ### Lot C — Capture riche
 
-Caméra scan IA, note vocale, Google OAuth, paiement CinetPay in-app browser.
+Caméra scan IA, note vocale, Google OAuth, paiement SasPay in-app browser.
 
 ### Lot D — Automatisation Android
 
