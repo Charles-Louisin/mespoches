@@ -283,6 +283,16 @@ export default function AdminDashboard({
           className="ad-side-out"
           onClick={() => {
             closeNav()
+            router.push('/admin/payments')
+          }}
+        >
+          Paiements
+        </button>
+        <button
+          type="button"
+          className="ad-side-out"
+          onClick={() => {
+            closeNav()
             router.push('/admin/release')
           }}
         >

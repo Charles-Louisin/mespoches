@@ -2,17 +2,16 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import AppLogo from '@/components/AppLogo'
 import { DownloadApkButton } from '@/components/store/DownloadApkButton'
-import SaasIndexBadge from '@/components/store/SaasIndexBadge'
+import SiteFooter from './SiteFooter'
 import { AnalyticsScreen, HomeScreen, PendingScreen, WalletsScreen } from '@/components/store/screens'
 import './landing.css'
 
 /* ─────────────────────────── Données ─────────────────────────── */
 
-// Opérateurs et banques reconnus par le parseur SMS (backend/src/utils/mobileMoneySmsParser.ts)
-const OPERATORS = ['Orange Money', 'MTN MoMo', 'Wave', 'Express Union', 'Afriland First Bank', 'Ecobank', 'UBA']
+// Seuls formats validés sur de vrais SMS (backend/src/tests/real-sms-parser.test.ts) : ils portent un ID de transaction.
+const OPERATORS = ['Orange Money', 'MTN MoMo']
 
 const STEPS = [
   {
@@ -41,7 +40,7 @@ const STEPS = [
 const FEATURES: { title: string; body: string; icon: ReactNode; tone: string }[] = [
   {
     title: 'Lecture des SMS',
-    body: 'Orange Money, MTN, Wave, votre banque : la transaction est préparée dès la notification.',
+    body: 'Orange Money et MTN MoMo : chaque paiement confirmé est préparé dès la notification.',
     icon: <path d="M4 5h16v11H8l-4 4V5Z" />,
     tone: 'blue',
   },
@@ -106,8 +105,8 @@ const TIERS = [
   { id: 'free', label: 'Gratuit', monthly: 0, desc: 'Pour démarrer et prendre l’habitude.', perks: ['5 poches', '5 catégories', '3 scans et 3 notes vocales / mois', '3 mois d’historique'] },
   // Limites identiques à backend/src/config/planLimits.ts (TIER_DEFS)
   { id: 'pro', label: 'Pro', monthly: 2500, desc: 'Le suivi complet au quotidien.', perks: ['20 poches', '20 catégories', '30 scans et 30 notes vocales / mois', 'Budgets, analyses, historique complet', 'Export PDF'], highlight: true },
-  { id: 'pro_plus', label: 'Pro+', monthly: 6000, desc: 'Pour les gros volumes.', perks: ['50 poches', '50 catégories', '100 scans et 100 notes vocales / mois', 'Tout Pro', 'Exports PDF, Excel et CSV'] },
-  { id: 'business', label: 'Business', monthly: 20000, desc: 'Commerce, association, équipe.', perks: ['Poches et catégories illimitées', '500 scans et 500 notes vocales / mois', 'Tout Pro+', 'Exports sur une plage de dates'] },
+  { id: 'pro_plus', label: 'Pro+', monthly: 6000, desc: 'Pour les gros volumes.', perks: ['50 poches', '50 catégories', '100 scans et 100 notes vocales / mois', 'Exports PDF, Excel et CSV'] },
+  { id: 'business', label: 'Business', monthly: 20000, desc: 'Commerce, association, équipe.', perks: ['Poches et catégories illimitées', '500 scans et 500 notes vocales / mois', 'Exports sur une plage de dates'] },
 ] as const
 
 const FAQ = [
@@ -117,11 +116,11 @@ const FAQ = [
   },
   {
     q: 'L’app lit-elle tous mes SMS ?',
-    a: 'Elle ne retient que les messages de transaction (montant, opérateur, solde) pour vous proposer une ligne. Rien n’est enregistré sans votre validation, et la fonction peut être coupée à tout moment dans les réglages.',
+    a: 'Non. Elle ne retient que les confirmations de paiement, de transfert ou de retrait qui portent un ID de transaction. Une demande de paiement, un code ou une promo sont ignorés. Rien n’est enregistré sans votre validation, et la fonction se coupe à tout moment dans les réglages.',
   },
   {
-    q: 'Quels opérateurs et quelles banques sont reconnus ?',
-    a: 'Orange Money, MTN MoMo et Wave, ainsi que les alertes d’Express Union, Afriland First Bank, Ecobank et UBA. Pour un autre format, l’analyse propose quand même une ligne ; vous corrigez une fois, l’app retient votre habitude.',
+    q: 'Quels opérateurs sont reconnus ?',
+    a: 'Orange Money et MTN MoMo. Pour les autres moyens (Wave, banque, espèces), ajoutez la dépense en photo, à la voix ou à la main : l’app propose la catégorie.',
   },
   {
     q: 'Comment payer un forfait ?',
@@ -208,7 +207,7 @@ export default function Landing() {
         <FinalCta />
       </main>
 
-      <Footer />
+      <SiteFooter />
 
       <div className={`lp-bar ${showBar ? 'is-on' : ''}`} aria-hidden={!showBar}>
         <AppLogo size="xs" />
@@ -285,6 +284,19 @@ function Nav() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  // Menu plein écran : page figée derrière, Échap pour fermer.
+  useEffect(() => {
+    if (!open) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prev
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
   const links = [
     ['#comment', 'Comment ça marche'],
     ['#fonctionnalites', 'Fonctionnalités'],
@@ -293,45 +305,79 @@ function Nav() {
   ] as const
 
   return (
-    <header className={`lp-nav ${scrolled ? 'is-scrolled' : ''}`}>
-      <a href="#contenu" className="lp-skip">
-        Aller au contenu
-      </a>
-      <div className="lp-shell lp-nav-row">
-        <a href="#top" className="lp-brand" aria-label="MES POCHES, accueil">
-          <AppLogo size="xs" priority />
-          <span>MES POCHES</span>
+    <>
+      <header className={`lp-nav ${scrolled ? 'is-scrolled' : ''}`}>
+        <a href="#contenu" className="lp-skip">
+          Aller au contenu
         </a>
-        <nav className="lp-nav-links" aria-label="Sections">
-          {links.map(([href, label]) => (
-            <a key={href} href={href}>
-              {label}
-            </a>
-          ))}
-        </nav>
-        <div className="lp-nav-cta">
-          <DownloadApkButton className="lp-btn lp-btn-primary lp-btn-sm">Télécharger</DownloadApkButton>
-          <button
-            type="button"
-            className="lp-burger"
-            aria-expanded={open}
-            aria-controls="lp-menu"
-            aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
-            onClick={() => setOpen((o) => !o)}
-          >
+        <div className="lp-shell lp-nav-row">
+          <a href="#top" className="lp-brand" aria-label="MES POCHES, accueil">
+            <AppLogo size="xs" priority />
+            <span>MES POCHES</span>
+          </a>
+          <nav className="lp-nav-links" aria-label="Sections">
+            {links.map(([href, label]) => (
+              <a key={href} href={href}>
+                {label}
+              </a>
+            ))}
+          </nav>
+          <div className="lp-nav-cta">
+            <Link href="/login" className="lp-btn lp-btn-ghost lp-btn-sm lp-nav-login">
+              Connexion
+            </Link>
+            <DownloadApkButton className="lp-btn lp-btn-primary lp-btn-sm">Télécharger</DownloadApkButton>
+            <button
+              type="button"
+              className="lp-burger"
+              aria-expanded={open}
+              aria-controls="lp-menu"
+              aria-label="Ouvrir le menu"
+              onClick={() => setOpen(true)}
+            >
+              <span />
+              <span />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div
+        id="lp-menu"
+        className={`lp-menu ${open ? 'is-open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu"
+        hidden={!open}
+      >
+        <div className="lp-shell lp-nav-row">
+          <a href="#top" className="lp-brand" onClick={() => setOpen(false)}>
+            <AppLogo size="xs" />
+            <span>MES POCHES</span>
+          </a>
+          <button type="button" className="lp-burger" aria-expanded="true" aria-label="Fermer le menu" onClick={() => setOpen(false)}>
             <span />
             <span />
           </button>
         </div>
+        <nav className="lp-shell lp-menu-links" aria-label="Sections">
+          {links.map(([href, label], i) => (
+            <a key={href} href={href} onClick={() => setOpen(false)} style={{ '--d': `${60 + i * 45}ms` } as React.CSSProperties}>
+              {label}
+            </a>
+          ))}
+        </nav>
+        <div className="lp-shell lp-menu-cta">
+          <DownloadApkButton className="lp-btn lp-btn-primary lp-btn-lg lp-btn-block">
+            <AndroidIcon />
+            Télécharger pour Android
+          </DownloadApkButton>
+          <Link href="/login" className="lp-btn lp-btn-ghost lp-btn-lg lp-btn-block" onClick={() => setOpen(false)}>
+            Connexion
+          </Link>
+        </div>
       </div>
-      <div id="lp-menu" className={`lp-menu ${open ? 'is-open' : ''}`}>
-        {links.map(([href, label]) => (
-          <a key={href} href={href} onClick={() => setOpen(false)}>
-            {label}
-          </a>
-        ))}
-      </div>
-    </header>
+    </>
   )
 }
 
@@ -394,20 +440,16 @@ function Hero({ heroRef }: { heroRef: React.RefObject<HTMLElement> }) {
 }
 
 function OperatorMarquee() {
-  const row = [...OPERATORS, ...OPERATORS]
   return (
-    <section className="lp-marquee" aria-label="Opérateurs et moyens reconnus">
+    <section className="lp-marquee" aria-label="Opérateurs reconnus">
       <div className="lp-shell lp-marquee-inner">
         <p className="lp-marquee-label">Reconnaît les SMS de</p>
-        <div className="lp-marquee-track">
-          <div className="lp-marquee-row">
-            {row.map((o, i) => (
-              <span key={`${o}-${i}`} aria-hidden={i >= OPERATORS.length}>
-                {o}
-              </span>
-            ))}
-          </div>
-        </div>
+        <ul className="lp-ops">
+          {OPERATORS.map((o) => (
+            <li key={o}>{o}</li>
+          ))}
+        </ul>
+        <p className="lp-ops-note">Paiements, transferts et retraits confirmés, avec leur ID de transaction.</p>
       </div>
     </section>
   )
@@ -483,9 +525,6 @@ function HowItWorks() {
                   <h3>{s.title}</h3>
                   <p>{s.body}</p>
                 </div>
-                <div className="lp-step-phone" aria-hidden>
-                  <Phone small>{s.screen}</Phone>
-                </div>
               </li>
             ))}
           </ol>
@@ -550,7 +589,7 @@ function Pricing() {
       <div className="lp-shell">
         <div className="lp-head lp-head-center" data-reveal>
           <h2 className="lp-h2">Commencez gratuitement. Passez Pro si ça vous change la vie.</h2>
-          <p className="lp-sub">Un mois Pro offert à l’inscription. Ensuite, la version gratuite reste la vôtre, sans limite de durée.</p>
+          <p className="lp-sub">La version gratuite reste la vôtre, sans limite de durée.</p>
           <div className="lp-toggle" role="group" aria-label="Période de facturation">
             <button type="button" aria-pressed={!yearly} onClick={() => setYearly(false)}>
               Mensuel
@@ -589,7 +628,7 @@ function Pricing() {
                   ))}
                 </ul>
                 <DownloadApkButton className={`lp-btn ${'highlight' in t && t.highlight ? 'lp-btn-primary' : 'lp-btn-outline'} lp-btn-block`}>
-                  {t.monthly === 0 ? 'Commencer gratuitement' : `Essayer ${t.label} 1 mois offert`}
+                  {t.monthly === 0 ? 'Commencer gratuitement' : `Choisir ${t.label}`}
                 </DownloadApkButton>
               </article>
             )
@@ -603,10 +642,16 @@ function Pricing() {
               <path d="m9 12 2 2 4-4" />
             </svg>
           </span>
-          <p>
-            Paiement sécurisé dans l’app : <strong>mobile money dans 21 pays d’Afrique</strong> ou <strong>carte Visa/Mastercard</strong> depuis
-            l’international. Le prix affiché est le prix du forfait ; les frais de l’opérateur sont indiqués avant validation.
-          </p>
+          <div>
+            <p className="lp-pay-gift">
+              <strong>1 mois Pro offert</strong> à l’inscription, sans moyen de paiement.
+            </p>
+            <p>
+              Paiement sécurisé dans l’app : <strong>mobile money dans 21 pays d’Afrique</strong> ou <strong>carte Visa/Mastercard</strong> depuis
+              l’international. Le forfait est activé dès la confirmation du paiement. Le prix affiché est le prix du forfait ; les frais de
+              l’opérateur sont indiqués avant validation.
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -693,45 +738,6 @@ function FinalCta() {
 }
 
 /* ─────────────────────────── Pied de page ─────────────────────────── */
-
-function Footer() {
-  const router = useRouter()
-  const taps = useRef({ n: 0, t: 0 })
-  // Accès discret à la connexion admin (5 taps sur l'année), conservé de l'ancienne page.
-  const maybeOpenLogin = () => {
-    const now = Date.now()
-    if (now - taps.current.t > 2200) taps.current.n = 0
-    taps.current.t = now
-    taps.current.n += 1
-    if (taps.current.n >= 5) {
-      taps.current.n = 0
-      router.push('/login')
-    }
-  }
-  return (
-    <footer className="lp-footer">
-      <div className="lp-shell lp-footer-row">
-        <div className="lp-brand">
-          <AppLogo size="xs" />
-          <span>MES POCHES</span>
-        </div>
-        <SaasIndexBadge />
-        <nav aria-label="Liens légaux">
-          <Link href="/legal">Informations légales</Link>
-          <Link href="/legal/privacy">Confidentialité</Link>
-          <Link href="/legal/terms">Conditions</Link>
-        </nav>
-        <p className="lp-copy">
-          ©{' '}
-          <button type="button" onClick={maybeOpenLogin} className="lp-year">
-            {new Date().getFullYear()}
-          </button>{' '}
-          MES POCHES
-        </p>
-      </div>
-    </footer>
-  )
-}
 
 /* ─────────────────────────── Primitives ─────────────────────────── */
 

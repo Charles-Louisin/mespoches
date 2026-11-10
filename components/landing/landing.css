@@ -309,25 +309,63 @@
 .lp-burger[aria-expanded='true'] span:last-child {
   transform: translateY(-3.5px) rotate(-45deg);
 }
+/* Menu mobile : plein écran, au-dessus de tout (barre collante, loader compris). */
 .lp-menu {
-  display: none;
-  padding: 0 16px 8px;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow-y: auto;
   background: #fff;
-  border-bottom: 1px solid var(--border);
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+.lp-menu[hidden] {
+  display: none;
 }
 .lp-menu.is-open {
-  display: block;
-  animation: lp-menu-in 0.35s var(--ease-out);
+  animation: lp-menu-in 0.32s var(--ease-out);
 }
-.lp-menu a {
-  display: block;
-  padding: 14px 4px;
-  font-weight: 500;
-  border-top: 1px solid var(--surface-2);
+.lp-menu-links {
+  display: flex;
+  flex-direction: column;
+  padding-top: 12px;
+}
+.lp-menu-links a {
+  padding: 18px 0;
+  font-size: clamp(1.5rem, 7vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  border-bottom: 1px solid var(--surface-2);
+  animation: lp-menu-link 0.42s var(--ease-out) both;
+  animation-delay: var(--d, 0ms);
+}
+.lp-menu-links a:active {
+  color: var(--primary);
+}
+.lp-menu-cta {
+  display: grid;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 32px;
 }
 @keyframes lp-menu-in {
-  from { opacity: 0; transform: translateY(-8px); }
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes lp-menu-link {
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
+}
+/* Connexion dans la barre : visible dès qu'il y a la place. */
+.lp-nav-login {
+  display: none;
+}
+@media (min-width: 560px) {
+  .lp-nav-login {
+    display: inline-flex;
+  }
 }
 @media (min-width: 900px) {
   .lp-nav-links {
@@ -777,6 +815,16 @@
 .lp-pay-note strong {
   color: var(--text);
 }
+.lp-pay-note p + p {
+  margin-top: 6px;
+}
+.lp-pay-note .lp-pay-gift {
+  font-size: 15px;
+  color: var(--text);
+}
+.lp-pay-note .lp-pay-gift strong {
+  color: var(--primary);
+}
 .lp-pay-ico {
   flex: none;
   display: grid;
@@ -1166,6 +1214,36 @@
 .lp-marquee:hover .lp-marquee-row {
   animation-play-state: paused;
 }
+/* Opérateurs réellement reconnus : liste fixe, pas de défilement. */
+.lp-ops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-ops li {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+.lp-ops-note {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+@media (min-width: 760px) {
+  .lp-ops-note {
+    margin-left: auto;
+    max-width: 30ch;
+    text-align: right;
+  }
+}
 
 /* ───────────── Problème : liste éditoriale ───────────── */
 .lp-pains-grid {
@@ -1297,4 +1375,240 @@
   .lp-stage-in {
     clip-path: none !important;
   }
+}
+
+/* ───────────── Pages du site (légal) : même langage que la landing ───────────── */
+.lp-site {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+.lp-site > main {
+  flex: 1;
+}
+.lp-site .lp-footer {
+  padding-bottom: 0;
+}
+.lp-legal-hero {
+  padding: 48px 0 40px;
+  background: linear-gradient(180deg, var(--primary-xlight), #fff);
+  border-bottom: 1px solid var(--border);
+}
+@media (min-width: 960px) {
+  .lp-legal-hero {
+    padding: 80px 0 56px;
+  }
+}
+.lp-legal-title {
+  margin: 0;
+  max-width: 18ch;
+  font-size: clamp(2.1rem, 6vw, 3.4rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.lp-legal-intro {
+  margin: 18px 0 0;
+  max-width: 62ch;
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--text-2);
+}
+.lp-legal-updated {
+  margin: 18px 0 0;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.lp-legal-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+  padding-top: 28px;
+  padding-bottom: 24px;
+}
+@media (min-width: 960px) {
+  .lp-legal-grid {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 72px;
+    padding-top: 56px;
+  }
+  .lp-legal-aside {
+    position: sticky;
+    top: 92px;
+    align-self: start;
+  }
+}
+.lp-legal-nav {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-inline: -16px;
+  padding-inline: 16px;
+}
+.lp-legal-nav::-webkit-scrollbar {
+  display: none;
+}
+.lp-legal-nav a {
+  flex: none;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-2);
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+}
+.lp-legal-nav a:hover {
+  color: var(--text);
+  border-color: var(--text-3);
+}
+.lp-legal-nav a[aria-current='page'] {
+  background: var(--primary-light);
+  border-color: transparent;
+  color: var(--primary-dark);
+  font-weight: 600;
+}
+@media (min-width: 960px) {
+  .lp-legal-nav {
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+  .lp-legal-nav a {
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .lp-legal-nav a:last-child {
+    margin-top: 12px;
+    color: var(--text-3);
+    font-size: 13px;
+  }
+}
+.lp-legal-aside {
+  min-width: 0;
+}
+.lp-legal-body {
+  min-width: 0;
+  max-width: 70ch;
+  overflow-wrap: break-word;
+  font-size: 16px;
+  line-height: 1.75;
+  color: #333;
+}
+.lp-legal-section {
+  padding: 28px 0;
+  border-top: 1px solid var(--surface-2);
+  scroll-margin-top: 88px;
+}
+.lp-legal-section:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.lp-legal-section h2 {
+  margin: 0 0 12px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+.lp-legal-section-body p {
+  margin: 0;
+}
+.lp-legal-section-body p + p,
+.lp-legal-section-body p + ul,
+.lp-legal-section-body ul + p {
+  margin-top: 12px;
+}
+.lp-legal-section-body ul {
+  list-style: disc;
+  margin: 10px 0 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 8px;
+}
+.lp-legal-section-body li::marker {
+  color: var(--primary);
+}
+.lp-legal-section-body strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.lp-legal-section-body a {
+  color: var(--primary);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--primary) 35%, transparent);
+}
+.lp-legal-section-body a:hover {
+  text-decoration-color: var(--primary);
+}
+.lp-legal-index {
+  padding-top: 32px;
+  padding-bottom: 24px;
+}
+@media (min-width: 960px) {
+  .lp-legal-index {
+    padding-top: 56px;
+  }
+}
+.lp-legal-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+@media (min-width: 760px) {
+  .lp-legal-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+}
+.lp-legal-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 26px 24px 22px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: #fff;
+  transition: border-color 0.25s, box-shadow 0.35s var(--ease-out), transform 0.35s var(--ease-out);
+}
+.lp-legal-card:hover {
+  border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+  box-shadow: 0 18px 36px -24px rgba(37, 99, 235, 0.45);
+  transform: translateY(-2px);
+}
+.lp-legal-card h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.lp-legal-card p {
+  margin: 10px 0 22px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+.lp-legal-card-go {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+}
+.lp-legal-card:hover .lp-legal-card-go svg {
+  transform: translateX(3px);
+}
+.lp-legal-card-go svg {
+  transition: transform 0.25s var(--ease-out);
 }

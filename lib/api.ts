@@ -64,6 +64,43 @@ export type EffectiveAppVersion = {
   source: 'github' | 'admin' | 'none'
 }
 
+export type AdminPayment = {
+  _id: string
+  transaction_id: string
+  user: { _id: string; email: string; name: string } | null
+  tier: 'pro' | 'pro_plus' | 'business'
+  period: 'monthly' | 'yearly'
+  amount: number
+  currency: string
+  status: 'pending' | 'completed' | 'failed'
+  saspay_status: string | null
+  saspay_charged: string | null
+  saspay_transaction_id: string | null
+  created_at: string
+  completed_at: string | null
+}
+
+export type AdminPaymentsData = {
+  days: number
+  summary: {
+    revenue: number
+    completed: number
+    pending: number
+    failed: number
+    byTier: { tier: string; count: number; amount: number }[]
+  }
+  payments: AdminPayment[]
+  meta: { page: number; limit: number; count: number; hasMore: boolean; total?: number }
+}
+
+export const adminPaymentsApi = {
+  list: (params: { days: number; status?: string; page?: number }) => {
+    const q = new URLSearchParams({ days: String(params.days), page: String(params.page ?? 1), limit: '50' })
+    if (params.status) q.set('status', params.status)
+    return fetchApi<AdminPaymentsData>(`/admin/payments?${q.toString()}`)
+  },
+}
+
 export const adminReleaseApi = {
   get: () =>
     fetchApi<{ github: GithubReleaseInfo; admin: AdminAppRelease | null; effective: EffectiveAppVersion }>(

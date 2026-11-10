@@ -1,14 +1,7 @@
 import type { Metadata } from 'next'
-import { Outfit } from 'next/font/google'
+import { outfit } from '@/lib/fonts'
 import Landing from '@/components/landing/Landing'
 
-// Police de l'application mobile (tokens : Outfit 400/500/600/700)
-const outfit = Outfit({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-outfit',
-  display: 'swap',
-})
 
 export const metadata: Metadata = {
   title: 'MES POCHES — Chaque franc retrouve sa poche',
