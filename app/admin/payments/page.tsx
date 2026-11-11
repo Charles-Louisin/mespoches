@@ -144,7 +144,12 @@ export default function AdminPaymentsPage() {
               </thead>
               <tbody className="divide-y divide-black/5">
                 {data.payments.map((p) => {
-                  const st = STATUS[p.status] ?? { label: p.status, cls: 'bg-surface text-ink-soft' }
+                  // Tentative refusée par SasPay alors que la session reste ouverte (le client peut réessayer).
+                  const attemptFailed =
+                    p.status === 'pending' && /^(FAILED|CANCELLED)$/i.test(p.saspay_status || '')
+                  const st = attemptFailed
+                    ? { label: 'Échoué · réessai possible', cls: STATUS.failed.cls }
+                    : STATUS[p.status] ?? { label: p.status, cls: 'bg-surface text-ink-soft' }
                   return (
                     <tr key={p._id} className="align-top">
                       <td className="whitespace-nowrap px-4 py-3 text-ink-soft">{when(p.created_at)}</td>
