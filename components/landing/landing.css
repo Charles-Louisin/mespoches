@@ -1701,3 +1701,61 @@
 .lp-auth-card input {
   font-family: inherit;
 }
+
+/* Suppression de compte (page publique exigée par Google Play) */
+.lp-legal-body ol {
+  padding-left: 1.25rem;
+  list-style: decimal;
+}
+.lp-delete-panel {
+  margin-top: 16px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+.lp-delete-panel p {
+  margin: 0;
+}
+.lp-delete-note {
+  color: var(--text-2);
+}
+.lp-delete-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.lp-delete-input {
+  width: 100%;
+  max-width: 320px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font: inherit;
+  letter-spacing: 0.04em;
+}
+.lp-delete-input:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.lp-delete-btn {
+  background: #b42318;
+  color: #fff;
+  border: 0;
+}
+.lp-delete-btn:hover:not(:disabled) {
+  background: #912018;
+}
+.lp-delete-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.lp-delete-panel .lp-btn,
+.lp-delete-panel .lp-btn:hover {
+  color: #fff;
+  text-decoration: none;
+}

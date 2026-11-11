@@ -2,7 +2,10 @@ import LegalPageLayout, { LegalSection } from '@/components/LegalPageLayout'
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'Mentions légales — MES POCHES',
+  title: "Mentions légales — MES POCHES",
+  description:
+    "Éditeur, hébergement et contact de MES POCHES.",
+  alternates: { canonical: "/legal/mentions" },
 }
 
 export default function LegalNoticePage() {

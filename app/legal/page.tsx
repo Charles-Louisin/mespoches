@@ -2,7 +2,10 @@ import SiteChrome from '@/components/landing/SiteChrome'
 import LegalNav from '@/components/LegalNav'
 
 export const metadata = {
-  title: 'Informations légales — MES POCHES',
+  title: "Informations légales — MES POCHES",
+  description:
+    "Politique de confidentialité, conditions d’utilisation, mentions légales et suppression de compte de l’application MES POCHES.",
+  alternates: { canonical: "/legal" },
 }
 
 export default function LegalIndexPage() {

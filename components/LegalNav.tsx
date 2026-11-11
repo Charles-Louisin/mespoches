@@ -19,6 +19,11 @@ const ITEMS = [
     title: 'Mentions légales',
     description: 'L’éditeur, l’hébergement, les prestataires et le contact.',
   },
+  {
+    href: '/suppression-compte',
+    title: 'Suppression du compte',
+    description: 'Effacer votre compte et vos données, depuis l’app ou ce site.',
+  },
 ] as const
 
 export default function LegalNav({ variant = 'side' }: { variant?: 'side' | 'cards' }) {

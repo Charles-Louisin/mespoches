@@ -39,7 +39,7 @@ const STEPS = [
 
 const FEATURES: { title: string; body: string; icon: ReactNode; tone: string }[] = [
   {
-    title: 'Lecture des SMS',
+    title: 'Lecture des notifications',
     body: 'Orange Money et MTN MoMo : chaque paiement confirmé est préparé dès la notification.',
     icon: <path d="M4 5h16v11H8l-4 4V5Z" />,
     tone: 'blue',
@@ -115,8 +115,8 @@ const FAQ = [
     a: 'La publication est en cours. En attendant, l’APK officiel est téléchargé depuis notre dépôt. Play Protect peut afficher un avertissement : notre guide montre comment le suspendre un jour seulement, sans désactiver la protection.',
   },
   {
-    q: 'L’app lit-elle tous mes SMS ?',
-    a: 'Non. Elle ne retient que les confirmations de paiement, de transfert ou de retrait qui portent un ID de transaction. Une demande de paiement, un code ou une promo sont ignorés. Rien n’est enregistré sans votre validation, et la fonction se coupe à tout moment dans les réglages.',
+    q: 'L’app lit-elle mes SMS ou toutes mes notifications ?',
+    a: 'Elle ne lit jamais votre boîte SMS. Avec votre accord, elle lit les notifications de vos opérateurs et ne retient que les confirmations de paiement, de transfert ou de retrait qui portent un ID de transaction. Une demande de paiement, un code ou une promo sont ignorés. Rien n’est enregistré sans votre validation, et la fonction se coupe à tout moment dans les réglages.',
   },
   {
     q: 'Quels opérateurs sont reconnus ?',
@@ -401,7 +401,7 @@ function Hero({ heroRef }: { heroRef: React.RefObject<HTMLElement> }) {
             </span>
           </h1>
           <p className="lp-lead lp-in" style={{ '--d': '280ms' } as React.CSSProperties}>
-            Cash, mobile money, banque : MES POCHES lit vos SMS de transaction, scanne vos tickets et écoute vos notes
+            Cash, mobile money, banque : MES POCHES lit les notifications de vos paiements, scanne vos tickets et écoute vos notes
             vocales. Vous validez, le solde suit. Fini les fins de mois où l’argent a « disparu ».
           </p>
           <div className="lp-cta-row lp-in" style={{ '--d': '380ms' } as React.CSSProperties}>

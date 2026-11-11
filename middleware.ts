@@ -7,7 +7,7 @@ import {
   PENDING_EMAIL_COOKIE,
 } from '@/lib/server/session-cookies'
 
-const PUBLIC_PREFIXES = ['/legal', '/login', '/verify-email', '/forgot-password', '/auth', '/paiement']
+const PUBLIC_PREFIXES = ['/legal', '/login', '/verify-email', '/forgot-password', '/auth', '/paiement', '/suppression-compte']
 
 function isPublicPath(pathname: string): boolean {
   if (pathname === '/') return true
@@ -64,5 +64,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|manifest.json|icons|logo\\.png|logo\\.svg|apple-touch-icon.png|favicon.png|mes-poches\\.apk).*)'],
+  // robots.txt, sitemap.xml et le fichier de validation Google ne passent jamais par la redirection vers /login.
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|manifest.json|icons|logo\\.png|logo\\.svg|apple-touch-icon.png|favicon.png|mes-poches\\.apk|robots\\.txt|sitemap\\.xml|google[0-9a-f]+\\.html|opengraph-image).*)'],
 }

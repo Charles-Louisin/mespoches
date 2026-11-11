@@ -17,6 +17,7 @@ export default function SiteFooter() {
           <Link href="/legal/privacy">Confidentialité</Link>
           <Link href="/legal/terms">Conditions</Link>
           <Link href="/legal/mentions">Mentions légales</Link>
+          <Link href="/suppression-compte">Supprimer mon compte</Link>
           <Link href="/login">Connexion</Link>
         </nav>
         <p className="lp-copy">© {new Date().getFullYear()} MES POCHES</p>

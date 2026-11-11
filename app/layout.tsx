@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Figtree, Fraunces } from 'next/font/google'
 import { Toaster } from 'sonner'
 import Providers from '@/components/Providers'
+import { SITE_URL } from '@/lib/site'
 import './globals.css'
 
 const figtree = Figtree({
@@ -17,10 +18,19 @@ const fraunces = Fraunces({
 })
 
 export const metadata: Metadata = {
+  // Base des URL absolues (canonique, Open Graph) : indispensable pour l'indexation.
+  metadataBase: new URL(SITE_URL),
   title: 'MES POCHES — Gestion financière',
   description:
     'Application mobile de gestion financière. Téléchargez MES POCHES pour Android.',
   applicationName: 'MES POCHES',
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large' } },
+  openGraph: {
+    siteName: 'MES POCHES',
+    type: 'website',
+    locale: 'fr_FR',
+    images: [{ url: '/logo.png', width: 512, height: 512, alt: 'MES POCHES' }],
+  },
   verification: {
     google: 'RVafmc-RMHhi3At9jbpUHXBCtf9bD9Dz8YolzToMpS8',
   },

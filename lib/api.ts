@@ -36,6 +36,8 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
 
 export const authApi = {
   me: () => fetchApi<MeUser>('/auth/me'),
+  /** Supprime définitivement le compte connecté et ses données. */
+  deleteMe: () => fetchApi<{ message: string }>('/auth/me', { method: 'DELETE' }),
 }
 
 export type GithubReleaseInfo = {

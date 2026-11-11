@@ -4,6 +4,9 @@ import { formatCurrency } from '@/lib/utils'
 
 export const metadata = {
   title: "Conditions d'utilisation — MES POCHES",
+  description:
+    "Conditions d’utilisation de l’application MES POCHES : compte, forfaits, abonnements et responsabilités.",
+  alternates: { canonical: "/legal/terms" },
 }
 
 export default function TermsPage() {
@@ -110,14 +113,14 @@ export default function TermsPage() {
           <li>utiliser le service conformément aux lois applicables ;</li>
           <li>ne pas tenter d’accéder au compte d’un tiers ;</li>
           <li>
-            valider, modifier ou ignorer chaque proposition issue d’un SMS, d’une
+            valider, modifier ou ignorer chaque proposition issue d’une
             notification, d’un scan ou d’une dictée avant de la considérer comme
             enregistrée ;
           </li>
           <li>ne pas détourner l’application à des fins frauduleuses.</li>
         </ul>
         <p>
-          Les permissions Android (SMS, notifications, appareil photo, microphone, stockage
+          Les permissions Android (accès aux notifications, appareil photo, microphone, stockage
           local) sont optionnelles au regard des fonctions correspondantes. Les retirer
           peut limiter certaines fonctionnalités, sans empêcher une saisie manuelle.
         </p>
