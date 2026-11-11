@@ -1,0 +1,360 @@
+/* ───────────────────────────────────────────────────────────
+   Console admin alignée sur le site public (landing.css) :
+   Outfit, tokens de l'app, surfaces blanches, bordures fines.
+   Calque scopé sur .ad-site : structure et comportement restent ceux de globals.css.
+   ─────────────────────────────────────────────────────────── */
+.ad-font {
+  font-family: var(--font-outfit), system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+.ad-site {
+  --ad-primary: #2563eb;
+  --ad-primary-dark: #1d4ed8;
+  --ad-primary-light: #eef4ff;
+  --ad-bg: #f8f9fa;
+  --ad-text: #111111;
+  --ad-text-2: #5f5f5f;
+  --ad-text-3: #737373;
+  --ad-border: #e7e7e7;
+  --ad-warn: #b45309;
+  font-family: var(--font-outfit), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--ad-bg);
+  color: var(--ad-text);
+  -webkit-font-smoothing: antialiased;
+}
+.ad-site ::selection {
+  background: var(--ad-primary-light);
+  color: var(--ad-primary-dark);
+}
+.ad-site :focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--ad-primary) 50%, transparent);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+.ad-site h1,
+.ad-site h2,
+.ad-site h3,
+.ad-site .ad-brand,
+.ad-site .ad-topbar-brand {
+  font-family: inherit;
+}
+
+/* Barre latérale claire, comme l'en-tête du site */
+.ad-site .ad-side {
+  background: #fff;
+  color: var(--ad-text);
+  border-right: 1px solid var(--ad-border);
+  padding: 22px 14px;
+  gap: 4px;
+}
+.ad-site .ad-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px 18px;
+}
+.ad-site .ad-brand {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ad-text);
+}
+.ad-site .ad-brand-sub {
+  margin: 1px 0 0;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ad-text-3);
+}
+.ad-site .ad-nav {
+  gap: 2px;
+}
+.ad-site .ad-nav button {
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ad-text-2);
+  cursor: pointer;
+  transition: background-color 0.18s, color 0.18s;
+}
+.ad-site .ad-nav button:hover {
+  background: var(--ad-bg);
+  color: var(--ad-text);
+}
+.ad-site .ad-nav button.is-on {
+  background: var(--ad-primary-light);
+  color: var(--ad-primary-dark);
+  font-weight: 600;
+}
+.ad-site .ad-nav-tools {
+  margin-top: 18px;
+}
+.ad-site .ad-nav-label {
+  padding: 0 12px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ad-text-3);
+}
+.ad-site .ad-periods {
+  margin: 0 0 16px;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 999px;
+  background: var(--ad-bg);
+  border: 1px solid var(--ad-border);
+}
+.ad-site .ad-periods button,
+.ad-site .ad-topbar-periods button {
+  border: 0;
+  border-radius: 999px;
+  min-height: 32px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ad-text-2);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.ad-site .ad-periods button.is-on,
+.ad-site .ad-topbar-periods button.is-on {
+  background: #fff;
+  color: var(--ad-text);
+  box-shadow: 0 1px 3px rgba(17, 17, 17, 0.12);
+}
+.ad-site .ad-side-out {
+  margin-top: 0;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--ad-text-2);
+  cursor: pointer;
+}
+.ad-site .ad-nav-tools + .ad-side-out {
+  margin-top: auto;
+}
+.ad-site .ad-side-out:hover {
+  background: var(--ad-bg);
+  color: var(--ad-text);
+}
+.ad-site .ad-side-out.is-red {
+  color: #c2410c;
+}
+
+/* Contenu */
+.ad-site .ad-main {
+  padding: 36px 40px 56px;
+}
+.ad-site .ad-hero {
+  grid-template-columns: 1fr;
+  margin-bottom: 24px;
+}
+.ad-site .ad-hero h1 {
+  margin: 0;
+  font-size: clamp(1.9rem, 3vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.ad-site .ad-hero p {
+  margin-top: 8px;
+  max-width: 62ch;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ad-text-2);
+}
+
+/* Comptes : bloc clair et dense, chiffres tabulaires */
+.ad-site .ad-census-hero {
+  margin-bottom: 16px;
+  padding: 20px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--ad-border);
+  box-shadow: none;
+  color: var(--ad-text);
+}
+.ad-site .ad-census-title {
+  margin: 0 0 14px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.ad-site .ad-census-grid {
+  gap: 0;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.ad-site .ad-census-hit {
+  border: 0;
+  border-left: 1px solid var(--ad-border);
+  border-radius: 0;
+  background: transparent;
+  padding: 4px 18px 6px;
+  transition: background-color 0.18s;
+}
+.ad-site .ad-census-hit:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+.ad-site .ad-census-hit:hover {
+  background: var(--ad-bg);
+}
+.ad-site .ad-census-hit span {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ad-text-2);
+}
+.ad-site .ad-census-hit strong {
+  margin-top: 6px;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ad-text);
+}
+.ad-site .ad-census-hit small {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--ad-text-3);
+}
+.ad-site .ad-census-hit.is-warn {
+  background: transparent;
+  border-color: var(--ad-border);
+}
+.ad-site .ad-census-hit.is-warn strong {
+  color: var(--ad-warn);
+}
+
+/* Indicateurs et cartes : bordure fine, pas d'ombre floue */
+.ad-site .ad-kpis {
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.ad-site .ad-kpi,
+.ad-site .ad-card {
+  border: 1px solid var(--ad-border);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: none;
+}
+.ad-site .ad-kpi {
+  padding: 14px 16px;
+  transition: border-color 0.18s, box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ad-site .ad-kpi:hover {
+  outline: 0;
+  border-color: color-mix(in srgb, var(--ad-primary) 45%, transparent);
+  box-shadow: 0 10px 24px -18px rgba(37, 99, 235, 0.55);
+}
+.ad-site .ad-kpi p {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ad-text-2);
+}
+.ad-site .ad-kpi strong {
+  margin-top: 6px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.ad-site .ad-kpi span,
+.ad-site .ad-card-sub {
+  font-size: 12px;
+  color: var(--ad-text-3);
+}
+.ad-site .ad-card {
+  padding: 20px;
+}
+.ad-site .ad-card h2 {
+  font-size: 1rem;
+  font-weight: 700;
+}
+.ad-site .ad-facts li,
+.ad-site .ad-census {
+  color: var(--ad-text-2);
+}
+.ad-site .ad-user-actions button {
+  border-color: var(--ad-border);
+  border-radius: 999px;
+  font-weight: 600;
+  color: var(--ad-text);
+}
+.ad-site .ad-user-actions button:hover:not(:disabled) {
+  border-color: var(--ad-text-3);
+}
+.ad-site .ad-user-actions button.is-danger {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+/* Mobile : barre du haut claire */
+@media (max-width: 1023px) {
+  .ad-site .ad-topbar {
+    background: #fff;
+    color: var(--ad-text);
+    border-bottom: 1px solid var(--ad-border);
+  }
+  .ad-site .ad-menu-btn {
+    border: 1px solid var(--ad-border);
+    border-radius: 999px;
+    background: #fff;
+  }
+  .ad-site .ad-menu-btn span {
+    background: var(--ad-text);
+  }
+  .ad-site .ad-topbar-brand {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+  .ad-site .ad-topbar-periods {
+    padding: 3px;
+    gap: 2px;
+    border-radius: 999px;
+    background: var(--ad-bg);
+    border: 1px solid var(--ad-border);
+  }
+  .ad-site .ad-topbar-periods button {
+    min-width: 40px;
+  }
+  .ad-site .ad-side {
+    box-shadow: 18px 0 40px -28px rgba(17, 17, 17, 0.35);
+  }
+  .ad-site .ad-side .ad-periods {
+    display: none;
+  }
+  .ad-site .ad-nav-mask {
+    background: rgba(17, 17, 17, 0.35);
+  }
+  .ad-site .ad-main {
+    padding: 22px 16px 48px;
+  }
+  .ad-site .ad-census-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 16px;
+  }
+  .ad-site .ad-census-hit,
+  .ad-site .ad-census-hit:first-child {
+    border-left: 0;
+    padding: 0;
+  }
+}
+
+/* Tableau des personnes */
+.ad-site .ad-table th {
+  background: var(--ad-bg);
+  padding: 10px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ad-text-2);
+  border-bottom: 1px solid var(--ad-border);
+}
+.ad-site .ad-table td {
+  padding: 12px 10px;
+  border-top-color: var(--ad-border);
+  font-variant-numeric: tabular-nums;
+}
+.ad-site .ad-table tr.is-on td,
+.ad-site .ad-table tr:hover td {
+  background: var(--ad-primary-light);
+}

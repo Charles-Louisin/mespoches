@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { APK_URL } from '@/lib/apk'
+import { APK_SIZE_MB, APK_URL } from '@/lib/apk'
 
 export function DownloadApkButton({
   children,
@@ -65,7 +65,7 @@ function InstallGuide({ onClose }: { onClose: () => void }) {
 
         <div className="apk-guide-actions">
           <a href={APK_URL} target="_blank" rel="noopener noreferrer" className="store-apk">
-            Lancer le téléchargement
+            Télécharger (~{APK_SIZE_MB} Mo)
           </a>
           <button type="button" className="apk-guide-close" onClick={onClose}>
             Annuler

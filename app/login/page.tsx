@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import AppLogo from '@/components/AppLogo'
 import { Eye, EyeOff } from 'lucide-react'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
@@ -27,7 +26,7 @@ import {
 import { toast } from 'sonner'
 import { getGoogleOAuthOrigin } from '@/lib/google-oauth-origin'
 import LoadingBar from '@/components/LoadingBar'
-import StoreChrome from '@/components/store/StoreChrome'
+import SiteChrome from '@/components/landing/SiteChrome'
 import Link from 'next/link'
 
 type TouchedState = Partial<Record<LoginField, boolean>>
@@ -247,40 +246,27 @@ function LoginPageContent() {
       : undefined
 
   return (
-    <StoreChrome bare>
-      <div className="auth-split">
-        <section className="auth-brand">
-          <p className="auth-brand-mark" aria-hidden>
-            {'MES\nPOCHES'}
+    <SiteChrome>
+      <div className="lp-shell lp-auth">
+        <section className="lp-auth-copy">
+          <h1 className="lp-auth-title">
+            {isLogin ? 'Bon retour sur' : 'Bienvenue sur'} <span className="lp-accent">MES POCHES.</span>
+          </h1>
+          <p className="lp-auth-lead">
+            Vous pouvez vous connecter, cependant le suivi de vos poches
+            se fait dans l’application Android.
           </p>
-          <div className="auth-brand-copy">
-            <AppLogo size="lg" priority />
-            <h1>Votre espace compte</h1>
-            <p>
-              Connectez-vous pour administrer le service ou gérer un compte MES POCHES. Le
-              suivi quotidien de vos poches se fait dans l’application mobile.
-            </p>
-            <ul className="auth-brand-list">
-              <li>
-                <b>—</b>
-                <span>Téléchargement officiel de l’APK Android depuis ce site.</span>
-              </li>
-              <li>
-                <b>—</b>
-                <span>Vos mouvements ne sont enregistrés qu’après validation.</span>
-              </li>
-              <li>
-                <b>—</b>
-                <span>Données personnelles traitées pour le seul fonctionnement du service.</span>
-              </li>
-            </ul>
-          </div>
+          <ul className="lp-auth-points">
+            <li>Le même compte que dans l’application.</li>
+            <li>Rien n’est enregistré sans votre validation.</li>
+            <li>Double authentification disponible dans les réglages.</li>
+          </ul>
         </section>
 
-        <section className="auth-form-col">
-          <div className="auth-card">
+        <section className="lp-auth-panel">
+          <div className="lp-auth-card">
             <h2>{isLogin ? 'Connexion' : 'Créer un compte'}</h2>
-            <p className="auth-lead">
+            <p className="lp-auth-card-lead">
               {isLogin
                 ? 'Utilisez Google ou votre e-mail.'
                 : 'Un e-mail de vérification vous sera envoyé.'}
@@ -295,7 +281,7 @@ function LoginPageContent() {
               onClick={startGoogle}
               loading={googleLoading}
               disabled={loading}
-              className="gap-3 border-black/[0.08] bg-white text-ink hover:bg-white/80 !shadow-none"
+              className="gap-3 !rounded-full border-[#e7e7e7] bg-white text-[#111] hover:bg-[#f8f9fa] !shadow-none"
             >
               <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden>
                 <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.2 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.5-.4-3.5z"/>
@@ -311,7 +297,7 @@ function LoginPageContent() {
                 <div className="w-full border-t border-black/[0.08]" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-white/80 px-3 text-[#6b6280]">ou</span>
+                <span className="bg-white px-3 text-[#9a9a9a]">ou</span>
               </div>
             </div>
 
@@ -319,7 +305,7 @@ function LoginPageContent() {
               <button
                 type="button"
                 onClick={() => setShowEmailForm(true)}
-                className="w-full rounded-xl border border-black/[0.08] bg-white px-4 py-3 text-sm font-medium text-ink hover:bg-[#f7f5fb] touch-manipulation"
+                className="h-12 w-full rounded-full border border-[#e7e7e7] bg-white px-4 text-[15px] font-semibold text-[#111] transition-colors hover:bg-[#f8f9fa] touch-manipulation"
               >
                 Continuer avec e-mail
               </button>
@@ -404,7 +390,7 @@ function LoginPageContent() {
                           }`
                         )
                       }
-                      className="text-sm text-[#2563EB] hover:underline font-medium touch-manipulation"
+                      className="text-sm text-[#2563eb] hover:underline font-medium touch-manipulation"
                     >
                       Mot de passe oublié ?
                     </button>
@@ -454,7 +440,7 @@ function LoginPageContent() {
                   disabled={submitAttempted && !formValid}
                   fullWidth
                   size="lg"
-                  className="!bg-[#2563eb] hover:!bg-[#1d4ed8]"
+                  className="!rounded-full !bg-[#2563eb] hover:!bg-[#1d4ed8]"
                 >
                   {loading
                     ? 'Chargement...'
@@ -463,12 +449,12 @@ function LoginPageContent() {
                       : 'Créer mon compte'}
                 </Button>
 
-                <p className="text-center text-sm text-[#6b6280]">
+                <p className="text-center text-sm text-[#707070]">
                   {isLogin ? 'Pas encore de compte ?' : 'Déjà un compte ?'}
                   <button
                     type="button"
                     onClick={switchMode}
-                    className="ml-2 text-[#1b1630] font-semibold touch-manipulation"
+                    className="ml-2 text-[#2563eb] font-semibold touch-manipulation"
                   >
                     {isLogin ? "S'inscrire" : 'Se connecter'}
                   </button>
@@ -476,13 +462,13 @@ function LoginPageContent() {
               </form>
             )}
             </div>
-            <p className="mt-6 text-center text-[12px] leading-relaxed text-[#6b6280]">
+            <p className="mt-6 text-center text-[12px] leading-relaxed text-[#707070]">
               En continuant, vous acceptez les{' '}
-              <Link href="/legal/terms" className="font-semibold text-[#2563EB]">
+              <Link href="/legal/terms" className="font-semibold text-[#2563eb]">
                 conditions
               </Link>{' '}
               et la{' '}
-              <Link href="/legal/privacy" className="font-semibold text-[#2563EB]">
+              <Link href="/legal/privacy" className="font-semibold text-[#2563eb]">
                 confidentialité
               </Link>
               .
@@ -490,7 +476,7 @@ function LoginPageContent() {
           </div>
         </section>
       </div>
-    </StoreChrome>
+    </SiteChrome>
   )
 }
 

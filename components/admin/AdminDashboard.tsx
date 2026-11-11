@@ -13,7 +13,8 @@ import {
 } from '@/lib/api'
 import { BarList, Donut, LineChart } from './AdminCharts'
 import AdminPeek from './AdminPeek'
-import AdminScene from './AdminScene'
+import AppLogo from '@/components/AppLogo'
+import './admin-site.css'
 
 const SOURCE_LABEL: Record<string, string> = {
   sms: 'SMS',
@@ -193,7 +194,7 @@ export default function AdminDashboard({
   ]
 
   return (
-    <div className={`ad-shell${navOpen ? ' is-nav-open' : ''}`}>
+    <div className={`ad-shell ad-site${navOpen ? ' is-nav-open' : ''}`}>
       <header className="ad-topbar">
         <button
           type="button"
@@ -207,8 +208,7 @@ export default function AdminDashboard({
           <span />
         </button>
         <div className="ad-topbar-copy">
-          <p className="ad-topbar-brand">MES POCHES</p>
-          <p className="ad-topbar-sub">Console</p>
+          <p className="ad-topbar-brand">Console</p>
         </div>
         <div className="ad-topbar-periods">
           {[7, 30, 90].map((n) => (
@@ -234,9 +234,12 @@ export default function AdminDashboard({
 
       <aside className="ad-side">
         <div className="ad-side-head">
-          <div>
-            <p className="ad-brand">MES POCHES</p>
-            <p className="ad-brand-sub">Console interne</p>
+          <div className="ad-brand-row">
+            <AppLogo size="xs" />
+            <div>
+              <p className="ad-brand">MES POCHES</p>
+              <p className="ad-brand-sub">Console</p>
+            </div>
           </div>
           <button type="button" className="ad-side-close" aria-label="Fermer le menu" onClick={closeNav}>
             Fermer
@@ -278,26 +281,27 @@ export default function AdminDashboard({
             </button>
           ))}
         </div>
-        <button
-          type="button"
-          className="ad-side-out"
-          onClick={() => {
-            closeNav()
-            router.push('/admin/payments')
-          }}
-        >
-          Paiements
-        </button>
-        <button
-          type="button"
-          className="ad-side-out"
-          onClick={() => {
-            closeNav()
-            router.push('/admin/release')
-          }}
-        >
-          Mise à jour de l’app
-        </button>
+        <nav className="ad-nav ad-nav-tools" aria-label="Outils">
+          <p className="ad-nav-label">Outils</p>
+          <button
+            type="button"
+            onClick={() => {
+              closeNav()
+              router.push('/admin/payments')
+            }}
+          >
+            Paiements
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              closeNav()
+              router.push('/admin/release')
+            }}
+          >
+            Mise à jour de l’app
+          </button>
+        </nav>
         <button
           type="button"
           className="ad-side-out"
@@ -318,18 +322,16 @@ export default function AdminDashboard({
           <>
             <header className="ad-hero">
               <div>
-                <p className="ad-kicker">Pilotage · {insights.periodDays} jours</p>
                 <h1>Qui fait quoi</h1>
                 <p>
-                  Cliquez un chiffre pour voir les personnes, puis une fiche pour suivre son
+                  Sur les {insights.periodDays} derniers jours. Cliquez un chiffre pour voir les personnes, puis une fiche pour suivre son
                   parcours — où ça bloque, où ça casse, où ça marche.
                 </p>
               </div>
-              <AdminScene />
             </header>
 
             <section className="ad-census-hero">
-              <p className="ad-census-kicker">Les comptes</p>
+              <h2 className="ad-census-title">Les comptes</h2>
               <div className="ad-census-grid">
                 <CensusHit
                   label="Inscrits"
@@ -629,7 +631,6 @@ export default function AdminDashboard({
           <>
             <header className="ad-hero ad-hero-sm">
               <div>
-                <p className="ad-kicker">Ce que font les gens dans l’app</p>
                 <h1>Clics, écrans, erreurs</h1>
                 <p>
                   {compact(telemetry.events)} actions · {people(telemetry.uniqueUsers)} ·{' '}
