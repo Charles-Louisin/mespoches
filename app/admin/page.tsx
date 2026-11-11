@@ -6,7 +6,7 @@ import { AuthGuard } from '@/components/AuthGuard'
 import AdminDashboard from '@/components/admin/AdminDashboard'
 import LoadingBar from '@/components/LoadingBar'
 import { adminApi, authApi, type AdminInsights, type AdminTelemetry, type AdminUserSummary } from '@/lib/api'
-import { hydrateAuthSession } from '@/lib/auth'
+import { hydrateAuthSession, logout } from '@/lib/auth'
 
 export default function AdminDashboardPage() {
   const router = useRouter()
@@ -52,15 +52,16 @@ export default function AdminDashboardPage() {
   return (
     <AuthGuard>
       {loading && !insights ? (
-        <div className="flex min-h-dvh items-center justify-center bg-[#0f1220]">
+        <div className="flex min-h-dvh items-center justify-center bg-[#f8f9fa]">
           <LoadingBar label="Chargement de la console…" />
         </div>
       ) : error || !insights || !telemetry ? (
         <div className="ad-session">
           <p>{error || 'Données indisponibles'}</p>
           <div className="ad-session-actions">
-            <button type="button" className="ad-session-btn" onClick={() => router.push('/login')}>
-              Aller à la connexion
+            {/* Session encore valide côté cookie : /login renverrait sur /admin. On la ferme d'abord. */}
+            <button type="button" className="ad-session-btn" onClick={() => logout('/login')}>
+              Se reconnecter
             </button>
             <button type="button" className="ad-session-btn is-ghost" onClick={() => window.location.reload()}>
               Actualiser

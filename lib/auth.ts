@@ -307,7 +307,8 @@ export function redirectAfterAuth(): void {
   window.location.assign(homeAfterAuth());
 }
 
-export const logout = (): void => {
+/** Ferme la session (cookie compris) puis ouvre la page demandée (accueil par défaut). */
+export const logout = (destination = '/'): void => {
   removeToken();
   removeUser();
   clearPendingVerificationEmail();
@@ -318,7 +319,7 @@ export const logout = (): void => {
         credentials: 'same-origin',
       });
     } finally {
-      window.location.href = '/';
+      window.location.href = destination;
     }
   })();
 };

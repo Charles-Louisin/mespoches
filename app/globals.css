@@ -243,8 +243,8 @@ button.store-apk.w-full {
   align-items: center;
   justify-content: center;
   padding: 32px;
-  background: #0f1220;
-  color: #e8e4f4;
+  background: #f8f9fa;
+  color: #111;
   text-align: center;
   font-size: 16px;
 }
@@ -255,10 +255,11 @@ button.store-apk.w-full {
   align-items: center;
   justify-content: center;
   gap: 22px;
-  background: #0f1220;
+  background: #f8f9fa;
   padding: 32px;
   text-align: center;
-  color: #fff;
+  color: #111;
+  font-family: var(--font-outfit), system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 .ad-session p {
   max-width: 28rem;
@@ -274,7 +275,7 @@ button.store-apk.w-full {
 .ad-session-btn {
   min-height: 44px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 999px;
   background: #2563eb;
   padding: 0 18px;
   font-size: 14px;
@@ -286,12 +287,12 @@ button.store-apk.w-full {
   background: #1d4ed8;
 }
 .ad-session-btn.is-ghost {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  color: #e8e4f4;
+  background: #fff;
+  border: 1px solid #e7e7e7;
+  color: #111;
 }
 .ad-session-btn.is-ghost:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: #f2f4f5;
 }
 .ad-shell {
   display: grid;
