@@ -104,9 +104,9 @@ const FEATURES: { title: string; body: string; icon: ReactNode; tone: string }[]
 const TIERS = [
   { id: 'free', label: 'Gratuit', monthly: 0, desc: 'Pour démarrer et prendre l’habitude.', perks: ['5 poches', '5 catégories', '3 scans et 3 notes vocales / mois', '3 mois d’historique'] },
   // Limites identiques à backend/src/config/planLimits.ts (TIER_DEFS)
-  { id: 'pro', label: 'Pro', monthly: 2500, desc: 'Le suivi complet au quotidien.', perks: ['20 poches', '20 catégories', '30 scans et 30 notes vocales / mois', 'Budgets, analyses, historique complet', 'Export PDF'], highlight: true },
-  { id: 'pro_plus', label: 'Pro+', monthly: 6000, desc: 'Pour les gros volumes.', perks: ['50 poches', '50 catégories', '100 scans et 100 notes vocales / mois', 'Exports PDF, Excel et CSV'] },
-  { id: 'business', label: 'Business', monthly: 20000, desc: 'Commerce, association, équipe.', perks: ['Poches et catégories illimitées', '500 scans et 500 notes vocales / mois', 'Exports sur une plage de dates'] },
+  { id: 'pro', label: 'Pro', monthly: 2500, desc: 'Le suivi complet au quotidien.', perks: ['20 poches', '100 catégories', '30 scans et 30 notes vocales / mois', 'Budgets, analyses, historique complet', 'Export PDF'], highlight: true },
+  { id: 'pro_plus', label: 'Pro+', monthly: 6000, desc: 'Pour les gros volumes.', perks: ['50 poches', '200 catégories', '100 scans et 100 notes vocales / mois', 'Exports PDF, Excel et CSV'] },
+  { id: 'business', label: 'Business', monthly: 20000, desc: 'Commerce, association, équipe.', perks: ['Poches et catégories illimitées', '500 scans et 500 notes vocales / mois', 'Exports sur une plage de dates', 'Export par catégorie'] },
 ] as const
 
 const FAQ = [
